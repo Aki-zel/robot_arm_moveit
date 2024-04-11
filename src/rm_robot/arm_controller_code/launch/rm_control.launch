@@ -1,0 +1,23 @@
+<launch>
+	<arg name="setip" default="192.168.0.18"/>
+	<!-- <group ns="robot1"> -->
+	<node pkg="arm_controller_code" name="arm_controller" type="armcontroller" output="screen">
+		<param name="ip" type="str" value="$(arg setip)"/>
+	</node>
+	<!-- <node pkg="rm_driver" name="rm_driver" type="rm_driver" output="screen"/> -->
+	<include file="$(find rm_65_moveit_config)/launch/demo.launch"></include>
+	
+	<node pkg="arm_controller_code" name="get_coordinate" type="getcoordinate.py" output="screen"></node>
+	<node pkg="arm_grab" name="arm_grab_driver" type="moveittest.py" output="screen">
+	  <param name="work_document" value="$(find arm_grab)/work_doucment" />
+	  <param name="x_offset"  value= "0" />
+	  <param name="y_offset" value= "0" />
+	  <param name="z_offset" value= "0" />
+	  <param name="grab_forward_distance" value= "0.1" />
+	  <param name="grab_upward_distance" value= "-0.05" />
+	  <param name="grab_backward_distance" value= "-0.1" />
+	  <param name="press_forward_distance" value= "0.05" />
+	  <param name="press_backward_distance" value= "-0.05" />
+	</node>
+	<!-- </group> -->
+</launch>

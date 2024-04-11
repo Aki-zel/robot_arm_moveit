@@ -4,3 +4,6 @@ devel
 build
 .vscode
 .catkin_tools
+src/rm_robot/arm_controller_code/scripts/img/
+src/rm_robot/arm_controller_code/model/
+src/rm_robot/arm_controller_code/scripts/weights/
