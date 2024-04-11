@@ -45,6 +45,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   tf2
   geometry_msgs
+  rm_msgs
 )
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 find_package(PythonLibs REQUIRED)

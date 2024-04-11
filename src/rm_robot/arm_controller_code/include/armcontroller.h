@@ -12,12 +12,10 @@
 #include <cubicSpline.h>
 #include <vector>
 #include <algorithm>
-#include <rm_base.h>
-#include <rm_service.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Empty.h>
 #include <thread>
-// #include <mwrobot_msgs/armgradm.h>
+#include <rm_msgs/JointPos.h>
 
 struct JointData
 {
@@ -44,7 +42,6 @@ private:
     ros::Publisher pub_getArmStateTimerSwitch;
     int current = 0;
     ros::Timer State_Timer;
-    RM_Service service;
     int sockets;
     ros::Publisher statePub;
     std::string ip;

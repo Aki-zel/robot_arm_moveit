@@ -1,8 +1,7 @@
 #include <armcontroller.h>
-#include <thread>
 
-ArmContorller::ArmContorller(std::string serverName, ros::NodeHandle nh)
-    : server(nh, serverName, boost::bind(&ArmContorller::executeCB, this, _1),
+ArmController::ArmController(std::string serverName, ros::NodeHandle nh)
+    : server(nh, serverName, boost::bind(&ArmController::executeCB, this, _1),
              false)
 {
     setlocale(LC_ALL, "");
@@ -11,13 +10,13 @@ ArmContorller::ArmContorller(std::string serverName, ros::NodeHandle nh)
     pub_getArmStateTimerSwitch = nh.advertise<std_msgs::Bool>("/rm_driver/GetArmStateTimerSwitch", 200);
 
     float min_interval = 0.02; // 透传周期,单位:秒
-    this->State_Timer = nh.createTimer(ros::Duration(min_interval), boost::bind(&ArmContorller::timer_callback, this));
+    this->State_Timer = nh.createTimer(ros::Duration(min_interval), boost::bind(&ArmController::timer_callback, this));
 }
 
-ArmContorller::~ArmContorller()
+ArmController::~ArmController()
 {
 }
-void ArmContorller::timer_callback()
+void ArmController::timer_callback()
 {
     rm_msgs::JointPos msg;
 
@@ -40,7 +39,7 @@ void ArmContorller::timer_callback()
         this->point_changed = false;
     }
 }
-void ArmContorller::executeCB(const control_msgs::FollowJointTrajectoryGoalConstPtr &goalPtr)
+void ArmController::executeCB(const control_msgs::FollowJointTrajectoryGoalConstPtr &goalPtr)
 {
     try
     {
@@ -138,7 +137,7 @@ int main(int argc, char *argv[])
     ros::NodeHandle nh;
     // ros::AsyncSpinner spinner(2);
     // spinner.start();
-    ArmContorller contorller("arm_controller/follow_joint_trajectory", nh);
+    ArmController contorller("arm_controller/follow_joint_trajectory", nh);
     std::thread serverThread([&contorller]()
                              { ros::spin(); });
 
