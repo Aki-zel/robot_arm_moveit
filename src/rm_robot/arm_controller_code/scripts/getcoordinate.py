@@ -3,10 +3,7 @@
 # 导入依赖
 import rospy
 from std_msgs.msg import Bool
-from mwrobot_msgs.msg import *
-from mwrobot_msgs.srv import *
 import actionlib
-
 import fastdeploy as fd
 import fastdeploy.vision as vision
 import yaml
@@ -18,11 +15,12 @@ import tf2_ros
 import geometry_msgs.msg
 import tf2_geometry_msgs
 import cv2
+from robot_msgs.srv import *
 
 pipeline = rs.pipeline()  # 定义流程pipeline
 config = rs.config()  # 定义配置config
-config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 15)
-config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 15)
+config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 profile = pipeline.start(config)  # 流程开始
 align_to = rs.stream.color  # 与color流对齐
 align = rs.align(align_to)
@@ -150,8 +148,8 @@ def getObjCoordinate(request):
     global model
     labels = []
     positions = []
-    run=request.run
-    respond=armgradmResponse()
+    run=request.catch
+    respond=Hand_CatchResponse()
     try:
         if run:
             for i in range(10):
@@ -197,7 +195,7 @@ if __name__ == '__main__':
         config = yaml.safe_load(file)
     rospy.init_node("camrea_node")    
     model = Detection(config)
-    service=rospy.Service("getcoordinate",armgradm,getObjCoordinate)
+    service=rospy.Service("getcoordinate",Hand_Catch,getObjCoordinate)
     rospy.spin()
     cv2.destroyAllWindows()
     pipeline.stop()

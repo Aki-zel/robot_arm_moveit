@@ -1,0 +1,7 @@
+#request
+bool catch
+
+---
+#respond
+string[] label
+float32[] positions

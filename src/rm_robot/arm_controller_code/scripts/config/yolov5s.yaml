@@ -18,7 +18,7 @@ threshold:
 # - 0 <- 使用GPU
 device: 'openvino'
 # 模型权重路径
-model_file: /home/akria/rwm_moveit/src/robot_arm/arm_controller_code/scripts/weights/best1.onnx
+model_file: src/rm_robot/arm_controller_code/model/best1.onnx
 params_file: ""
 config_file: ""
 

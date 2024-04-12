@@ -7,3 +7,5 @@ build
 src/rm_robot/arm_controller_code/scripts/img/
 src/rm_robot/arm_controller_code/model/
 src/rm_robot/arm_controller_code/scripts/weights/
+src/easy_handeye
+src/aruco_ros
