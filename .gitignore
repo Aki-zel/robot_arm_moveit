@@ -9,3 +9,5 @@ src/rm_robot/arm_controller_code/model/
 src/rm_robot/arm_controller_code/scripts/weights/
 src/easy_handeye
 src/aruco_ros
+src/robot_control/robtot_camera_control/model/
+src/robot_control/robtot_camera_control/scripts/img/
