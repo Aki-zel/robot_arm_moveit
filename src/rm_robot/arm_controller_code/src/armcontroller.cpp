@@ -137,7 +137,13 @@ int main(int argc, char *argv[])
     ros::NodeHandle nh;
     // ros::AsyncSpinner spinner(2);
     // spinner.start();
+<<<<<<< HEAD:src/rm_robot/arm_controller_code/src/armcontroller.cpp
     ArmController contorller("arm_controller/follow_joint_trajectory", nh);
+=======
+    // ArmController contorller("arm_controller/follow_joint_trajectory", nh);
+    
+    ArmController contorller("rm_group/follow_joint_trajectory", nh);
+>>>>>>> akira:src/rm_robot/arm_controller_code/src/armcontroller11.cpp
     std::thread serverThread([&contorller]()
                              { ros::spin(); });
 
