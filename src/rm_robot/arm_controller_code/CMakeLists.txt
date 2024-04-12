@@ -107,12 +107,12 @@ find_package(OpenCV 4 REQUIRED)
 # )
 
 # # Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
+# generate_messages(
+#   DEPENDENCIES
 
-  # tf2_geometry_msgs
-  # std_msgs
-)
+#   # tf2_geometry_msgs
+#   # std_msgs
+# )
 
 # ###############################################
 # # Declare ROS dynamic reconfigure parameters ##
@@ -256,11 +256,11 @@ target_link_libraries(armcontroller
 # scripts/Detection.py
 # DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
-catkin_install_python(PROGRAMS
-  # scripts/cameratest.py
-  scripts/camera.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# catkin_install_python(PROGRAMS
+#   # scripts/cameratest.py
+#   scripts/camera.py
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
 
 # # Mark executables for installation
 # # See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
@@ -270,11 +270,11 @@ catkin_install_python(PROGRAMS
 
 # # Mark libraries for installation
 # # See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-install(TARGETS arm_controller_code
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
+# install(TARGETS arm_controller_code
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+# )
 
 # # Mark cpp header files for installation
 # install(DIRECTORY include/${PROJECT_NAME}/
@@ -289,10 +289,10 @@ install(TARGETS arm_controller_code
 # # myfile2
 # DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
-install(
-  DIRECTORY include/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-)
+# install(
+#   DIRECTORY include/
+#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+# )
 
 # ############
 # # Testing ##

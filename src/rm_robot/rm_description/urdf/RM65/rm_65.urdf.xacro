@@ -32,7 +32,6 @@
       <geometry>
         <box size="0.06 0.06 0.02" />
       </geometry>
-      <material name="Brown" />
     </visual>
     <collision>
       <origin xyz=" 0 0 0"  rpy="0 0 0"/>
@@ -450,6 +449,12 @@
       velocity="3.92" />
 	<dynamics damping="50" friction="1"/>
   </joint>
+
+  <!-- <xacro:arg name="use_nominal_extrinsics" default="false"/>
+  <xacro:include filename="$(find realsense2_description)/urdf/_d415.urdf.xacro" />
+  <xacro:sensor_d415 parent="Link6" use_nominal_extrinsics="$(arg use_nominal_extrinsics)" >
+      <origin xyz="0.0 0.06 0.05" rpy="0 0 1.57"/>
+  </xacro:sensor_d415>  -->
   
   <!-- Transmissions for ROS Control -->
   <xacro:macro name="transmission_block" params="joint_name">
@@ -481,3 +486,4 @@
     </plugin>
   </gazebo>
 </robot>
+
