@@ -9,6 +9,6 @@
 
 
 <!-- Moveit -->
-  <include file="$(find rm_65_moveit_config)/launch/demo.launch">
+  <include file="$(find rm_65_moveit_config)/launch/demo_realrobot.launch">
   </include>
 </launch>
