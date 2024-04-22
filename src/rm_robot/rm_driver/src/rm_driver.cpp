@@ -1416,8 +1416,8 @@ int main(int argc, char **argv)
     geometry_msgs::Quaternion quaternion_msg;
     tf2::Quaternion quaternion_tf;
 
-    private_nh_.param<std::string>("Arm_IP",               Arm_IP_,                "192.168.1.18");
-    private_nh_.param<std::string>("Arm_Type",             RM_Joint.arm_type,      "RM75");
+    private_nh_.param<std::string>("Arm_IP",               Arm_IP_,                "192.168.3.61");
+    private_nh_.param<std::string>("Arm_Type",             RM_Joint.arm_type,      "RM65");
     private_nh_.param<bool>       ("Follow",               canfd_follow,           false);
     private_nh_.param<int>        ("Arm_Port",             Arm_Port_,              8080);
     private_nh_.param<int>        ("Arm_Dof",              arm_dof,                6);

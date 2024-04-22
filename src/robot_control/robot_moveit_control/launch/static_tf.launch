@@ -1,0 +1,3 @@
+<launch>
+<node pkg="tf2_ros" type="static_transform_publisher" name="base_To_cramera" args="x y z qx qy qz qw base_link camera_link"/>
+</launch>

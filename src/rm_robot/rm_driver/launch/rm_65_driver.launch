@@ -1,7 +1,7 @@
 <launch>
 
     <!-- 标签 -->
-    <arg name="Arm_IP"                   default="192.168.1.18"/>    <!-- 设置TCP连接时的IP -->
+    <arg name="Arm_IP"                   default="192.168.3.61"/>    <!-- 设置TCP连接时的IP -->
     <arg name="Arm_Port"                 default="8080"/>            <!-- 设置TCP连接时的端口 -->
     <arg name="Arm_Dof"                  default="6"/>               <!-- 机械臂自由度设置 -->
     <arg name="Arm_Type"                 default="RM65"/>            <!-- 机械臂型号设置 -->
