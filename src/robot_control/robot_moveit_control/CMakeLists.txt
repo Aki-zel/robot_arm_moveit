@@ -29,8 +29,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV 4 REQUIRED)
-find_package(Qt5 REQUIRED Core Widgets Multimedia)
-set(QT_LIBRARIES Qt5::Widgets Qt5::Multimedia)
+# find_package(Qt5 REQUIRED Core Widgets Multimedia)
+# set(QT_LIBRARIES Qt5::Widgets Qt5::Multimedia)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -124,14 +124,14 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
-file(GLOB QT_FORMS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ui/*.ui)
-file(GLOB QT_RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} resources/*.qrc)
-file(GLOB_RECURSE QT_MOC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS include/robot_moveit_control/*.hpp *.h)
+# file(GLOB QT_FORMS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ui/*.ui)
+# file(GLOB QT_RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} resources/*.qrc)
+# file(GLOB_RECURSE QT_MOC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS include/robot_moveit_control/*.hpp *.h)
 
-QT5_ADD_RESOURCES(QT_RESOURCES_CPP ${QT_RESOURCES})
-QT5_WRAP_UI(QT_FORMS_HPP ${QT_FORMS})
-QT5_WRAP_CPP(QT_MOC_HPP ${QT_MOC})
-file(GLOB_RECURSE QT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS src/*.cpp)
+# QT5_ADD_RESOURCES(QT_RESOURCES_CPP ${QT_RESOURCES})
+# QT5_WRAP_UI(QT_FORMS_HPP ${QT_FORMS})
+# QT5_WRAP_CPP(QT_MOC_HPP ${QT_MOC})
+# file(GLOB_RECURSE QT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS src/*.cpp)
 ###########
 ## Build ##
 ###########
@@ -174,8 +174,8 @@ link_directories(${OpenCV_LIBRARY_DIRS})
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-add_executable(ydrobot ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
-target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES})
+# add_executable(ydrobot ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
+# target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES})
 # install(TARGETS robot_hmi RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 #############
 ## Install ##
