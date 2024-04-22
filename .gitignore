@@ -11,3 +11,9 @@ src/easy_handeye
 src/aruco_ros
 src/robot_control/robtot_camera_control/model/
 src/robot_control/robtot_camera_control/scripts/img/
+src/robot_control/rm65_grasping/scripts/robotic_arm_package/__pycache__/robotic_arm.cpython-38.pyc
+src/robot_control/rm65_grasping/scripts/robotic_arm_package/__pycache__/log_setting.cpython-38.pyc
+src/robot_control/rm65_grasping/scripts/robotic_arm_package/libRM_Base.so.1.0.0
+src/robot_control/rm65_grasping/scripts/robotic_arm_package/libRM_Base.so.1.0
+src/robot_control/rm65_grasping/scripts/robotic_arm_package/libRM_Base.so.1
+src/robot_control/rm65_grasping/scripts/robotic_arm_package/libRM_Base.so
