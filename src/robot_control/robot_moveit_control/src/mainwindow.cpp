@@ -14,8 +14,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     ros::NodeHandle nh;
     ros::CallbackQueue queue;
     image_subscriber_ = nh.subscribe("/camera/color/image_raw/compressed", 10, &MainWindow::imageCallback, this);
-    nh.setCallbackQueue(&queue);
-    ros::AsyncSpinner spinner(1, &queue);
+    // nh.setCallbackQueue(&queue);
+    ros::AsyncSpinner spinner(1);
     image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
 
     spinner.start();
