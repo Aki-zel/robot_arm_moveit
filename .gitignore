@@ -14,3 +14,6 @@ src/robot_control/robtot_camera_control/model/*.yml
 src/robot_control/robtot_camera_control/model/*.pd*
 src/robot_control/robtot_camera_control/model/*.pt
 src/robot_control/robtot_camera_control/scripts/img/
+.xdp_rwm_moveit.workspace.U2GKM2
+rwm_moveit.workspace.user
+src/robot_control/robot_moveit_control/ui/mainwindow.ui.autosave
