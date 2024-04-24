@@ -22,6 +22,9 @@
 #include <sensor_msgs/CompressedImage.h>
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Pose.h>
+#include <MoveitServer.h>
 namespace Ui
 {
     class MainWindow;
@@ -36,6 +39,7 @@ public:
     ~MainWindow();
     void addStart();
     void imageCallback(const sensor_msgs::CompressedImageConstPtr &msg);
+    void objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg);
     sensor_msgs::ImagePtr convertQPixmapToSensorImage(const QPixmap &pixmap);
 
 private slots:
@@ -66,7 +70,9 @@ private:
     bool m_isSelecting;
     bool m_isImage;
     ros::Subscriber image_subscriber_;
+    ros::Subscriber objection_subscriber_;
     ros::Publisher image_publisher_;
+    MoveitServer *server;
 };
 
 #endif // MAINWINDOW_H

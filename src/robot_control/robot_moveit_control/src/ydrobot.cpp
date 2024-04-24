@@ -1,4 +1,4 @@
-#include "../include/robot_moveit_control/mainwindow.h"
+#include "mainwindow.h"
 
 #include <QApplication>
 

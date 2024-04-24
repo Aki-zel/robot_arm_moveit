@@ -1,4 +1,4 @@
-#include "../include/robot_moveit_control/mainwindow.h"
+#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
@@ -13,20 +13,38 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     // 初始化ROS节点
     ros::NodeHandle nh;
     ros::CallbackQueue queue;
-    image_subscriber_ = nh.subscribe("/camera/color/image_raw/compressed", 10, &MainWindow::imageCallback, this);
-    // nh.setCallbackQueue(&queue);
-    ros::AsyncSpinner spinner(1);
-    image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
-
+    ros::AsyncSpinner spinner(3);
     spinner.start();
-    // 订阅摄像头图像话题
+    std::string PLANNING_GROUP = "arm";
+    this->server = new MoveitServer( PLANNING_GROUP);
+    image_subscriber_ = nh.subscribe("/camera/color/image_raw/compressed", 10, &MainWindow::imageCallback, this);
+    objection_subscriber_ = nh.subscribe("object_position", 10, &MainWindow::objectionCallback, this);
+    // nh.setCallbackQueue(&queue);
+
+    image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-
+void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg)
+{
+    try
+    {
+        // std::vector<double> p;
+        // p.push_back(msg.get()->pose.position.x);
+        // p.push_back(msg.get()->pose.position.y);
+        // p.push_back(msg.get()->pose.position.z);
+        ROS_INFO("1111");
+        double p[3] = {msg.get()->pose.position.x + 0.15, msg.get()->pose.position.y, msg.get()->pose.position.z + 0.15};
+        this->server->move_p(p);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+}
 void MainWindow::on_closeButton_clicked()
 {
     this->close();
@@ -51,6 +69,8 @@ void MainWindow::on_startButton_clicked()
 {
     this->addStart();
     this->m_isImage = true;
+    std::vector<double> joint = {0.108, -0.376, 1.37, 0.017, 1.371, 0.182};
+    this->server->move_j(joint);
 }
 
 void MainWindow::on_detectButton_clicked()
@@ -66,11 +86,11 @@ void MainWindow::addStart()
     this->manager_->initialize();
     this->manager_->removeAllDisplays();
     this->manager_->startUpdate();
+    this->manager_->setFixedFrame("dummy");
     auto grid_ = this->manager_->createDisplay("rviz/Grid", "adjustable grid", true);
     ROS_ASSERT(grid_ != NULL);
     auto robotmodel_ = this->manager_->createDisplay("rviz/RobotModel", "RobotModel", true);
     ROS_ASSERT(robotmodel_ != NULL);
-    this->manager_->setFixedFrame("dummy");
 }
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {

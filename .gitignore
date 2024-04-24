@@ -17,3 +17,9 @@ src/robot_control/robtot_camera_control/scripts/img/
 .xdp_rwm_moveit.workspace.U2GKM2
 rwm_moveit.workspace.user
 src/robot_control/robot_moveit_control/ui/mainwindow.ui.autosave
+src/robot_control/rm65_grasping/scripts/robotic_arm_package/__pycache__/robotic_arm.cpython-38.pyc
+src/robot_control/rm65_grasping/scripts/robotic_arm_package/__pycache__/log_setting.cpython-38.pyc
+src/robot_control/rm65_grasping/scripts/robotic_arm_package/libRM_Base.so.1.0.0
+src/robot_control/rm65_grasping/scripts/robotic_arm_package/libRM_Base.so.1.0
+src/robot_control/rm65_grasping/scripts/robotic_arm_package/libRM_Base.so.1
+src/robot_control/rm65_grasping/scripts/robotic_arm_package/libRM_Base.so
