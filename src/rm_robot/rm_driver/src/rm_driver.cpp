@@ -1816,7 +1816,7 @@ int main(int argc, char **argv)
                         for (i = 0; i < 6; i++)
                         {
                             real_joint.position[i] = RM_Joint.joint[i] * DEGREE_RAD;
-                            // ROS_INFO("Reveive Joint State: joint[%d].position=%f",  i, real_joint.position[i]);
+                            ROS_INFO("Reveive Joint State: joint[%d].position=%f",  i, real_joint.position[i]);
                         }
                         // real_joint.position[6] = RM_Joint.gripper_joint;
                         Joint_State.publish(real_joint);

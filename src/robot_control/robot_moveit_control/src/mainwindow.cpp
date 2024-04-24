@@ -1,6 +1,6 @@
-#include "../include/robot_moveit_control/mainwindow.h"
+#include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#define Pi 3.1415926
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
                                           ui(new Ui::MainWindow)
 {
@@ -13,23 +13,52 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     // 初始化ROS节点
     ros::NodeHandle nh;
     ros::CallbackQueue queue;
-    image_subscriber_ = nh.subscribe("/camera/color/image_raw/compressed", 10, &MainWindow::imageCallback, this);
-    // nh.setCallbackQueue(&queue);
-    ros::AsyncSpinner spinner(1);
-    image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
-
+    ros::AsyncSpinner spinner(3);
     spinner.start();
-    // 订阅摄像头图像话题
+    std::string PLANNING_GROUP = "arm";
+    this->server = new MoveitServer(PLANNING_GROUP);
+    image_subscriber_ = nh.subscribe("/camera/color/image_raw/compressed", 10, &MainWindow::imageCallback, this);
+    objection_subscriber_ = nh.subscribe("object_position", 10, &MainWindow::objectionCallback, this);
+    // nh.setCallbackQueue(&queue);
+
+    image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
+void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg)
+{
+    try
+    {
+        // std::vector<double> p;
+        // p.push_back(msg.get()->pose.position.x);
+        // p.push_back(msg.get()->pose.position.y);
+        // p.push_back(msg.get()->pose.position.z);
+        this->server->Set_Tool_DO(2, false);
+        double p[3] = {msg.get()->pose.position.x + 0.09, msg.get()->pose.position.y, msg.get()->pose.position.z + 0.10};
+        this->server->move_p(p);
+        ros::Duration(3.0).sleep();
+        this->server->Set_Tool_DO(2, true);
+        double p1[3] = {msg.get()->pose.position.x + 0.09, msg.get()->pose.position.y, msg.get()->pose.position.z + 0.20};
+        this->server->move_p(p1);
+        ros::Duration(3.0).sleep();
+        double p2[3] = {msg.get()->pose.position.x + 0.09, msg.get()->pose.position.y - 0.3, msg.get()->pose.position.z + 0.12};
+        this->server->move_p(p2);
+        ros::Duration(3.0).sleep();
+        this->server->Set_Tool_DO(2, false);
+    }
 
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+}
 void MainWindow::on_closeButton_clicked()
 {
     this->close();
+    delete this;
 }
 
 void MainWindow::on_chooseButton_clicked()
@@ -51,6 +80,9 @@ void MainWindow::on_startButton_clicked()
 {
     this->addStart();
     this->m_isImage = true;
+    std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
+    this->server->move_j(joint);
+    this->server->Set_Tool_DO(2, true);
 }
 
 void MainWindow::on_detectButton_clicked()
@@ -66,11 +98,11 @@ void MainWindow::addStart()
     this->manager_->initialize();
     this->manager_->removeAllDisplays();
     this->manager_->startUpdate();
+    this->manager_->setFixedFrame("dummy");
     auto grid_ = this->manager_->createDisplay("rviz/Grid", "adjustable grid", true);
     ROS_ASSERT(grid_ != NULL);
     auto robotmodel_ = this->manager_->createDisplay("rviz/RobotModel", "RobotModel", true);
     ROS_ASSERT(robotmodel_ != NULL);
-    this->manager_->setFixedFrame("dummy");
 }
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
@@ -146,7 +178,7 @@ sensor_msgs::ImagePtr MainWindow::convertQPixmapToSensorImage(const QPixmap &pix
     // 将QImage转换为OpenCV格式
     cv::Mat cv_image(image.height(), image.width(), CV_8UC4, (uchar *)image.bits(), image.bytesPerLine());
     cv::cvtColor(cv_image, cv_image, cv::COLOR_RGBA2BGR); // Qt的QImage默认使用RGBA格式，而OpenCV默认使用BGR格式，需要进行通道转换
-
+    // cv::resize()
     // 创建一个cv_bridge::CvImage对象
     cv_bridge::CvImage cv_bridge_image;
     cv_bridge_image.image = cv_image;
