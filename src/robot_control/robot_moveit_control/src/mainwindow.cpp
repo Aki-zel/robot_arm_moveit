@@ -37,14 +37,14 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
         // p.push_back(msg.get()->pose.position.y);
         // p.push_back(msg.get()->pose.position.z);
         this->server->Set_Tool_DO(2, false);
-        double p[3] = {msg.get()->pose.position.x + 0.09, msg.get()->pose.position.y, msg.get()->pose.position.z + 0.10};
+        double p[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y, msg.get()->pose.position.z};
         this->server->move_p(p);
-        ros::Duration(3.0).sleep();
+        ros::Duration(5.0).sleep();
         this->server->Set_Tool_DO(2, true);
-        double p1[3] = {msg.get()->pose.position.x + 0.09, msg.get()->pose.position.y, msg.get()->pose.position.z + 0.20};
+        double p1[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y, msg.get()->pose.position.z + 0.10};
         this->server->move_p(p1);
         ros::Duration(3.0).sleep();
-        double p2[3] = {msg.get()->pose.position.x + 0.09, msg.get()->pose.position.y - 0.3, msg.get()->pose.position.z + 0.12};
+        double p2[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y - 0.3, msg.get()->pose.position.z};
         this->server->move_p(p2);
         ros::Duration(3.0).sleep();
         this->server->Set_Tool_DO(2, false);

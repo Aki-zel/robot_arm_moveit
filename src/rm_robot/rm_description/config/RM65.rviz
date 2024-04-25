@@ -4,8 +4,8 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /Status1
+        - /TF1
+        - /TF1/Frames1
       Splitter Ratio: 0.5
     Tree Height: 549
   - Class: rviz/Selection
@@ -101,7 +101,39 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        camera_bottom_screw_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         dummy:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        ee_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        finger1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        finger2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gripper_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        tool0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -111,6 +143,75 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Class: rviz/TF
+      Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): ""
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        Link1:
+          Value: false
+        Link2:
+          Value: false
+        Link3:
+          Value: false
+        Link4:
+          Value: false
+        Link5:
+          Value: false
+        Link6:
+          Value: false
+        base_link:
+          Value: false
+        bottom_link:
+          Value: false
+        camera_bottom_screw_frame:
+          Value: false
+        camera_link:
+          Value: true
+        dummy:
+          Value: false
+        ee_link:
+          Value: true
+        finger1:
+          Value: false
+        finger2:
+          Value: false
+        gripper_link:
+          Value: false
+        tool0:
+          Value: false
+      Marker Alpha: 1
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        dummy:
+          base_link:
+            Link1:
+              Link2:
+                Link3:
+                  Link4:
+                    Link5:
+                      Link6:
+                        ee_link:
+                          {}
+                        tool0:
+                          camera_bottom_screw_frame:
+                            camera_link:
+                              {}
+                          gripper_link:
+                            finger1:
+                              {}
+                            finger2:
+                              {}
+            bottom_link:
+              {}
+      Update Interval: 0
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -139,7 +240,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.1567115783691406
+      Distance: 1.1381654739379883
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -147,17 +248,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.10485730320215225
-        Y: -0.036040570586919785
-        Z: 0.3628707230091095
+        X: -0.0011481486726552248
+        Y: 0.1543562114238739
+        Z: 0.9140535593032837
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3553982675075531
+      Pitch: -0.05960186570882797
       Target Frame: <Fixed Frame>
-      Yaw: 0.7653980255126953
+      Yaw: 4.638581275939941
     Saved: ~
 Window Geometry:
   Displays:
@@ -176,4 +277,4 @@ Window Geometry:
     collapsed: false
   Width: 1200
   X: 417
-  Y: 141
+  Y: 104

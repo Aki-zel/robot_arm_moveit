@@ -112,7 +112,39 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          camera_bottom_screw_frame:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          camera_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           dummy:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          ee_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          finger1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          gripper_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          tool0:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -202,7 +234,39 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          camera_bottom_screw_frame:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          camera_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           dummy:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          ee_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          finger1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          gripper_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          tool0:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -229,12 +293,14 @@ Visualization Manager:
         Link5:
           Value: false
         Link6:
-          Value: true
+          Value: false
         base_link:
-          Value: true
+          Value: false
         bottom_link:
           Value: false
         camera_aligned_depth_to_color_frame:
+          Value: false
+        camera_bottom_screw_frame:
           Value: false
         camera_color_frame:
           Value: false
@@ -247,6 +313,16 @@ Visualization Manager:
         camera_link:
           Value: true
         dummy:
+          Value: false
+        ee_link:
+          Value: true
+        finger1:
+          Value: false
+        finger2:
+          Value: false
+        gripper_link:
+          Value: false
+        tool0:
           Value: false
       Marker Alpha: 1
       Marker Scale: 1
@@ -271,6 +347,16 @@ Visualization Manager:
                             {}
                           camera_depth_frame:
                             camera_depth_optical_frame:
+                              {}
+                        ee_link:
+                          {}
+                        tool0:
+                          camera_bottom_screw_frame:
+                            {}
+                          gripper_link:
+                            finger1:
+                              {}
+                            finger2:
                               {}
             bottom_link:
               {}
@@ -326,7 +412,39 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        camera_bottom_screw_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         dummy:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        ee_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        finger1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        finger2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gripper_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        tool0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -368,9 +486,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.06460212916135788
+      Pitch: 0.30539777874946594
       Target Frame: dummy
-      Yaw: 2.015399217605591
+      Yaw: 1.6054034233093262
     Saved: ~
 Window Geometry:
   Displays:

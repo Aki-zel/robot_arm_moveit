@@ -456,9 +456,17 @@
   <!-- tool -->
   <link name="tool0"/>
   <joint name="joint_tool0" type="fixed">
-    <origin xyz="0 0 0.01" rpy="0 0 0" />
+    <origin xyz="0 0 0.015" rpy="0 0 0" />
     <parent link="Link6" />
     <child link="tool0" />
+  </joint>
+  
+  <!-- tool_frame -->
+  <link name="ee_link"/>
+  <joint name="joint_ee_link" type="fixed">
+    <origin xyz="0 0 0.14" rpy="0 0 0" />
+    <parent link="Link6" />
+    <child link="ee_link" />
   </joint>
 
   <!-- camera -->
