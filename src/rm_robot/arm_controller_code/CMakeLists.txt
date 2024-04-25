@@ -49,7 +49,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 find_package(PythonLibs REQUIRED)
-find_package(OpenCV 4 REQUIRED)
+find_package(OpenCV  REQUIRED)
 
 # # System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)

@@ -7,7 +7,6 @@ Panels:
         - /Global Options1
         - /Status1
         - /RobotModel1
-        - /RobotModel1/Status1
         - /TF1
         - /TF1/Frames1
       Splitter Ratio: 0.6360294222831726
@@ -65,6 +64,56 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_bottom_screw_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_color_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_color_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_depth_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_depth_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_infra1_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_infra1_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_infra2_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_infra2_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        camera_usb_plug_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -78,7 +127,11 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        base_link:
+          Value: true
         camera_aligned_depth_to_color_frame:
+          Value: true
+        camera_bottom_screw_frame:
           Value: true
         camera_color_frame:
           Value: false
@@ -88,7 +141,17 @@ Visualization Manager:
           Value: false
         camera_depth_optical_frame:
           Value: false
+        camera_infra1_frame:
+          Value: true
+        camera_infra1_optical_frame:
+          Value: true
+        camera_infra2_frame:
+          Value: true
+        camera_infra2_optical_frame:
+          Value: true
         camera_link:
+          Value: true
+        camera_usb_plug_link:
           Value: true
       Marker Alpha: 1
       Marker Scale: 0.10000000149011612
@@ -97,15 +160,25 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        camera_link:
-          camera_aligned_depth_to_color_frame:
-            camera_color_optical_frame:
-              {}
-          camera_color_frame:
-            {}
-          camera_depth_frame:
-            camera_depth_optical_frame:
-              {}
+        base_link:
+          camera_bottom_screw_frame:
+            camera_link:
+              camera_aligned_depth_to_color_frame:
+                camera_color_optical_frame:
+                  {}
+              camera_color_frame:
+                {}
+              camera_depth_frame:
+                camera_depth_optical_frame:
+                  {}
+              camera_infra1_frame:
+                camera_infra1_optical_frame:
+                  {}
+              camera_infra2_frame:
+                camera_infra2_optical_frame:
+                  {}
+              camera_usb_plug_link:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -180,9 +253,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.15999993681907654
+      Pitch: -0.2449999302625656
       Target Frame: <Fixed Frame>
-      Yaw: 0.7750000953674316
+      Yaw: 2.210000514984131
     Saved: ~
 Window Geometry:
   Displays:

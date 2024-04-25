@@ -58,8 +58,40 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
-
-
+  <build_depend>rviz</build_depend>
+  <build_export_depend>rviz</build_export_depend>
+  <exec_depend>rviz</exec_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_export_depend>sensor_msgs</build_export_depend>
+  <exec_depend>sensor_msgs</exec_depend>  
+  <build_depend>cv_bridge</build_depend>
+  <build_export_depend>cv_bridge</build_export_depend>
+  <exec_depend>cv_bridge</exec_depend>   
+  <build_depend>image_transport</build_depend>
+  <build_export_depend>image_transport</build_export_depend>
+  <exec_depend>image_transport</exec_depend>   
+  <build_depend>tf2_eigen</build_depend>
+  <build_export_depend>tf2_eigen</build_export_depend>
+  <exec_depend>tf2_eigen</exec_depend>  
+  <build_depend>tf2_geometry_msgs</build_depend>
+  <build_export_depend>tf2_geometry_msgs</build_export_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>  
+  <build_depend>tf2_ros</build_depend>
+  <build_export_depend>tf2_ros</build_export_depend>
+  <exec_depend>tf2_ros</exec_depend>   
+  <build_depend>tf2</build_depend>
+  <build_export_depend>tf2</build_export_depend>
+  <exec_depend>tf2</exec_depend>   
+  <build_depend>geometry_msgs</build_depend>
+  <build_export_depend>geometry_msgs</build_export_depend>
+  <exec_depend>geometry_msgs</exec_depend>   
+  <build_depend>rm_msgs</build_depend>
+  <build_export_depend>rm_msgs</build_export_depend>
+  <exec_depend>rm_msgs</exec_depend>   
+  <build_depend>moveit_ros_planning_interface</build_depend>
+  <build_export_depend>moveit_ros_planning_interface</build_export_depend>
+  <exec_depend>moveit_ros_planning_interface</exec_depend>   
+  
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
