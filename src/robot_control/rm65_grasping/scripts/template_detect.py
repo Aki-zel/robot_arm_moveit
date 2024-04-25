@@ -16,13 +16,16 @@ class TemplateDetect:
         # 创建cv_bridge，声明图像的发布者和订阅者
         self.bridge = CvBridge()
         self.image_pub = rospy.Publisher("template_detect_image", Image, queue_size=1)
-        rospy.Subscriber("/camera/color/image_raw", Image, self.image_callback)
+        rospy.Subscriber("/camera/color/image_raw/", Image, self.image_callback) # 订阅相机图像
+        rospy.Subscriber("/image_template", Image, self.template_cb) # 订阅模版图像
         self.template_image = None
-        # 图像与世界坐标系间tf坐标转换
+        # 图像与世界坐标系间tf坐标转换，订阅相机内参和深度图像用于获取物体三维坐标
         self.depth_img = None
         self.camera_info = None
         self.tf_buffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tf_buffer)
+        rospy.Subscriber('/camera/aligned_depth_to_color/image_raw', Image, self.depth_image_cb)
+        rospy.Subscriber('/camera/aligned_depth_to_color/camera_info', CameraInfo, self.camera_info_cb)
         # 发布目标位姿信息
         self.tf_broadcaster = tf2_ros.TransformBroadcaster() # 创建TF广播器
         self.object_position_pub = rospy.Publisher("object_position", PoseStamped, queue_size=10)
@@ -60,10 +63,10 @@ class TemplateDetect:
         except CvBridgeError as e:
             print(e)
         self.template_image=None
-        # 将物体中心点像素坐标转换为相机坐标系下的三维坐标
+        # 将物体中心点像素坐标转换为世界坐标系下的三维坐标
         object_position = self.get_object_3d_position(template_center_x, template_center_y)
         if object_position is not None:
-            rospy.loginfo("Object position in camera coordinates: {}".format(object_position))
+            rospy.loginfo("Object position in world coordinates: {}".format(object_position))
             self.tf_transform(object_position)
             self.tf_broad(object_position)
         else:
@@ -81,7 +84,6 @@ class TemplateDetect:
             new_height = int(original_height /419*720)
             # 缩放图像
             self.template_image = cv2.resize(self.template_image, (new_width, new_height))
-
         except CvBridgeError as e:
             print(e)
 
@@ -114,7 +116,7 @@ class TemplateDetect:
     def tf_transform(self, position):
         x, y, z = position
         camera_point = geometry_msgs.msg.PoseStamped()
-        camera_point.header.frame_id = "camera_color_optical_frame"
+        camera_point.header.frame_id = "camera_link"
         camera_point.pose.position.x = x
         camera_point.pose.position.y = y
         camera_point.pose.position.z = z
@@ -122,7 +124,7 @@ class TemplateDetect:
 
         try:
             # 使用tf2将机械臂摄像头坐标系转换到base_link坐标系
-            transform = self.tf_buffer.lookup_transform('base_link', 'camera_color_optical_frame', rospy.Time(0), rospy.Duration(1))
+            transform = self.tf_buffer.lookup_transform('base_link', 'camera_link', rospy.Time(0), rospy.Duration(1))
             world_point = tf2_geometry_msgs.do_transform_pose(camera_point, transform)
             if world_point is not None:
                 rospy.loginfo("World point: %s", world_point)
@@ -137,8 +139,8 @@ class TemplateDetect:
     def tf_broad(self, position): 
         x, y, z = position       
         tfs = TransformStamped() # 创建广播数据
-        tfs.header.stamp = rospy.Time.now()
         tfs.header.frame_id = "camera_link"  # 参考坐标系
+        tfs.header.stamp = rospy.Time.now()
         tfs.child_frame_id = "object"  # 目标坐标系
         tfs.transform.translation.x = x
         tfs.transform.translation.y = y
@@ -147,16 +149,12 @@ class TemplateDetect:
         # 发布tf变换
         self.tf_broadcaster.sendTransform(tfs)
 
-
 if __name__ == '__main__':
     try:
         # 初始化ros节点
         rospy.init_node("template_detect")
         rospy.loginfo("Starting template_detect node")
         find_object = TemplateDetect()
-        rospy.Subscriber("/image_template", Image, find_object.template_cb)
-        rospy.Subscriber('/camera/aligned_depth_to_color/image_raw', Image, find_object.depth_image_cb)
-        rospy.Subscriber('/camera/aligned_depth_to_color/camera_info', CameraInfo, find_object.camera_info_cb)
         rospy.spin()
     except KeyboardInterrupt:
         print("Shutting down cv_bridge_test node.")

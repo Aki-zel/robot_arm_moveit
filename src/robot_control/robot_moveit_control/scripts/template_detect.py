@@ -17,15 +17,15 @@ class TemplateDetect:
         self.bridge = CvBridge()
         self.image_pub = rospy.Publisher("template_detect_image", Image, queue_size=1)
         rospy.Subscriber("/camera/color/image_raw/", Image, self.image_callback) # 订阅相机图像
+        rospy.Subscriber("/image_template", Image, self.template_cb) # 订阅模版图像
         self.template_image = None
-        rospy.Subscriber("/image_template", Image, find_object.template_cb) # 订阅模版图像
         # 图像与世界坐标系间tf坐标转换，订阅相机内参和深度图像用于获取物体三维坐标
         self.depth_img = None
         self.camera_info = None
         self.tf_buffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tf_buffer)
-        rospy.Subscriber('/camera/aligned_depth_to_color/image_raw', Image, find_object.depth_image_cb)
-        rospy.Subscriber('/camera/aligned_depth_to_color/camera_info', CameraInfo, find_object.camera_info_cb)
+        rospy.Subscriber('/camera/aligned_depth_to_color/image_raw', Image, self.depth_image_cb)
+        rospy.Subscriber('/camera/aligned_depth_to_color/camera_info', CameraInfo, self.camera_info_cb)
         # 发布目标位姿信息
         self.tf_broadcaster = tf2_ros.TransformBroadcaster() # 创建TF广播器
         self.object_position_pub = rospy.Publisher("object_position", PoseStamped, queue_size=10)
