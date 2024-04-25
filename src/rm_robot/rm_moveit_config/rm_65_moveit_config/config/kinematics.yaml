@@ -2,9 +2,6 @@ arm:
   kinematics_solver: rm_65_arm/IKFastKinematicsPlugin
   kinematics_solver_search_resolution: 0.005
   kinematics_solver_timeout: 0.005
-<<<<<<< HEAD
-=======
   goal_joint_tolerance: 0.0001
   goal_position_tolerance: 0.0001
   goal_orientation_tolerance: 0.001
->>>>>>> b9028ea4760805b61117aa37a9889ad1b81c2ec8
