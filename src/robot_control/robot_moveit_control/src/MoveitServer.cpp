@@ -1,6 +1,6 @@
 #include <MoveitServer.h>
 
-MoveitServer::MoveitServer(std::string &PLANNING_GROUP):arm_(PLANNING_GROUP)
+MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 {
 	// 设置机械臂误差和速度
 	arm_.setGoalPositionTolerance(0.001);
@@ -10,7 +10,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP):arm_(PLANNING_GROUP)
 	arm_.setMaxVelocityScalingFactor(0.2);
 	// 设置规划参数
 	const moveit::core::JointModelGroup *joint_model_group =
-		this->arm_.getCurrentState(3)->getJointModelGroup(PLANNING_GROUP);
+		this->arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 	this->end_effector_link = arm_.getEndEffectorLink();
 	this->reference_frame = "base_link";
 	arm_.setPoseReferenceFrame(this->reference_frame);
@@ -22,14 +22,16 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP):arm_(PLANNING_GROUP)
 	this->tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
 	// 夹爪初始化
 	this->Set_Tool_DO(1, false);
-	ros::Duration(2.0).sleep();
+	ros::Duration(1.0).sleep();
 	this->Set_Tool_DO(1, true);
-	ros::Duration(2.0).sleep();
+	ros::Duration(1.0).sleep();
 	this->Set_Tool_DO(1, false);
-	// ros::Duration(2.0).sleep();
-	// this->Set_Tool_DO(2, true);
-	// ros::Duration(2.0).sleep();
-	// this->Set_Tool_DO(2, false);
+	ros::Duration(1.0).sleep();
+	this->Set_Tool_DO(2, false);
+	ros::Duration(1.0).sleep();
+	this->Set_Tool_DO(2, true);
+	ros::Duration(1.0).sleep();
+	this->Set_Tool_DO(2, false);
 	ROS_INFO("夹爪初始化完成");
 	// MoveitServer::go_home();
 }
@@ -37,14 +39,42 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP):arm_(PLANNING_GROUP)
 void MoveitServer::go_home()
 {
 	arm_.setNamedTarget("home");
-	arm_.move();
-	sleep(0.5);
+	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+	bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+
+	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
+	if (success)
+	{
+		Planer(my_plan);
+	}
+}
+void MoveitServer::Planer(moveit::planning_interface::MoveGroupInterface::Plan plan)
+{
+	this->myplan = plan;
+	Executer();
+}
+bool MoveitServer::Executer()
+{
+	if (!this->myplan.trajectory_.joint_trajectory.points.empty())
+	{
+		bool success = (this->arm_.asyncExecute(this->myplan) == moveit::core::MoveItErrorCode::SUCCESS);
+		return success;
+	}
+	return false;
 }
 void MoveitServer::go_pose(const std::string str)
 {
 	arm_.setNamedTarget(str);
-	arm_.move();
-	sleep(0.5);
+	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+	bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+
+	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
+	if (success)
+	{
+		Planer(my_plan);
+	}
 }
 void MoveitServer::joint_state_callback(const sensor_msgs::JointStateConstPtr &msg)
 {
@@ -57,9 +87,19 @@ void MoveitServer::joint_state_callback(const sensor_msgs::JointStateConstPtr &m
 bool MoveitServer::move_j(const std::vector<double> &joint_group_positions)
 {
 	arm_.setJointValueTarget(joint_group_positions);
-	arm_.asyncMove();
-	sleep(0.5);
-	return true;
+	// arm_.move();
+	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+	bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+
+	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
+	if (success)
+	{
+		Planer(my_plan);
+		return true;
+	}
+	return false;
+	// sleep(0.5);
 }
 
 bool MoveitServer::move_p(const std::vector<double> &pose)
@@ -79,19 +119,39 @@ bool MoveitServer::move_p(const std::vector<double> &pose)
 	arm_.setStartStateToCurrentState();
 	arm_.setPoseTarget(target_pose);
 
-	moveit::planning_interface::MoveGroupInterface::Plan plan;
-	moveit::core::MoveItErrorCode success = arm_.plan(plan);
-	ROS_INFO("move_p:%s", success ? "SUCCESS" : "FAILED");
+	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
+	bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+
+	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
 	if (success)
 	{
-		arm_.execute(plan);
-		sleep(1);
+		Planer(my_plan);
 		return true;
 	}
 	return false;
 }
+bool MoveitServer::move_p(const geometry_msgs::PoseStampedConstPtr &msg)
+{
+	geometry_msgs::Pose target_pose;
+	target_pose = msg.get()->pose;
+	target_pose.position.x += 0.10;
+	target_pose.position.z += 0.18;
+	arm_.setStartStateToCurrentState();
+	arm_.setPoseTarget(target_pose);
 
+	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+	bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+
+	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
+	if (success)
+	{
+		Planer(my_plan);
+		return true;
+	}
+	return false;
+}
 bool MoveitServer::move_p(const double (&position)[3])
 {
 	geometry_msgs::Pose target_pose;
@@ -106,14 +166,14 @@ bool MoveitServer::move_p(const double (&position)[3])
 	arm_.setStartStateToCurrentState();
 	arm_.setPoseTarget(target_pose);
 
-	moveit::planning_interface::MoveGroupInterface::Plan plan;
-	moveit::core::MoveItErrorCode success = arm_.plan(plan);
-	ROS_INFO("move_p:%s", success ? "SUCCESS" : "FAILED");
+	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
+	bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+
+	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
 	if (success)
 	{
-		arm_.execute(plan);
-		sleep(1);
+		Planer(my_plan);
 		return true;
 	}
 	return false;

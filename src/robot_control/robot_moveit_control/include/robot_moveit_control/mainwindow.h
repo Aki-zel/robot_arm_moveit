@@ -25,6 +25,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
 #include <MoveitServer.h>
+#include <opencv2/highgui.hpp>
 namespace Ui
 {
     class MainWindow;

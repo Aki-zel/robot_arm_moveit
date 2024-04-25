@@ -1,4 +1,5 @@
 <launch>
 <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="base_To_cramera" args="x y z qx qy qz qw base_link camera_link"/> -->
-<node pkg="tf2_ros" type="static_transform_publisher" name="base_To_cramera" args="-0.05227947923714777 0.01809736165587189 0.02408503855130915 0.0025067044203440293 -0.7023259450761804 -0.0005736266107462758 0.711850865180559 Link6 camera_link"/>
+<node pkg="tf2_ros" type="static_transform_publisher" name="base_To_cramera" args="-0.04608809103480994 0.031410818173565176 0.01680247490824934 
+0.004867876410342842 -0.010143691342199057 -0.7073319749610286 0.7067919683350531 Link6 camera_link"/>
 </launch>

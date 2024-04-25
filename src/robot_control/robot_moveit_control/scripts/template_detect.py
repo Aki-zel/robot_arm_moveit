@@ -16,7 +16,7 @@ class TemplateDetect:
         # 创建cv_bridge，声明图像的发布者和订阅者
         self.bridge = CvBridge()
         self.image_pub = rospy.Publisher("template_detect_image", Image, queue_size=1)
-        rospy.Subscriber("/camera/color/image_raw", Image, self.image_callback)
+        rospy.Subscriber("/camera/color/image_raw/", Image, self.image_callback)
         self.template_image = None
         # 图像与世界坐标系间tf坐标转换
         self.depth_img = None
@@ -70,6 +70,14 @@ class TemplateDetect:
         # 使用cv_bridge将ROS的图像数据转换成OpenCV的图像格式
         try:
             self.template_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            self.template_image = cv2.cvtColor(self.template_image, cv2.COLOR_BGR2RGB)
+            # 获取原始图像的宽度和高度
+            original_height, original_width, _ = self.template_image.shape
+            # 计算新的宽度和高度
+            new_width = int(original_width /451*1280)
+            new_height = int(original_height /419*720)
+            # 缩放图像
+            self.template_image = cv2.resize(self.template_image, (new_width, new_height))
         except CvBridgeError as e:
             print(e)
 
@@ -106,12 +114,14 @@ class TemplateDetect:
         camera_point.pose.position.x = x
         camera_point.pose.position.y = y
         camera_point.pose.position.z = z
+        
         camera_point.pose.orientation.w = 1
 
         try:
             # 使用tf2将机械臂摄像头坐标系转换到base_link坐标系
             transform = self.tf_buffer.lookup_transform('base_link', 'camera_link', rospy.Time(0), rospy.Duration(1))
             world_point = tf2_geometry_msgs.do_transform_pose(camera_point, transform)
+            # world_point = self.tf_buffer.transform(camera_point, 'base_link')
             rospy.loginfo("目标在世界坐标系下的坐标:%s", world_point)
             if world_point is not None:
                 rospy.loginfo("World point: %s", world_point)
