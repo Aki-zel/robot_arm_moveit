@@ -8,7 +8,7 @@ from sensor_msgs.msg import Image, CameraInfo
 import tf2_ros
 import geometry_msgs.msg
 import tf2_geometry_msgs
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, TransformStamped
 
 
 class TemplateDetect:
@@ -16,13 +16,18 @@ class TemplateDetect:
         # 创建cv_bridge，声明图像的发布者和订阅者
         self.bridge = CvBridge()
         self.image_pub = rospy.Publisher("template_detect_image", Image, queue_size=1)
-        rospy.Subscriber("/camera/color/image_raw/", Image, self.image_callback)
+        rospy.Subscriber("/camera/color/image_raw/", Image, self.image_callback) # 订阅相机图像
         self.template_image = None
-        # 图像与世界坐标系间tf坐标转换
+        rospy.Subscriber("/image_template", Image, find_object.template_cb) # 订阅模版图像
+        # 图像与世界坐标系间tf坐标转换，订阅相机内参和深度图像用于获取物体三维坐标
         self.depth_img = None
         self.camera_info = None
         self.tf_buffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tf_buffer)
+        rospy.Subscriber('/camera/aligned_depth_to_color/image_raw', Image, find_object.depth_image_cb)
+        rospy.Subscriber('/camera/aligned_depth_to_color/camera_info', CameraInfo, find_object.camera_info_cb)
+        # 发布目标位姿信息
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster() # 创建TF广播器
         self.object_position_pub = rospy.Publisher("object_position", PoseStamped, queue_size=10)
 
     def image_callback(self, data):
@@ -63,6 +68,7 @@ class TemplateDetect:
         if object_position is not None:
             rospy.loginfo("Object position in world coordinates: {}".format(object_position))
             self.tf_transform(object_position)
+            self.tf_broad(object_position)
         else:
             rospy.logwarn("Unable to determine object position.")
 
@@ -114,15 +120,12 @@ class TemplateDetect:
         camera_point.pose.position.x = x
         camera_point.pose.position.y = y
         camera_point.pose.position.z = z
-        
         camera_point.pose.orientation.w = 1
 
         try:
             # 使用tf2将机械臂摄像头坐标系转换到base_link坐标系
             transform = self.tf_buffer.lookup_transform('base_link', 'camera_link', rospy.Time(0), rospy.Duration(1))
             world_point = tf2_geometry_msgs.do_transform_pose(camera_point, transform)
-            # world_point = self.tf_buffer.transform(camera_point, 'base_link')
-            rospy.loginfo("目标在世界坐标系下的坐标:%s", world_point)
             if world_point is not None:
                 rospy.loginfo("World point: %s", world_point)
                 self.object_position_pub.publish(world_point)
@@ -132,6 +135,19 @@ class TemplateDetect:
             rospy.logwarn("Exception while transforming: %s", e)
             return None
 
+    # 发布物体的TF坐标系   
+    def tf_broad(self, position): 
+        x, y, z = position       
+        tfs = TransformStamped() # 创建广播数据
+        tfs.header.frame_id = "camera_link"  # 参考坐标系
+        tfs.header.stamp = rospy.Time.now()
+        tfs.child_frame_id = "object"  # 目标坐标系
+        tfs.transform.translation.x = x
+        tfs.transform.translation.y = y
+        tfs.transform.translation.z = z
+        tfs.transform.rotation.w = 1 
+        # 发布tf变换
+        self.tf_broadcaster.sendTransform(tfs)
 
 if __name__ == '__main__':
     try:
@@ -139,9 +155,6 @@ if __name__ == '__main__':
         rospy.init_node("template_detect")
         rospy.loginfo("Starting template_detect node")
         find_object = TemplateDetect()
-        rospy.Subscriber("/image_template", Image, find_object.template_cb)
-        rospy.Subscriber('/camera/aligned_depth_to_color/image_raw', Image, find_object.depth_image_cb)
-        rospy.Subscriber('/camera/aligned_depth_to_color/camera_info', CameraInfo, find_object.camera_info_cb)
         rospy.spin()
     except KeyboardInterrupt:
         print("Shutting down cv_bridge_test node.")
