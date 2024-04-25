@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(robot_moveit_control)
-
+# set(CMAKE_AUTOUIC ON)
+# set(CMAKE_AUTOMOC ON)
+# set(CMAKE_AUTORCC ON)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -23,14 +25,15 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   geometry_msgs
   rm_msgs
+  moveit_ros_planning_interface
 )
 
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV 4 REQUIRED)
-# find_package(Qt5 REQUIRED Core Widgets Multimedia)
-# set(QT_LIBRARIES Qt5::Widgets Qt5::Multimedia)
+find_package(Qt5 REQUIRED COMPONENTS Core Widgets )
+set(QT_LIBRARIES Qt5::Core Qt5::Widgets)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -124,14 +127,6 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
-# file(GLOB QT_FORMS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ui/*.ui)
-# file(GLOB QT_RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} resources/*.qrc)
-# file(GLOB_RECURSE QT_MOC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS include/robot_moveit_control/*.hpp *.h)
-
-# QT5_ADD_RESOURCES(QT_RESOURCES_CPP ${QT_RESOURCES})
-# QT5_WRAP_UI(QT_FORMS_HPP ${QT_FORMS})
-# QT5_WRAP_CPP(QT_MOC_HPP ${QT_MOC})
-# file(GLOB_RECURSE QT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS src/*.cpp)
 ###########
 ## Build ##
 ###########
@@ -139,27 +134,43 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+include
+include/robot_moveit_control
   ${catkin_INCLUDE_DIRS}
   ${PYTHON_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
 )
 link_directories(${OpenCV_LIBRARY_DIRS})
+file(GLOB QT_FORMS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ui/*.ui)
+file(GLOB QT_RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} resources/*.qrc)
+file(GLOB_RECURSE QT_MOC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS include/robot_moveit_control/*.hpp *.h)
+file(GLOB_RECURSE QT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS src/ydrobot.cpp mainwindow.cpp)
+QT5_ADD_RESOURCES(QT_RESOURCES_CPP ${QT_RESOURCES})
+QT5_WRAP_UI(QT_FORMS_HPP ${QT_FORMS})
+QT5_WRAP_CPP(QT_MOC_HPP ${QT_MOC})
+
+message(STATUS "正在設置項目: ${PROJECT_NAME} ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP}")
+
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/robot_moveit_control.cpp
 # )
+add_library(MoveitServer_h
+  # include/MoveitServer.h
+  src/MoveitServer.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(ydrobot ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/robot_moveit_control_node.cpp)
-
+add_executable(ydrobot ${QT_SOURCES} ${QT_MOC} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
+add_executable(MoveitServer src/test.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -168,15 +179,20 @@ link_directories(${OpenCV_LIBRARY_DIRS})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
+add_dependencies(ydrobot ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(MoveitServer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-# add_executable(ydrobot ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
+target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES} MoveitServer_h)
 # target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES})
-# install(TARGETS robot_hmi RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+target_link_libraries(MoveitServer_h ${catkin_LIBRARIES})
+
+target_link_libraries(MoveitServer
+  MoveitServer_h
+  ${catkin_LIBRARIES}
+)
 #############
 ## Install ##
 #############

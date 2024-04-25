@@ -22,17 +22,16 @@ int main(int argc, char** argv) {
 	ros::AsyncSpinner spinner(1);
 	ros::NodeHandle nh;
 	spinner.start();
-	static const std::string PLANNING_GROUP = "arm";
-	moveit::planning_interface::MoveGroupInterface arm(PLANNING_GROUP);
-
-	MoveitServer moveit_server(nh,arm,PLANNING_GROUP);
+	std::string PLANNING_GROUP = "arm";
+	// moveit::planning_interface::MoveGroupInterface arm(PLANNING_GROUP);
+	MoveitServer moveit_server(PLANNING_GROUP);
 
 	// Test 
 
 	// test for move_j
-	// cout<<"-----------------------test for move_j----------------------"<<endl;
-	// vector<double> joints ={0,0,-1.57,0,0,0};
-	// moveit_server.move_j(joints);
+	cout<<"-----------------------test for move_j----------------------"<<endl;
+	vector<double> joints ={0,0,1.57,0,0,0};
+	moveit_server.move_j(joints);
 
 	// // test for move_p and move_l(1 point)
 	// cout<<"-----------------------test for move_p and move_l---------------------"<<endl;
@@ -69,10 +68,12 @@ int main(int argc, char** argv) {
 	// moveit_server.move_p_with_constrains(xyz);
 	
 	// 控制夹爪
-	moveit_server.Set_Tool_DO(2, true);
-	ros::Duration(1.0).sleep();
-	moveit_server.Set_Tool_DO(2, false);
-
+	// moveit_server.Set_Tool_DO(2, true);
+	// ros::Duration(2.0).sleep();
+	// moveit_server.Set_Tool_DO(2, false);
+	// ros::Duration(2.0).sleep();
+	// moveit_server.Set_Tool_DO(2, true);
+	ros::waitForShutdown();
 	return 0;
 
 }
