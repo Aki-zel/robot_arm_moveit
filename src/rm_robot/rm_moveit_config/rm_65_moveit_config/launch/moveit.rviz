@@ -116,7 +116,7 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_link:
+          camera_link1:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -238,7 +238,7 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_link:
+          camera_link1:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -312,6 +312,8 @@ Visualization Manager:
           Value: false
         camera_link:
           Value: true
+        camera_link1:
+          Value: false
         dummy:
           Value: false
         ee_link:
@@ -352,7 +354,8 @@ Visualization Manager:
                           {}
                         tool0:
                           camera_bottom_screw_frame:
-                            {}
+                            camera_link1:
+                              {}
                           gripper_link:
                             finger1:
                               {}
@@ -416,7 +419,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        camera_link:
+        camera_link1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -486,9 +489,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.30539777874946594
+      Pitch: 0.640397310256958
       Target Frame: dummy
-      Yaw: 1.6054034233093262
+      Yaw: 1.3103854656219482
     Saved: ~
 Window Geometry:
   Displays:

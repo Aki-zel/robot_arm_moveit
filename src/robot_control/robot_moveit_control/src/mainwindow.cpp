@@ -36,18 +36,34 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
         // p.push_back(msg.get()->pose.position.x);
         // p.push_back(msg.get()->pose.position.y);
         // p.push_back(msg.get()->pose.position.z);
-        this->server->Set_Tool_DO(2, false);
         double p[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y, msg.get()->pose.position.z};
-        this->server->move_p(p);
-        ros::Duration(5.0).sleep();
-        this->server->Set_Tool_DO(2, true);
-        double p1[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y, msg.get()->pose.position.z + 0.10};
+        this->server->Set_Tool_DO(2, false);
+        ROS_INFO("夹爪开");
+        double p1[3] = {p[0], p[1], p[2] + 0.10};
         this->server->move_p(p1);
-        ros::Duration(3.0).sleep();
-        double p2[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y - 0.3, msg.get()->pose.position.z};
+        ROS_INFO("移动到目标上方");
+        ros::Duration(5.0).sleep();
+        double p2[3] = {p[0], p[1], p[2]};
         this->server->move_p(p2);
+        ROS_INFO("移动到夹取位置");
+        ros::Duration(10.0).sleep();
+        this->server->Set_Tool_DO(2, true);
+        ROS_INFO("夹取目标物体");
+        ros::Duration(5.0).sleep();
+        double p3[3] = {p[0], p[1], p[2] + 0.10};
+        this->server->move_p(p3);
+        ROS_INFO("抬起目标");
+        ros::Duration(5.0).sleep();
+        double p4[3] = {p[0], p[1] + 0.20, p[2]};
+        this->server->move_p(p4);
+        ROS_INFO("移动到指定位置");
         ros::Duration(3.0).sleep();
         this->server->Set_Tool_DO(2, false);
+        ROS_INFO("夹爪开");
+        ros::Duration(5.0).sleep();
+        std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
+        this->server->move_j(joint);
+        ROS_INFO("回到初始位置");
     }
 
     catch (const std::exception &e)
