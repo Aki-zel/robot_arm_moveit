@@ -23,15 +23,12 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 	// 夹爪初始化
 	this->Set_Tool_DO(1, false);
 	ros::Duration(1.0).sleep();
+	this->Set_Tool_DO(2, false);
+	ros::Duration(1.0).sleep();
 	this->Set_Tool_DO(1, true);
 	ros::Duration(1.0).sleep();
 	this->Set_Tool_DO(1, false);
 	ros::Duration(1.0).sleep();
-	this->Set_Tool_DO(2, false);
-	ros::Duration(1.0).sleep();
-	this->Set_Tool_DO(2, true);
-	ros::Duration(1.0).sleep();
-	this->Set_Tool_DO(2, false);
 	ROS_INFO("夹爪初始化完成");
 	// MoveitServer::go_home();
 }
