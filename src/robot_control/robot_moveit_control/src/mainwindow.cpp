@@ -9,19 +9,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     setMouseTracking(true);
     this->m_isImage = false;
     this->m_isSelecting = false;
-    this->render_panel_ = new rviz::RenderPanel();
-    ui->rivzLayout->addWidget(this->render_panel_);
+    this->addStart();
     // 初始化ROS节点
     ros::NodeHandle nh;
-    ros::CallbackQueue queue;
-    ros::AsyncSpinner spinner(3);
-    spinner.start();
+    ros::AsyncSpinner spinner(4);
     std::string PLANNING_GROUP = "arm";
     this->server = new MoveitServer(PLANNING_GROUP);
     image_subscriber_ = nh.subscribe("/camera/color/image_raw/compressed", 10, &MainWindow::imageCallback, this);
     objection_subscriber_ = nh.subscribe("object_position", 10, &MainWindow::objectionCallback, this);
-    // nh.setCallbackQueue(&queue);
-
+    spinner.start();
     image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
     this->label = new QLabel();
 }
@@ -96,7 +92,6 @@ void MainWindow::on_backButton_clicked()
 
 void MainWindow::on_startButton_clicked()
 {
-    this->addStart();
     this->m_isImage = true;
     std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
     this->server->move_j(joint);
@@ -109,6 +104,8 @@ void MainWindow::on_detectButton_clicked()
 
 void MainWindow::addStart()
 {
+    this->render_panel_ = new rviz::RenderPanel();
+    ui->rivzLayout->addWidget(this->render_panel_);
     this->manager_ = new rviz::VisualizationManager(render_panel_); // 获取可视化rviz的控制对象，后面直接操作这个
 
     this->render_panel_->initialize(this->manager_->getSceneManager(), this->manager_); // 绑定交互信号(初始化camera ，实现放大 缩小 平移等操作)

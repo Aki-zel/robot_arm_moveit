@@ -2,22 +2,24 @@
 
 MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 {
-	
+
 	// 设置机械臂误差和速度
 	arm_.setGoalPositionTolerance(0.001);
 	arm_.setGoalOrientationTolerance(0.01);
 	arm_.setGoalJointTolerance(0.001);
-	arm_.setMaxAccelerationScalingFactor(0.1);
-	arm_.setMaxVelocityScalingFactor(0.2);
+	arm_.setMaxAccelerationScalingFactor(0.3);
+	arm_.setMaxVelocityScalingFactor(0.5);
 	// 设置规划参数
-	const moveit::core::JointModelGroup *joint_model_group = this->arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
+	// const moveit::core::JointModelGroup *joint_model_group = this->arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 	this->end_effector_link = arm_.getEndEffectorLink();
+	this->tfListener = new tf2_ros::TransformListener(this->tfBuffer);
 	this->reference_frame = "base_link";
 	arm_.setPoseReferenceFrame(this->reference_frame);
 	arm_.allowReplanning(true);
 	arm_.setPlanningTime(5.0);
-	arm_.setPlannerId("RRTConnect");
-	this->joint_state_sub = nh_.subscribe<sensor_msgs::JointState>("/joint_state", 10, &MoveitServer::joint_state_callback, this);
+	arm_.setPlannerId("TRRT");
+	task_executor_.start();
+	// this->tf_sub = nh_.subscribe("/tf", 10, &MoveitServer::tf_callback, this);
 	// 发布话题消息
 	this->tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
 	// 夹爪初始化
@@ -31,18 +33,34 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 	ros::Duration(1.0).sleep();
 	ROS_INFO("夹爪初始化完成");
 }
-
-void MoveitServer::Planer(moveit::planning_interface::MoveGroupInterface::Plan plan) // 规划求解
+bool MoveitServer::Planer(moveit::planning_interface::MoveGroupInterface::Plan plan) // 规划求解
 {
 	this->myplan = plan;
-	Executer();
+	// 在一个新的线程中执行 Execute() 函数
+	std::thread t(&MoveitServer::Execute, this);
+
+	// 让线程与主线程分离，避免阻塞主线程
+	t.detach();
+	// task_executor_.addTask(std::bind(&MoveitServer::Execute, this));
+
+	return true;
 }
 
-bool MoveitServer::Executer() // 求解
+bool MoveitServer::asyncExecute() // 求解
 {
 	if (!this->myplan.trajectory_.joint_trajectory.points.empty())
 	{
-		bool success = (this->arm_.asyncExecute(this->myplan) == moveit::core::MoveItErrorCode::SUCCESS); //异步求解
+		bool success = (this->arm_.asyncExecute(this->myplan) == moveit::core::MoveItErrorCode::SUCCESS); // 异步求解
+		return success;
+	}
+	return false;
+}
+
+bool MoveitServer::Execute()
+{
+	if (!this->myplan.trajectory_.joint_trajectory.points.empty())
+	{
+		bool success = (this->arm_.execute(this->myplan) == moveit::core::MoveItErrorCode::SUCCESS); // 异步求解
 		return success;
 	}
 	return false;
@@ -61,14 +79,69 @@ void MoveitServer::go_pose(const std::string str) // 移动到预设位姿
 		Planer(my_plan);
 	}
 }
-
-void MoveitServer::joint_state_callback(const sensor_msgs::JointStateConstPtr &msg) // 获取关节状态
+geometry_msgs::Pose MoveitServer::setPoint(const double x, const double y, const double z)
 {
-	this->joint_state->effort = msg.get()->effort;
-	this->joint_state->header = msg.get()->header;
-	this->joint_state->name = msg.get()->name;
-	this->joint_state->position = msg.get()->position;
-	this->joint_state->velocity = msg.get()->velocity;
+	geometry_msgs::Pose target_pose1;
+	target_pose1.position.x = x;
+	target_pose1.position.y = y;
+	target_pose1.position.z = z;
+	return target_pose1;
+}
+geometry_msgs::Pose MoveitServer::setPoint(double position[])
+{
+	geometry_msgs::Pose target_pose1;
+	target_pose1.position.x = position[0];
+	target_pose1.position.y = position[1];
+	target_pose1.position.z = position[2];
+	return target_pose1;
+}
+double MoveitServer::round(double num, int exponent)
+{
+	double multiplied = std::round(num * std::pow(10, exponent));
+	double result = multiplied / std::pow(10, exponent);
+	return result;
+}
+void MoveitServer::tf_callback(const tf2_msgs::TFMessageConstPtr &tf)
+{
+	geometry_msgs::TransformStamped transformStamped;
+
+	try
+	{
+		// 尝试获取末端(link6)坐标系到基座坐标系的变换
+		transformStamped = this->tfBuffer.lookupTransform("base_link", "ee_link",
+														  ros::Time(0));
+		// // 输出末端(link6)的姿态信息
+		// ROS_INFO("End Effector Pose (base_link->link6):");
+
+		this->current_state = transformStamped.transform;
+	}
+	catch (tf2::TransformException &ex)
+	{
+		ROS_WARN("%s", ex.what());
+		// ros::Duration(1.0).sleep();
+	}
+}
+geometry_msgs::Transform MoveitServer::getCurrent_State()
+{
+	geometry_msgs::TransformStamped transformStamped;
+
+	try
+	{
+		// 尝试获取末端(link6)坐标系到基座坐标系的变换
+		transformStamped = this->tfBuffer.lookupTransform("base_link", "ee_link",
+														  ros::Time(0));
+		// // 输出末端(link6)的姿态信息
+		// ROS_INFO("End Effector Pose (base_link->link6):");
+
+		this->current_state = transformStamped.transform;
+		return transformStamped.transform;
+	}
+	catch (tf2::TransformException &ex)
+	{
+		ROS_WARN("%s", ex.what());
+		// ros::Duration(1.0).sleep();
+	}
+	return transformStamped.transform;
 }
 
 bool MoveitServer::move_j(const std::vector<double> &joint_group_positions) // 按目标关节位置移动
@@ -147,10 +220,10 @@ bool MoveitServer::move_p(const double (&position)[3]) // 按目标空间位姿�
 	target_pose.position.y = position[1];
 	target_pose.position.z = position[2];
 
-	geometry_msgs::Pose current_pose = arm_.getCurrentPose().pose; 	// keep current pose
-	target_pose.orientation = current_pose.orientation;
-	ROS_INFO("当前姿态：%lf,%lf,%lf,%lf",current_pose.orientation.x,current_pose.orientation.y,current_pose.orientation.z,current_pose.orientation.w);
-	arm_.setStartStateToCurrentState();
+	// geometry_msgs::Pose current_pose = arm_.getCurrentPose().pose; // keep current pose
+	target_pose.orientation = this->getCurrent_State().rotation;
+	// ROS_INFO("当前姿态：%lf,%lf,%lf,%lf", current_pose.orientation.x, current_pose.orientation.y, current_pose.orientation.z, current_pose.orientation.w);
+	// arm_.setStartStateToCurrentState();
 	arm_.setPoseTarget(target_pose);
 
 	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
@@ -180,15 +253,15 @@ bool MoveitServer::move_l(const std::vector<double> &pose) // 按目标空间位
 	target_pose.orientation.y = myQuaternion.getY();
 	target_pose.orientation.z = myQuaternion.getZ();
 	target_pose.orientation.w = myQuaternion.getW();
-	
-	waypoints.push_back(target_pose); 
+
+	waypoints.push_back(target_pose);
 
 	moveit_msgs::RobotTrajectory trajectory;
 	const double jump_threshold = 0.0; // 允许关节空间跳跃最大值
-	const double eef_step = 0.01; // 两个连续路径点间的最大移动距离
-	double fraction = 0.0; // 规划路径占原始请求路径的比例
-	int maxtries = 100; // 最大尝试次数
-	int attempts = 0; // 尝试次数
+	const double eef_step = 0.01;	   // 两个连续路径点间的最大移动距离
+	double fraction = 0.0;			   // 规划路径占原始请求路径的比例
+	int maxtries = 100;				   // 最大尝试次数
+	int attempts = 0;				   // 尝试次数
 
 	while (fraction < 1.0 && attempts < maxtries)
 	{
@@ -201,7 +274,7 @@ bool MoveitServer::move_l(const std::vector<double> &pose) // 按目标空间位
 		ROS_INFO("Path computed successfully. Moving the arm.");
 		moveit::planning_interface::MoveGroupInterface::Plan plan;
 		plan.trajectory_ = trajectory; // 计算轨迹传入
-		arm_.asyncExecute(plan); // 异步执行规划
+		arm_.asyncExecute(plan);	   // 异步执行规划
 		return true;
 	}
 	else
@@ -219,15 +292,14 @@ bool MoveitServer::move_l(const double (&position)[3]) // 按目标空间位姿�
 	target_pose.position.y = position[1];
 	target_pose.position.z = position[2];
 
-	geometry_msgs::Pose current_pose = arm_.getCurrentPose().pose;
-	target_pose.orientation = current_pose.orientation;
+	target_pose.orientation = this->getCurrent_State().rotation;
 	waypoints.push_back(target_pose);
 
 	moveit_msgs::RobotTrajectory trajectory;
 	const double jump_threshold = 0.0;
 	const double eef_step = 0.01;
 	double fraction = 0.0;
-	int maxtries = 100; 
+	int maxtries = 100;
 	int attempts = 0;
 
 	while (fraction < 1.0 && attempts < maxtries)
@@ -309,5 +381,6 @@ void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
 
 MoveitServer::~MoveitServer()
 {
+	task_executor_.stop();
 	delete this;
 }
