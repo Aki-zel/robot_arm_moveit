@@ -14,7 +14,6 @@
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
-// using namespace std;
 
 class MoveitServer
 {

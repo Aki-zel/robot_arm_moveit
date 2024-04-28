@@ -29,11 +29,12 @@ int main(int argc, char** argv) {
 	// Test 
 
 	// test for move_j
-	cout<<"-----------------------test for move_j----------------------"<<endl;
-	vector<double> joints ={0,0,1.57,0,0,0};
-	moveit_server.move_j(joints);
+	// cout<<"-----------------------test for move_j----------------------"<<endl;
+	// vector<double> joints ={0, -0.8028, 1.2740, 0, 1.850, 0};
+	// moveit_server.move_j(joints);
+	// ros::Duration(5.0).sleep();
 
-	// // test for move_p and move_l(1 point)
+	// test for move_p and move_l(1 point)
 	// cout<<"-----------------------test for move_p and move_l---------------------"<<endl;
 	// vector<double> xyzrpy={0.3,0.1,0.4,-3.1415,0,0};
 	// moveit_server.move_p(xyzrpy);
@@ -60,11 +61,16 @@ int main(int argc, char** argv) {
 
 	// // test for my functions
 	// cout<<"-----------------------test for my move_function----------------------"<<endl;
-	// double xyz[3]={0.3,0.1,0.4};
-	// moveit_server.move_p(xyz);
-	// xyz[2]=0.2;
+	// double xyz[3]={-0.5,0.02,0.2};
 	// moveit_server.move_l(xyz);
-	// xyz[1]=0.2;
+	// ros::Duration(5.0).sleep();
+	// xyz[2]=0.3;
+	// moveit_server.move_l(xyz);
+	// ros::Duration(5.0).sleep();
+	// vector<double> xyzrpy={0.3,0.1,0.4,-3.1415,0,0};
+	// vector<double> xyzrpy1={0.3,0.2,0.3,-3.1415,0,0};
+	// moveit_server.move_l({xyzrpy, xyzrpy1});
+	// xyz[2]=0.1;
 	// moveit_server.move_p_with_constrains(xyz);
 	
 	// 控制夹爪
