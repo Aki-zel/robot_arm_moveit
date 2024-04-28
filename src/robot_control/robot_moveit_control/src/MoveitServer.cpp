@@ -2,6 +2,7 @@
 
 MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 {
+	
 	// 设置机械臂误差和速度
 	arm_.setGoalPositionTolerance(0.001);
 	arm_.setGoalOrientationTolerance(0.01);
@@ -30,8 +31,6 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 	this->Set_Tool_DO(2, false);
 	ros::Duration(1.0).sleep();
 	this->Set_Tool_DO(2, true);
-	ros::Duration(1.0).sleep();
-	this->Set_Tool_DO(2, false);
 	ROS_INFO("夹爪初始化完成");
 	// MoveitServer::go_home();
 }
@@ -136,7 +135,7 @@ bool MoveitServer::move_p(const geometry_msgs::PoseStampedConstPtr &msg)
 	geometry_msgs::Pose target_pose;
 	target_pose = msg.get()->pose;
 	target_pose.position.x += 0.10;
-	target_pose.position.z += 0.18;
+	target_pose.position.z += 0.20;
 	arm_.setStartStateToCurrentState();
 	arm_.setPoseTarget(target_pose);
 
@@ -162,7 +161,7 @@ bool MoveitServer::move_p(const double (&position)[3])
 	// keep current pose
 	geometry_msgs::Pose current_pose = arm_.getCurrentPose().pose;
 	target_pose.orientation = current_pose.orientation;
-
+	ROS_INFO("当前姿态：%lf,%lf,%lf,%lf",current_pose.orientation.x,current_pose.orientation.y,current_pose.orientation.z,current_pose.orientation.w);
 	arm_.setStartStateToCurrentState();
 	arm_.setPoseTarget(target_pose);
 
@@ -331,7 +330,6 @@ bool MoveitServer::move_l(const double (&position)[3])
 
 	geometry_msgs::Pose current_pose = arm_.getCurrentPose().pose;
 	target_pose.orientation = current_pose.orientation;
-
 	waypoints.push_back(target_pose);
 
 	moveit_msgs::RobotTrajectory trajectory;

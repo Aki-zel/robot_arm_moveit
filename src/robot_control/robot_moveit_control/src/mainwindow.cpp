@@ -4,6 +4,7 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
                                           ui(new Ui::MainWindow)
 {
+    setlocale(LC_ALL, "");
     ui->setupUi(this);
     setMouseTracking(true);
     this->m_isImage = false;
@@ -22,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     // nh.setCallbackQueue(&queue);
 
     image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
+    this->label = new QLabel();
 }
 
 MainWindow::~MainWindow()
@@ -39,15 +41,17 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
         this->server->Set_Tool_DO(2, false);
         double p[3] = {msg.get()->pose.position.x + 0.09, msg.get()->pose.position.y, msg.get()->pose.position.z + 0.10};
         this->server->move_p(p);
-        ros::Duration(3.0).sleep();
+        ros::Duration(5.0).sleep();
         this->server->Set_Tool_DO(2, true);
         double p1[3] = {msg.get()->pose.position.x + 0.09, msg.get()->pose.position.y, msg.get()->pose.position.z + 0.20};
         this->server->move_p(p1);
-        ros::Duration(3.0).sleep();
-        double p2[3] = {msg.get()->pose.position.x + 0.09, msg.get()->pose.position.y - 0.3, msg.get()->pose.position.z + 0.12};
+        ros::Duration(5.0).sleep();
+        double p2[3] = {-0.184, 0, 0.35};
         this->server->move_p(p2);
         ros::Duration(3.0).sleep();
         this->server->Set_Tool_DO(2, false);
+        ros::Duration(3.0).sleep();
+        label->hide();
     }
 
     catch (const std::exception &e)
@@ -103,6 +107,8 @@ void MainWindow::addStart()
     ROS_ASSERT(grid_ != NULL);
     auto robotmodel_ = this->manager_->createDisplay("rviz/RobotModel", "RobotModel", true);
     ROS_ASSERT(robotmodel_ != NULL);
+    auto TF_ = this->manager_->createDisplay("rviz/TF", "TF", true);
+    ROS_ASSERT(TF_ != NULL);
 }
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
@@ -137,8 +143,8 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
             // std::cout<<"re  "<<selectionRect.x()<<"  "<<selectionRect.y()<<std::endl;
             QPixmap screenshot = screen->grabWindow(this->ui->centralwidget->winId(), selectionRect.x(), selectionRect.y(), selectionRect.width(), selectionRect.height());
             image_publisher_.publish(this->convertQPixmapToSensorImage(screenshot));
+            ros::spinOnce();
             // 截取选择区域的屏幕
-            QLabel *label = new QLabel;
             label->setPixmap(screenshot);
             label->resize(screenshot.size());
             label->show();

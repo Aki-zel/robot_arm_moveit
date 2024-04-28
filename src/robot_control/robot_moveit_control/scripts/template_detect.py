@@ -8,7 +8,7 @@ from sensor_msgs.msg import Image, CameraInfo
 import tf2_ros
 import geometry_msgs.msg
 import tf2_geometry_msgs
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, TransformStamped
 
 
 class TemplateDetect:
@@ -23,6 +23,7 @@ class TemplateDetect:
         self.camera_info = None
         self.tf_buffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tf_buffer)
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster() # 创建TF广播器
         self.object_position_pub = rospy.Publisher("object_position", PoseStamped, queue_size=10)
 
     def image_callback(self, data):
@@ -131,7 +132,19 @@ class TemplateDetect:
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
             rospy.logwarn("Exception while transforming: %s", e)
             return None
-
+    # 发布物体的TF坐标系   
+    def tf_broad(self, position): 
+        x, y, z = position       
+        tfs = TransformStamped() # 创建广播数据
+        tfs.header.frame_id = "camera_link"  # 参考坐标系
+        tfs.header.stamp = rospy.Time.now()
+        tfs.child_frame_id = "object"  # 目标坐标系
+        tfs.transform.translation.x = x
+        tfs.transform.translation.y = y
+        tfs.transform.translation.z = z
+        tfs.transform.rotation.w = 1 
+        # 发布tf变换
+        self.tf_broadcaster.sendTransform(tfs)
 
 if __name__ == '__main__':
     try:

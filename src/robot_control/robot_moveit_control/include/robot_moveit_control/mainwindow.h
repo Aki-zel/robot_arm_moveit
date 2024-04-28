@@ -26,6 +26,8 @@
 #include <geometry_msgs/Pose.h>
 #include <MoveitServer.h>
 #include <opencv2/highgui.hpp>
+#include <QLabel>
+#include <thread>
 namespace Ui
 {
     class MainWindow;
@@ -74,6 +76,7 @@ private:
     ros::Subscriber objection_subscriber_;
     ros::Publisher image_publisher_;
     MoveitServer *server;
+    QLabel *label ;
 };
 
 #endif // MAINWINDOW_H

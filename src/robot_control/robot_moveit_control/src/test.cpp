@@ -13,10 +13,10 @@
 
 using namespace std;
 
-
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
 	// 设置编码
-	setlocale(LC_ALL,"");
+	setlocale(LC_ALL, "");
 
 	ros::init(argc, argv, "moveit_control_server_cpp");
 	ros::AsyncSpinner spinner(1);
@@ -26,13 +26,14 @@ int main(int argc, char** argv) {
 	// moveit::planning_interface::MoveGroupInterface arm(PLANNING_GROUP);
 	MoveitServer moveit_server(PLANNING_GROUP);
 
-	// Test 
+	// Test
 
 	// test for move_j
-	cout<<"-----------------------test for move_j----------------------"<<endl;
-	vector<double> joints ={0,0,1.57,0,0,0};
+	cout << "-----------------------test for move_j----------------------" << endl;
+	vector<double> joints = {0, 0, 1.57, 0, 0, 0};
 	moveit_server.move_j(joints);
-
+	vector<double> joints1 = {0, 0, 0, 0, 0, 0};
+	moveit_server.move_j(joints1);
 	// // test for move_p and move_l(1 point)
 	// cout<<"-----------------------test for move_p and move_l---------------------"<<endl;
 	// vector<double> xyzrpy={0.3,0.1,0.4,-3.1415,0,0};
@@ -66,7 +67,7 @@ int main(int argc, char** argv) {
 	// moveit_server.move_l(xyz);
 	// xyz[1]=0.2;
 	// moveit_server.move_p_with_constrains(xyz);
-	
+
 	// 控制夹爪
 	// moveit_server.Set_Tool_DO(2, true);
 	// ros::Duration(2.0).sleep();
@@ -75,6 +76,4 @@ int main(int argc, char** argv) {
 	// moveit_server.Set_Tool_DO(2, true);
 	ros::waitForShutdown();
 	return 0;
-
 }
-
