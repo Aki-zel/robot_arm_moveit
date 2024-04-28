@@ -23,12 +23,10 @@ public:
 	void go_pose(const std::string str);
 	bool move_j(const std::vector<double> &joint_group_positions);
 	bool move_p(const std::vector<double> &pose);
-	bool move_p(const double (&position)[3]);
+	bool move_p(const std::array<double, 3>& position);
 	bool move_p(const geometry_msgs::PoseStampedConstPtr &msg);
-	bool move_p_with_constrains(const std::vector<double> &pose);
-	bool move_p_with_constrains(const double (&position)[3]);
 	bool move_l(const std::vector<double> &pose);
-	bool move_l(const double (&position)[3]);
+	bool move_l(const std::array<double, 3>& position);
 	bool move_l(const std::vector<std::vector<double>> &posees);
 	void Set_Tool_DO(int num, bool state);
 	void joint_state_callback(const sensor_msgs::JointStateConstPtr &msg);

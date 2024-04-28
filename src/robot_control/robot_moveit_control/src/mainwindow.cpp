@@ -30,45 +30,57 @@ MainWindow::~MainWindow()
 }
 void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg)
 {
+    if (!msg) {
+        ROS_ERROR("Received a null pose message.");
+        return; // 提前返回，避免空指针解引用
+    }
+
     try
     {
-        // std::vector<double> p;
-        // p.push_back(msg.get()->pose.position.x);
-        // p.push_back(msg.get()->pose.position.y);
-        // p.push_back(msg.get()->pose.position.z);
-        double p[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y, msg.get()->pose.position.z};
+        std::array<double, 3> position = {msg->pose.position.x, msg->pose.position.y, msg->pose.position.z};
+        
         this->server->Set_Tool_DO(2, false);
         ROS_INFO("夹爪开");
-        double p1[3] = {p[0], p[1], p[2] + 0.10};
-        this->server->move_p(p1);
+        
+        std::array<double, 3> targetPositionAbove = {position[0], position[1], position[2] + 0.10};
+        this->server->move_p(targetPositionAbove);
         ROS_INFO("移动到目标上方");
-        ros::Duration(5.0).sleep();
-        double p2[3] = {p[0], p[1], p[2]};
-        this->server->move_p(p2);
+        ros::Duration(2.0).sleep();
+        
+        std::array<double, 3> grabPosition = {position[0], position[1], position[2]};
+        this->server->move_p(grabPosition);
         ROS_INFO("移动到夹取位置");
-        ros::Duration(10.0).sleep();
+        ros::Duration(5.0).sleep();
+
         this->server->Set_Tool_DO(2, true);
         ROS_INFO("夹取目标物体");
-        ros::Duration(5.0).sleep();
-        double p3[3] = {p[0], p[1], p[2] + 0.10};
-        this->server->move_p(p3);
+        ros::Duration(2.0).sleep();
+
+        targetPositionAbove = {position[0], position[1], position[2] + 0.10};
+        this->server->move_p(targetPositionAbove);
         ROS_INFO("抬起目标");
-        ros::Duration(5.0).sleep();
-        double p4[3] = {p[0], p[1] + 0.20, p[2]};
-        this->server->move_p(p4);
+        ros::Duration(2.0).sleep();
+
+        std::array<double, 3> movePosition = {position[0], position[1] + 0.20, position[2]};
+        this->server->move_p(movePosition);
         ROS_INFO("移动到指定位置");
         ros::Duration(3.0).sleep();
+
         this->server->Set_Tool_DO(2, false);
         ROS_INFO("夹爪开");
-        ros::Duration(5.0).sleep();
+        ros::Duration(2.0).sleep();
+        
+        movePosition = {position[0], position[1] + 0.20, position[2] + 0.10};
+        this->server->move_p(movePosition);
+        ros::Duration(2.0).sleep();
+        
         std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
         this->server->move_j(joint);
         ROS_INFO("回到初始位置");
     }
-
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << '\n';
+        std::cerr << "捕获到异常: " << e.what() << '\n';
     }
 }
 void MainWindow::on_closeButton_clicked()
@@ -109,7 +121,7 @@ void MainWindow::addStart()
 {
     this->manager_ = new rviz::VisualizationManager(render_panel_); // 获取可视化rviz的控制对象，后面直接操作这个
 
-    this->render_panel_->initialize(this->manager_->getSceneManager(), this->manager_); // 绑定交互信号(初始化camera ，实现放大 缩小 平移等操作)
+    this->render_panel_->initialize(this->manager_->getSceneManager(), this->manager_); // 绑定交互信号(初始化camera实现放大 缩小 平移等操作)
 
     this->manager_->initialize();
     this->manager_->removeAllDisplays();

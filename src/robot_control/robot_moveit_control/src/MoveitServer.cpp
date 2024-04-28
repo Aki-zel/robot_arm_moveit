@@ -139,7 +139,7 @@ bool MoveitServer::move_p(const geometry_msgs::PoseStampedConstPtr &msg) // 按�
 	return false;
 }
 
-bool MoveitServer::move_p(const double (&position)[3]) // 按目标空间位姿移动(接收x,y,z，保持末端位姿)
+bool MoveitServer::move_p(const std::array<double, 3>& position) // 按目标空间位姿移动(接收x,y,z，保持末端位姿)
 {
 	geometry_msgs::Pose target_pose;
 	target_pose.position.x = position[0];
@@ -210,7 +210,7 @@ bool MoveitServer::move_l(const std::vector<double> &pose) // 按目标空间位
 	}
 }
 
-bool MoveitServer::move_l(const double (&position)[3]) // 按目标空间位姿直线移动(接收x,y,z，保持末端位姿)
+bool MoveitServer::move_l(const std::array<double, 3>& position) // 按目标空间位姿直线移动(接收x,y,z，保持末端位姿)
 {
 	std::vector<geometry_msgs::Pose> waypoints;
 	geometry_msgs::Pose target_pose;
