@@ -18,7 +18,6 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 	arm_.allowReplanning(true);
 	arm_.setPlanningTime(5.0);
 	arm_.setPlannerId("TRRT");
-	task_executor_.start();
 	// this->tf_sub = nh_.subscribe("/tf", 10, &MoveitServer::tf_callback, this);
 	// 发布话题消息
 	this->tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
@@ -33,42 +32,8 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 	ros::Duration(1.0).sleep();
 	ROS_INFO("夹爪初始化完成");
 }
-bool MoveitServer::Planer(moveit::planning_interface::MoveGroupInterface::Plan plan) // 规划求解
+bool MoveitServer::Planer() // 规划求解
 {
-	this->myplan = plan;
-	// 在一个新的线程中执行 Execute() 函数
-	std::thread t(&MoveitServer::Execute, this);
-
-	// 让线程与主线程分离，避免阻塞主线程
-	t.detach();
-	// task_executor_.addTask(std::bind(&MoveitServer::Execute, this));
-
-	return true;
-}
-
-bool MoveitServer::asyncExecute() // 求解
-{
-	if (!this->myplan.trajectory_.joint_trajectory.points.empty())
-	{
-		bool success = (this->arm_.asyncExecute(this->myplan) == moveit::core::MoveItErrorCode::SUCCESS); // 异步求解
-		return success;
-	}
-	return false;
-}
-
-bool MoveitServer::Execute()
-{
-	if (!this->myplan.trajectory_.joint_trajectory.points.empty())
-	{
-		bool success = (this->arm_.execute(this->myplan) == moveit::core::MoveItErrorCode::SUCCESS); // 异步求解
-		return success;
-	}
-	return false;
-}
-
-void MoveitServer::go_pose(const std::string str) // 移动到预设位姿
-{
-	arm_.setNamedTarget(str);
 	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
 	bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
@@ -76,8 +41,42 @@ void MoveitServer::go_pose(const std::string str) // 移动到预设位姿
 	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
 	if (success)
 	{
-		Planer(my_plan);
+		this->arm_.execute(my_plan);
 	}
+
+	return success;
+}
+bool MoveitServer::asyncPlaner() // 规划求解
+{
+	// 等待上一个异步任务完成
+	if (last_task_future.valid())
+		last_task_future.get(); // 等待上一个任务完成
+
+	// 异步执行规划和执行动作
+	auto future = std::async(std::launch::async, [this]()
+							 {
+        moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+        bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+
+        ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
+        if (success)
+        {
+			success = (this->arm_.execute(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+        }
+        return success; });
+
+	// 更新last_task_future以便跟踪当前任务
+	last_task_future = std::move(future);
+
+	// 返回异步任务的future，以便在需要时检查任务是否完成或获取结果
+	return last_task_future.valid();
+}
+
+void MoveitServer::go_pose(const std::string str) // 移动到预设位姿
+{
+	arm_.setNamedTarget(str);
+	Planer();
 }
 geometry_msgs::Pose MoveitServer::setPoint(const double x, const double y, const double z)
 {
@@ -144,24 +143,17 @@ geometry_msgs::Transform MoveitServer::getCurrent_State()
 	return transformStamped.transform;
 }
 
-bool MoveitServer::move_j(const std::vector<double> &joint_group_positions) // 按目标关节位置移动
+bool MoveitServer::move_j(const std::vector<double> &joint_group_positions,bool isAsync) // 按目标关节位置移动
 {
 	arm_.setJointValueTarget(joint_group_positions);
-
-	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-
-	bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-
-	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
-	if (success)
+	if(isAsync)
 	{
-		Planer(my_plan);
-		return true;
+		return asyncPlaner();
 	}
-	return false;
+	return Planer();
 }
 
-bool MoveitServer::move_p(const std::vector<double> &pose) // 按目标空间位姿移动(x,y,z,roll,pitch,yaw)
+bool MoveitServer::move_p(const std::vector<double> &pose,bool isAsync) // 按目标空间位姿移动(x,y,z,roll,pitch,yaw)
 {
 	geometry_msgs::Pose target_pose;
 	target_pose.position.x = pose[0];
@@ -177,43 +169,27 @@ bool MoveitServer::move_p(const std::vector<double> &pose) // 按目标空间位
 
 	arm_.setStartStateToCurrentState();
 	arm_.setPoseTarget(target_pose);
-
-	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-
-	bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-
-	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
-	if (success)
+	if (isAsync)
 	{
-		Planer(my_plan);
-		return true;
+		return asyncPlaner();
 	}
-	return false;
+	return Planer();
 }
 
-bool MoveitServer::move_p(const geometry_msgs::PoseStampedConstPtr &msg) // 按目标空间位姿移动(接收目标物体位姿)
+bool MoveitServer::move_p(const geometry_msgs::Pose &msg,bool isAsync) // 按目标空间位姿移动(接收目标物体位姿)
 {
 	geometry_msgs::Pose target_pose;
-	target_pose = msg.get()->pose;
-	target_pose.position.x += 0.10;
-	target_pose.position.z += 0.20;
+	target_pose = msg;
 	arm_.setStartStateToCurrentState();
 	arm_.setPoseTarget(target_pose);
-
-	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-
-	bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-
-	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
-	if (success)
+	if (isAsync)
 	{
-		Planer(my_plan);
-		return true;
+		return asyncPlaner();
 	}
-	return false;
+	return Planer();
 }
 
-bool MoveitServer::move_p(const double (&position)[3]) // 按目标空间位姿移动(接收x,y,z，保持末端位姿)
+bool MoveitServer::move_p(const double (&position)[3],bool isAsync) // 按目标空间位姿移动(接收x,y,z，保持末端位姿)
 {
 	geometry_msgs::Pose target_pose;
 	target_pose.position.x = position[0];
@@ -225,18 +201,11 @@ bool MoveitServer::move_p(const double (&position)[3]) // 按目标空间位姿�
 	// ROS_INFO("当前姿态：%lf,%lf,%lf,%lf", current_pose.orientation.x, current_pose.orientation.y, current_pose.orientation.z, current_pose.orientation.w);
 	// arm_.setStartStateToCurrentState();
 	arm_.setPoseTarget(target_pose);
-
-	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-
-	bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-
-	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
-	if (success)
+	if (isAsync)
 	{
-		Planer(my_plan);
-		return true;
+		return asyncPlaner();
 	}
-	return false;
+	return Planer();
 }
 
 bool MoveitServer::move_l(const std::vector<double> &pose) // 按目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
@@ -381,6 +350,5 @@ void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
 
 MoveitServer::~MoveitServer()
 {
-	task_executor_.stop();
 	delete this;
 }

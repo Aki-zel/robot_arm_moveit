@@ -9,17 +9,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     setMouseTracking(true);
     this->m_isImage = false;
     this->m_isSelecting = false;
-    this->addStart();
     // 初始化ROS节点
     ros::NodeHandle nh;
-    ros::AsyncSpinner spinner(4);
+    // ros::AsyncSpinner spinner(4);
     std::string PLANNING_GROUP = "arm";
     this->server = new MoveitServer(PLANNING_GROUP);
     image_subscriber_ = nh.subscribe("/camera/color/image_raw/compressed", 10, &MainWindow::imageCallback, this);
     objection_subscriber_ = nh.subscribe("object_position", 10, &MainWindow::objectionCallback, this);
-    spinner.start();
+    // spinner.start();
     image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
     this->label = new QLabel();
+    this->addStart();
 }
 
 MainWindow::~MainWindow()
@@ -37,30 +37,32 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
         double p[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y, msg.get()->pose.position.z};
         this->server->Set_Tool_DO(2, false);
         ROS_INFO("夹爪开");
-        double p1[3] = {p[0], p[1], p[2] + 0.10};
-        this->server->move_p(p1);
-        ROS_INFO("移动到目标上方");
-        ros::Duration(5.0).sleep();
-        double p2[3] = {p[0], p[1], p[2]};
-        this->server->move_p(p2);
-        ROS_INFO("移动到夹取位置");
-        ros::Duration(10.0).sleep();
-        this->server->Set_Tool_DO(2, true);
+        geometry_msgs::Pose msg1 = msg.get()->pose;
+        msg1.position.y = msg.get()->pose.position.y + 0.05;
+        this->server->move_p(msg1, false);
         ROS_INFO("夹取目标物体");
-        ros::Duration(5.0).sleep();
-        double p3[3] = {p[0], p[1], p[2] + 0.10};
-        this->server->move_p(p3);
-        ROS_INFO("抬起目标");
-        ros::Duration(5.0).sleep();
-        double p4[3] = {p[0], p[1] + 0.20, p[2]};
-        this->server->move_p(p4);
+        // ros::Duration(5.0).sleep();
+        ROS_INFO("移动到夹取位置");
+        this->server->move_p(msg.get()->pose, false);
+        // ros::Duration(10.0).sleep();
+        ROS_INFO("夹取目标物体");
+        // this->server->Set_Tool_DO(2, true);
+        // ros::Duration(5.0).sleep();
+        // ros::Duration(5.0).sleep();
+        std::vector<double> joint = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
+        this->server->move_j(joint, false);
+        ROS_INFO("回到初始位置");
+        std::vector<double> joint1 = {0, 0.33, 1.064, 0, 1.6747, 0};
+        this->server->move_j(joint1, false);
         ROS_INFO("移动到指定位置");
-        ros::Duration(3.0).sleep();
+        // ros::Duration(3.0).sleep();
         this->server->Set_Tool_DO(2, false);
-        ROS_INFO("夹爪开");
-        ros::Duration(5.0).sleep();
-        std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
-        this->server->move_j(joint);
+        // double p5[3] = {p[0], p[1], p[2] + 0.10};
+        // this->server->move_p(p5, false);
+        // ROS_INFO("夹爪开");
+        // ros::Duration(5.0).sleep();
+        std::vector<double> joint2 = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
+        this->server->move_j(joint2, false);
         ROS_INFO("回到初始位置");
     }
 
@@ -93,8 +95,8 @@ void MainWindow::on_backButton_clicked()
 void MainWindow::on_startButton_clicked()
 {
     this->m_isImage = true;
-    std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
-    this->server->move_j(joint);
+    std::vector<double> joint = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
+    this->server->move_j(joint, true);
     this->server->Set_Tool_DO(2, true);
 }
 
