@@ -66,6 +66,7 @@ protected:
 
 private:
     Ui::MainWindow *ui;
+        ros::NodeHandle nh;
     rviz::RenderPanel *render_panel_;     // rviz显示容器
     rviz::VisualizationManager *manager_; // rviz控制器
     QPoint m_startPos;
@@ -76,7 +77,6 @@ private:
     ros::Subscriber objection_subscriber_;
     ros::Publisher image_publisher_;
     MoveitServer *server;
-    QLabel *label ;
 };
 
 #endif // MAINWINDOW_H

@@ -31,13 +31,13 @@ int main(int argc, char **argv)
 	// test for move_j
 	// cout<<"-----------------------test for move_j----------------------"<<endl;
 	vector<double> joints ={0, -0.8028, 1.2740, 0, 1.850, 0};
-	moveit_server.move_j(joints,true);
-	ros::Duration(5.0).sleep();
+	moveit_server.move_j(joints,false);
+	// ros::Duration(5.0).sleep();
 
 	// test for move_p and move_l(1 point)
 	// cout<<"-----------------------test for move_p and move_l---------------------"<<endl;
-	// vector<double> xyzrpy={0.3,0.1,0.4,-3.1415,0,0};
-	// moveit_server.move_p(xyzrpy);
+	std::vector<double> xyzrpy={-0.30,0.0,0.40};
+	moveit_server.move_p(xyzrpy,false);
 	// xyzrpy[2]=0.2;
 	// moveit_server.move_l(xyzrpy);
 

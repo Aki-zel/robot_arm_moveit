@@ -170,7 +170,7 @@ add_library(MoveitServer_h
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/robot_moveit_control_node.cpp)
 add_executable(ydrobot ${QT_SOURCES} ${QT_MOC} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
-add_executable(MoveitServer src/test.cpp)
+# add_executable(MoveitServer src/test.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -180,19 +180,19 @@ add_executable(MoveitServer src/test.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(ydrobot ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(MoveitServer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(MoveitServer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES} MoveitServer_h)
 # target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES})
-target_link_libraries(MoveitServer_h ${catkin_LIBRARIES})
+target_link_libraries(MoveitServer_h ${catkin_LIBRARIES}   )
 
-target_link_libraries(MoveitServer
-  MoveitServer_h
-  ${catkin_LIBRARIES}
-)
+# target_link_libraries(MoveitServer
+#   MoveitServer_h
+#   ${catkin_LIBRARIES}
+# )
 #############
 ## Install ##
 #############

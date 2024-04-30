@@ -3,34 +3,35 @@
 MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 {
 
-	// 设置机械臂误差和速度
+	// Set arm properties
 	arm_.setGoalPositionTolerance(0.001);
 	arm_.setGoalOrientationTolerance(0.01);
 	arm_.setGoalJointTolerance(0.001);
 	arm_.setMaxAccelerationScalingFactor(0.3);
 	arm_.setMaxVelocityScalingFactor(0.5);
-	// 设置规划参数
-	// const moveit::core::JointModelGroup *joint_model_group = this->arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
-	this->end_effector_link = arm_.getEndEffectorLink();
-	this->tfListener = new tf2_ros::TransformListener(this->tfBuffer);
-	this->reference_frame = "base_link";
-	arm_.setPoseReferenceFrame(this->reference_frame);
+	arm_.setPoseReferenceFrame("base_link");
 	arm_.allowReplanning(true);
-	arm_.setPlanningTime(5.0);
+	arm_.setPlanningTime(3.0);
 	arm_.setPlannerId("TRRT");
-	// this->tf_sub = nh_.subscribe("/tf", 10, &MoveitServer::tf_callback, this);
-	// 发布话题消息
-	this->tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
-	// 夹爪初始化
-	this->Set_Tool_DO(1, false);
+
+	tfListener = new tf2_ros::TransformListener(tfBuffer);
+
+	tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
+
+	initializeClaw();
+}
+
+void MoveitServer::initializeClaw()
+{
+	Set_Tool_DO(1, false);
 	ros::Duration(1.0).sleep();
-	this->Set_Tool_DO(2, false);
+	Set_Tool_DO(2, false);
 	ros::Duration(1.0).sleep();
-	this->Set_Tool_DO(1, true);
+	Set_Tool_DO(1, true);
 	ros::Duration(1.0).sleep();
-	this->Set_Tool_DO(1, false);
+	Set_Tool_DO(1, false);
 	ros::Duration(1.0).sleep();
-	ROS_INFO("夹爪初始化完成");
+	ROS_INFO("Claw initialization completed");
 }
 bool MoveitServer::Planer() // 规划求解
 {
@@ -58,26 +59,24 @@ bool MoveitServer::asyncPlaner() // 规划求解
 {
 	try
 	{
+
 		// 等待上一个异步任务完成
 		if (last_task_future.valid())
 			last_task_future.get(); // 等待上一个任务完成
 
 		// 异步执行规划和执行动作
-		auto future = std::async(std::launch::async, [this]()
+			auto future = std::async(std::launch::async, [this]()
 								 {
-        moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+			moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
-        bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+			bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
 
-        ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
-        if (success)
-        {
-			success = (this->arm_.execute(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-        }
-        return success; });
-
-		// 更新last_task_future以便跟踪当前任务
-		last_task_future = std::move(future);
+			ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
+			if (success)
+			{
+				success = (this->arm_.execute(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+			} 	
+			return success; });
 	}
 	catch (const std::exception &e)
 	{
@@ -102,25 +101,25 @@ geometry_msgs::Pose MoveitServer::setPoint(const double x, const double y, const
 	target_pose1.orientation = this->getCurrent_State().rotation;
 	return target_pose1;
 }
-geometry_msgs::Pose MoveitServer::setPoint(const double position[])
+geometry_msgs::Pose MoveitServer::setPoint(const std::vector<double> &pose)
 {
 	geometry_msgs::Pose target_pose1;
-	if (sizeof(position) / sizeof(double) == 3)
+	if (pose.size() == 3)
 	{
-		target_pose1.position.x = position[0];
-		target_pose1.position.y = position[1];
-		target_pose1.position.z = position[2];
+		target_pose1.position.x = pose[0];
+		target_pose1.position.y = pose[1];
+		target_pose1.position.z = pose[2];
 		target_pose1.orientation = this->getCurrent_State().rotation;
 	}
-	else if (sizeof(position) / sizeof(double) == 7)
+	else if (pose.size() == 7)
 	{
-		target_pose1.position.x = position[0];
-		target_pose1.position.y = position[1];
-		target_pose1.position.z = position[2];
-		target_pose1.orientation.x = position[3];
-		target_pose1.orientation.y = position[4];
-		target_pose1.orientation.z = position[5];
-		target_pose1.orientation.w = position[6];
+		target_pose1.position.x = pose[0];
+		target_pose1.position.y = pose[1];
+		target_pose1.position.z = pose[2];
+		target_pose1.orientation.x = pose[3];
+		target_pose1.orientation.y = pose[4];
+		target_pose1.orientation.z = pose[5];
+		target_pose1.orientation.w = pose[6];
 	}
 
 	return target_pose1;
@@ -171,29 +170,23 @@ geometry_msgs::Transform MoveitServer::getCurrent_State()
 	return transformStamped.transform;
 }
 
-bool MoveitServer::move_j(const std::vector<double> &joint_group_positions, bool isAsync) // 按目标关节位置移动
+void MoveitServer::move_j(const std::vector<double> &joint_group_positions, bool isAsync) // 按目标关节位置移动
 {
 	arm_.setJointValueTarget(joint_group_positions);
 	if (isAsync)
 	{
-		return asyncPlaner();
+		asyncPlaner();
 	}
-	return Planer();
+	Planer();
 }
-
+void MoveitServer::stop()
+{
+	arm_.stop();
+}
 bool MoveitServer::move_p(const std::vector<double> &pose, bool isAsync) // 按目标空间位姿移动(x,y,z,roll,pitch,yaw)
 {
 	geometry_msgs::Pose target_pose;
-	target_pose.position.x = pose[0];
-	target_pose.position.y = pose[1];
-	target_pose.position.z = pose[2];
-
-	tf2::Quaternion myQuaternion;
-	myQuaternion.setRPY(pose[3], pose[4], pose[5]);
-	target_pose.orientation.x = myQuaternion.getX();
-	target_pose.orientation.y = myQuaternion.getY();
-	target_pose.orientation.z = myQuaternion.getZ();
-	target_pose.orientation.w = myQuaternion.getW();
+	target_pose = this->setPoint(pose);
 
 	arm_.setPoseTarget(target_pose);
 	if (isAsync)
@@ -207,18 +200,6 @@ bool MoveitServer::move_p(const geometry_msgs::Pose &msg, bool isAsync) // 按�
 {
 	geometry_msgs::Pose target_pose;
 	target_pose = msg;
-	arm_.setPoseTarget(target_pose);
-	if (isAsync)
-	{
-		return asyncPlaner();
-	}
-	return Planer();
-}
-
-bool MoveitServer::move_p(const double position[], bool isAsync) // 按目标空间位姿移动(接收x,y,z，保持末端位姿)
-{
-	geometry_msgs::Pose target_pose;
-	target_pose=this->setPoint(position);
 	arm_.setPoseTarget(target_pose);
 	if (isAsync)
 	{

@@ -4,33 +4,30 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
                                           ui(new Ui::MainWindow)
 {
-    setlocale(LC_ALL, "");
     ui->setupUi(this);
     setMouseTracking(true);
-    this->m_isImage = false;
+    this->m_isImage = true;
     this->m_isSelecting = false;
-    // 初始化ROS节点
-    ros::NodeHandle nh;
-    // ros::AsyncSpinner spinner(4);
+    ros::AsyncSpinner spinner(2);
+    spinner.start();
     std::string PLANNING_GROUP = "arm";
     this->server = new MoveitServer(PLANNING_GROUP);
     image_subscriber_ = nh.subscribe("/camera/color/image_raw/compressed", 10, &MainWindow::imageCallback, this);
     objection_subscriber_ = nh.subscribe("object_position", 10, &MainWindow::objectionCallback, this);
     // spinner.start();
     image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
-    this->label = new QLabel();
     this->addStart();
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete this;
 }
 void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg)
 {
     try
     {
-        label->hide();
         // double p[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y, msg.get()->pose.position.z};
         // this->server->Set_Tool_DO(2, false);
         // ROS_INFO("夹爪开");
@@ -64,7 +61,7 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
         ROS_INFO("夹取目标物体");
         this->server->move_p(msg1, false);
         ROS_INFO("抬起目标");
-        msg1.position.y = msg.get()->pose.position.y +0.1;
+        msg1.position.y = msg.get()->pose.position.y - 0.1;
         this->server->move_p(msg1, false);
         ROS_INFO("移动到指定位置");
         this->server->Set_Tool_DO(2, false);
@@ -167,10 +164,22 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
             QPixmap screenshot = screen->grabWindow(this->ui->centralwidget->winId(), selectionRect.x(), selectionRect.y(), selectionRect.width(), selectionRect.height());
             image_publisher_.publish(this->convertQPixmapToSensorImage(screenshot));
             ros::spinOnce();
-            // 截取选择区域的屏幕
+            QLabel *label = new QLabel(); // 创建 QLabel 对象
             label->setPixmap(screenshot);
             label->resize(screenshot.size());
             label->show();
+
+            // 创建 QTimer 对象
+            QTimer *timer = new QTimer(this);
+            // 连接 QTimer 的 timeout 信号到槽函数，用于在超时后删除 QLabel 对象
+            connect(timer, &QTimer::timeout, [=]()
+                    {
+                        label->hide();
+                        delete label;
+                        timer->deleteLater(); // 在删除 QTimer 对象后，确保释放内存
+                    });
+            // 设置 QTimer 的超时时间为 3 秒（3000 毫秒）
+            timer->start(3000); // 3 秒后触发 timeout 信号
         }
         update();
     }
