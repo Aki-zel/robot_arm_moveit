@@ -30,39 +30,47 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
 {
     try
     {
-        // std::vector<double> p;
-        // p.push_back(msg.get()->pose.position.x);
-        // p.push_back(msg.get()->pose.position.y);
-        // p.push_back(msg.get()->pose.position.z);
+        label->hide();
+        // double p[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y, msg.get()->pose.position.z};
+        // this->server->Set_Tool_DO(2, false);
+        // ROS_INFO("夹爪开");
+        // geometry_msgs::Pose msg1 = msg.get()->pose;
+        // msg1.position.y = msg.get()->pose.position.y + 0.05;
+        // this->server->move_p(msg1, false);
+        // ROS_INFO("夹取目标物体");
+        // ROS_INFO("移动到夹取位置");
+        // this->server->move_p(msg.get()->pose, false);;
+        // ROS_INFO("夹取目标物体");
+        // std::vector<double> joint = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
+        // this->server->move_j(joint, false);
+        // ROS_INFO("回到初始位置");
+        // std::vector<double> joint1 = {0, 0.33, 1.064, 0, 1.6747, 0};
+        // this->server->move_j(joint1, false);
+        // ROS_INFO("移动到指定位置");
+        // this->server->Set_Tool_DO(2, false);
+        // std::vector<double> joint2 = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
+        // this->server->move_j(joint2, false);
+        // ROS_INFO("回到初始位置");
         double p[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y, msg.get()->pose.position.z};
         this->server->Set_Tool_DO(2, false);
-        ROS_INFO("夹爪开");
         geometry_msgs::Pose msg1 = msg.get()->pose;
-        msg1.position.y = msg.get()->pose.position.y + 0.05;
+        msg1.position.z = msg.get()->pose.position.z + 0.1;
+        ROS_INFO("夹爪开");
         this->server->move_p(msg1, false);
-        ROS_INFO("夹取目标物体");
-        // ros::Duration(5.0).sleep();
-        ROS_INFO("移动到夹取位置");
+        ROS_INFO("移动到目标上方");
         this->server->move_p(msg.get()->pose, false);
-        // ros::Duration(10.0).sleep();
+        ROS_INFO("移动到夹取位置");
+        this->server->Set_Tool_DO(2, true);
         ROS_INFO("夹取目标物体");
-        // this->server->Set_Tool_DO(2, true);
-        // ros::Duration(5.0).sleep();
-        // ros::Duration(5.0).sleep();
-        std::vector<double> joint = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
-        this->server->move_j(joint, false);
-        ROS_INFO("回到初始位置");
-        std::vector<double> joint1 = {0, 0.33, 1.064, 0, 1.6747, 0};
-        this->server->move_j(joint1, false);
+        this->server->move_p(msg1, false);
+        ROS_INFO("抬起目标");
+        msg1.position.y = msg.get()->pose.position.y +0.1;
+        this->server->move_p(msg1, false);
         ROS_INFO("移动到指定位置");
-        // ros::Duration(3.0).sleep();
         this->server->Set_Tool_DO(2, false);
-        // double p5[3] = {p[0], p[1], p[2] + 0.10};
-        // this->server->move_p(p5, false);
-        // ROS_INFO("夹爪开");
-        // ros::Duration(5.0).sleep();
-        std::vector<double> joint2 = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
-        this->server->move_j(joint2, false);
+        ROS_INFO("夹爪开");
+        std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
+        this->server->move_j(joint, false);
         ROS_INFO("回到初始位置");
     }
 
@@ -95,7 +103,9 @@ void MainWindow::on_backButton_clicked()
 void MainWindow::on_startButton_clicked()
 {
     this->m_isImage = true;
-    std::vector<double> joint = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
+    // std::vector<double> joint = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
+    // this->server->move_j(joint, true);
+    std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
     this->server->move_j(joint, true);
     this->server->Set_Tool_DO(2, true);
 }
@@ -115,7 +125,7 @@ void MainWindow::addStart()
     this->manager_->initialize();
     this->manager_->removeAllDisplays();
     this->manager_->startUpdate();
-    this->manager_->setFixedFrame("dummy");
+    this->manager_->setFixedFrame("base_link");
     auto grid_ = this->manager_->createDisplay("rviz/Grid", "adjustable grid", true);
     ROS_ASSERT(grid_ != NULL);
     auto robotmodel_ = this->manager_->createDisplay("rviz/RobotModel", "RobotModel", true);

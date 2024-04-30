@@ -23,3 +23,4 @@ src/robot_control/rm65_grasping/scripts/robotic_arm_package/libRM_Base.so.1.0.0
 src/robot_control/rm65_grasping/scripts/robotic_arm_package/libRM_Base.so.1.0
 src/robot_control/rm65_grasping/scripts/robotic_arm_package/libRM_Base.so.1
 src/robot_control/rm65_grasping/scripts/robotic_arm_package/libRM_Base.so
+src/moveit_calibration

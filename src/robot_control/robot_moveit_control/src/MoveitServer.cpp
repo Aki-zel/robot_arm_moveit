@@ -34,27 +34,37 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 }
 bool MoveitServer::Planer() // 规划求解
 {
-	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-
-	bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-
-	ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
-	if (success)
+	bool success = false;
+	try
 	{
-		this->arm_.execute(my_plan);
+		moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+		success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+
+		ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
+		if (success)
+		{
+			success = (this->arm_.execute(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+		}
+	}
+	catch (const std::exception &e)
+	{
+		ROS_ERROR("Exception caught while waiting for the asyncPlaner to complete: %s", e.what());
 	}
 
 	return success;
 }
 bool MoveitServer::asyncPlaner() // 规划求解
 {
-	// 等待上一个异步任务完成
-	if (last_task_future.valid())
-		last_task_future.get(); // 等待上一个任务完成
+	try
+	{
+		// 等待上一个异步任务完成
+		if (last_task_future.valid())
+			last_task_future.get(); // 等待上一个任务完成
 
-	// 异步执行规划和执行动作
-	auto future = std::async(std::launch::async, [this]()
-							 {
+		// 异步执行规划和执行动作
+		auto future = std::async(std::launch::async, [this]()
+								 {
         moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
         bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
@@ -66,11 +76,16 @@ bool MoveitServer::asyncPlaner() // 规划求解
         }
         return success; });
 
-	// 更新last_task_future以便跟踪当前任务
-	last_task_future = std::move(future);
+		// 更新last_task_future以便跟踪当前任务
+		last_task_future = std::move(future);
+	}
+	catch (const std::exception &e)
+	{
+		ROS_ERROR("Exception caught while waiting for the asyncPlaner to complete: %s", e.what());
+	}
 
 	// 返回异步任务的future，以便在需要时检查任务是否完成或获取结果
-	return last_task_future.valid();
+	return true;
 }
 
 void MoveitServer::go_pose(const std::string str) // 移动到预设位姿
@@ -84,14 +99,30 @@ geometry_msgs::Pose MoveitServer::setPoint(const double x, const double y, const
 	target_pose1.position.x = x;
 	target_pose1.position.y = y;
 	target_pose1.position.z = z;
+	target_pose1.orientation = this->getCurrent_State().rotation;
 	return target_pose1;
 }
-geometry_msgs::Pose MoveitServer::setPoint(double position[])
+geometry_msgs::Pose MoveitServer::setPoint(const double position[])
 {
 	geometry_msgs::Pose target_pose1;
-	target_pose1.position.x = position[0];
-	target_pose1.position.y = position[1];
-	target_pose1.position.z = position[2];
+	if (sizeof(position) / sizeof(double) == 3)
+	{
+		target_pose1.position.x = position[0];
+		target_pose1.position.y = position[1];
+		target_pose1.position.z = position[2];
+		target_pose1.orientation = this->getCurrent_State().rotation;
+	}
+	else if (sizeof(position) / sizeof(double) == 7)
+	{
+		target_pose1.position.x = position[0];
+		target_pose1.position.y = position[1];
+		target_pose1.position.z = position[2];
+		target_pose1.orientation.x = position[3];
+		target_pose1.orientation.y = position[4];
+		target_pose1.orientation.z = position[5];
+		target_pose1.orientation.w = position[6];
+	}
+
 	return target_pose1;
 }
 double MoveitServer::round(double num, int exponent)
@@ -106,11 +137,8 @@ void MoveitServer::tf_callback(const tf2_msgs::TFMessageConstPtr &tf)
 
 	try
 	{
-		// 尝试获取末端(link6)坐标系到基座坐标系的变换
 		transformStamped = this->tfBuffer.lookupTransform("base_link", "ee_link",
 														  ros::Time(0));
-		// // 输出末端(link6)的姿态信息
-		// ROS_INFO("End Effector Pose (base_link->link6):");
 
 		this->current_state = transformStamped.transform;
 	}
@@ -143,17 +171,17 @@ geometry_msgs::Transform MoveitServer::getCurrent_State()
 	return transformStamped.transform;
 }
 
-bool MoveitServer::move_j(const std::vector<double> &joint_group_positions,bool isAsync) // 按目标关节位置移动
+bool MoveitServer::move_j(const std::vector<double> &joint_group_positions, bool isAsync) // 按目标关节位置移动
 {
 	arm_.setJointValueTarget(joint_group_positions);
-	if(isAsync)
+	if (isAsync)
 	{
 		return asyncPlaner();
 	}
 	return Planer();
 }
 
-bool MoveitServer::move_p(const std::vector<double> &pose,bool isAsync) // 按目标空间位姿移动(x,y,z,roll,pitch,yaw)
+bool MoveitServer::move_p(const std::vector<double> &pose, bool isAsync) // 按目标空间位姿移动(x,y,z,roll,pitch,yaw)
 {
 	geometry_msgs::Pose target_pose;
 	target_pose.position.x = pose[0];
@@ -167,7 +195,6 @@ bool MoveitServer::move_p(const std::vector<double> &pose,bool isAsync) // 按�
 	target_pose.orientation.z = myQuaternion.getZ();
 	target_pose.orientation.w = myQuaternion.getW();
 
-	arm_.setStartStateToCurrentState();
 	arm_.setPoseTarget(target_pose);
 	if (isAsync)
 	{
@@ -176,11 +203,10 @@ bool MoveitServer::move_p(const std::vector<double> &pose,bool isAsync) // 按�
 	return Planer();
 }
 
-bool MoveitServer::move_p(const geometry_msgs::Pose &msg,bool isAsync) // 按目标空间位姿移动(接收目标物体位姿)
+bool MoveitServer::move_p(const geometry_msgs::Pose &msg, bool isAsync) // 按目标空间位姿移动(接收目标物体位姿)
 {
 	geometry_msgs::Pose target_pose;
 	target_pose = msg;
-	arm_.setStartStateToCurrentState();
 	arm_.setPoseTarget(target_pose);
 	if (isAsync)
 	{
@@ -189,17 +215,10 @@ bool MoveitServer::move_p(const geometry_msgs::Pose &msg,bool isAsync) // 按目
 	return Planer();
 }
 
-bool MoveitServer::move_p(const double (&position)[3],bool isAsync) // 按目标空间位姿移动(接收x,y,z，保持末端位姿)
+bool MoveitServer::move_p(const double position[], bool isAsync) // 按目标空间位姿移动(接收x,y,z，保持末端位姿)
 {
 	geometry_msgs::Pose target_pose;
-	target_pose.position.x = position[0];
-	target_pose.position.y = position[1];
-	target_pose.position.z = position[2];
-
-	// geometry_msgs::Pose current_pose = arm_.getCurrentPose().pose; // keep current pose
-	target_pose.orientation = this->getCurrent_State().rotation;
-	// ROS_INFO("当前姿态：%lf,%lf,%lf,%lf", current_pose.orientation.x, current_pose.orientation.y, current_pose.orientation.z, current_pose.orientation.w);
-	// arm_.setStartStateToCurrentState();
+	target_pose=this->setPoint(position);
 	arm_.setPoseTarget(target_pose);
 	if (isAsync)
 	{

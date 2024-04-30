@@ -9,7 +9,6 @@ from geometry_msgs.msg import Pose
 
 absolute_path = "/home/yds/rmrobot_ws/src/rm65_grasping/scripts"
 sys.path.insert(0, absolute_path)
-from robotic_arm_package.robotic_arm import Arm
 
 
 class GraspingDemo:

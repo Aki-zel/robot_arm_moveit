@@ -112,19 +112,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          camera_bottom_screw_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_link1:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          dummy:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           ee_link:
             Alpha: 1
             Show Axes: false
@@ -145,6 +132,10 @@ Visualization Manager:
             Show Trail: false
             Value: true
           tool0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          world:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -234,19 +225,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          camera_bottom_screw_frame:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          camera_link1:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          dummy:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           ee_link:
             Alpha: 1
             Show Axes: false
@@ -267,6 +245,10 @@ Visualization Manager:
             Show Trail: false
             Value: true
           tool0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          world:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -300,8 +282,6 @@ Visualization Manager:
           Value: false
         camera_aligned_depth_to_color_frame:
           Value: false
-        camera_bottom_screw_frame:
-          Value: false
         camera_color_frame:
           Value: false
         camera_color_optical_frame:
@@ -312,10 +292,6 @@ Visualization Manager:
           Value: false
         camera_link:
           Value: true
-        camera_link1:
-          Value: false
-        dummy:
-          Value: false
         ee_link:
           Value: true
         finger1:
@@ -326,6 +302,8 @@ Visualization Manager:
           Value: false
         tool0:
           Value: false
+        world:
+          Value: true
       Marker Alpha: 1
       Marker Scale: 1
       Name: TF
@@ -333,7 +311,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        dummy:
+        world:
           base_link:
             Link1:
               Link2:
@@ -353,9 +331,6 @@ Visualization Manager:
                         ee_link:
                           {}
                         tool0:
-                          camera_bottom_screw_frame:
-                            camera_link1:
-                              {}
                           gripper_link:
                             finger1:
                               {}
@@ -415,19 +390,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        camera_bottom_screw_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        camera_link1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        dummy:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         ee_link:
           Alpha: 1
           Show Axes: false
@@ -451,17 +413,49 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: RGB8
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic: /camera/depth/color/points
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: dummy
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:
@@ -489,9 +483,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.640397310256958
+      Pitch: 0.4853973090648651
       Target Frame: dummy
-      Yaw: 1.3103854656219482
+      Yaw: 0.9303838610649109
     Saved: ~
 Window Geometry:
   Displays:

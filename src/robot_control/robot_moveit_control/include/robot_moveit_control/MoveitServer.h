@@ -33,7 +33,7 @@ public:
 	void go_pose(const std::string str);
 	bool move_j(const std::vector<double> &joint_group_positions, bool isAsync);
 	bool move_p(const std::vector<double> &pose, bool isAsync);
-	bool move_p(const double (&position)[3], bool isAsync);
+	bool move_p(const double position[], bool isAsync);
 	bool move_p(const geometry_msgs::Pose &msg, bool isAsync);
 	bool move_p_with_constrains(const std::vector<double> &pose);
 	bool move_p_with_constrains(const double (&position)[3]);
@@ -49,7 +49,7 @@ public:
 	// bool Execute(moveit::planning_interface::MoveGroupInterface::Plan plan);
 	double round(double num, int exponent);
 	geometry_msgs::Pose setPoint(const double x, const double y, const double z);
-	geometry_msgs::Pose setPoint(double position[]);
+	geometry_msgs::Pose setPoint(const double position[]);
 	~MoveitServer();
 
 public:

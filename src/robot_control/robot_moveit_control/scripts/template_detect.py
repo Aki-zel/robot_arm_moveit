@@ -68,7 +68,7 @@ class TemplateDetect:
         if object_position is not None:
             rospy.loginfo("Object position in world coordinates: {}".format(object_position))
             self.tf_transform(object_position)
-            self.tf_broad(object_position)
+
         else:
             rospy.logwarn("Unable to determine object position.")
 
@@ -116,7 +116,7 @@ class TemplateDetect:
     def tf_transform(self, position):
         x, y, z = position
         camera_point = geometry_msgs.msg.PoseStamped()
-        camera_point.header.frame_id = "camera_link"
+        camera_point.header.frame_id = "camera_color_optical_frame"
         camera_point.pose.position.x = x
         camera_point.pose.position.y = y
         camera_point.pose.position.z = z
@@ -124,11 +124,12 @@ class TemplateDetect:
 
         try:
             # 使用tf2将机械臂摄像头坐标系转换到base_link坐标系
-            transform = self.tf_buffer.lookup_transform('base_link', 'camera_link', rospy.Time(0), rospy.Duration(1))
+            transform = self.tf_buffer.lookup_transform('base_link', 'camera_color_optical_frame', rospy.Time(0), rospy.Duration(1))
             world_point = tf2_geometry_msgs.do_transform_pose(camera_point, transform)
             if world_point is not None:
                 rospy.loginfo("World point: %s", world_point)
                 self.object_position_pub.publish(world_point)
+                self.tf_broad(world_point)
             else:
                 return None
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
@@ -136,15 +137,12 @@ class TemplateDetect:
             return None
     # 发布物体的TF坐标系   
     def tf_broad(self, position): 
-        x, y, z = position       
         tfs = TransformStamped() # 创建广播数据
-        tfs.header.frame_id = "camera_link"  # 参考坐标系
+        tfs.header.frame_id = "base_link"  # 参考坐标系
         tfs.header.stamp = rospy.Time.now()
         tfs.child_frame_id = "object"  # 目标坐标系
-        tfs.transform.translation.x = x
-        tfs.transform.translation.y = y
-        tfs.transform.translation.z = z
-        tfs.transform.rotation.w = 1 
+        tfs.transform.translation = position.pose.position
+        tfs.transform.rotation= position.pose.orientation
         # 发布tf变换
         self.tf_broadcaster.sendTransform(tfs)
 
