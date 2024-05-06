@@ -24,10 +24,10 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
-#include <MoveitServer.h>
 #include <opencv2/highgui.hpp>
 #include <QLabel>
 #include <thread>
+#include <robotControl.h>
 namespace Ui
 {
     class MainWindow;
@@ -66,7 +66,7 @@ protected:
 
 private:
     Ui::MainWindow *ui;
-        ros::NodeHandle nh;
+    ros::NodeHandle nh;
     rviz::RenderPanel *render_panel_;     // rviz显示容器
     rviz::VisualizationManager *manager_; // rviz控制器
     QPoint m_startPos;
@@ -76,7 +76,7 @@ private:
     ros::Subscriber image_subscriber_;
     ros::Subscriber objection_subscriber_;
     ros::Publisher image_publisher_;
-    MoveitServer *server;
+    robotControl *server;
 };
 
 #endif // MAINWINDOW_H
