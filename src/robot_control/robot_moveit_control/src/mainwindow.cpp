@@ -18,7 +18,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     objection_subscriber_ = nh.subscribe("object_position", 10, &MainWindow::objectionCallback, this);
     // spinner.start();
     image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
-    this->label = new QLabel();
     this->addStart();
 }
 
@@ -30,7 +29,6 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
 {
     try
     {
-        label->hide();
         // double p[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y, msg.get()->pose.position.z};
         // this->server->Set_Tool_DO(2, false);
         // ROS_INFO("夹爪开");
@@ -64,7 +62,7 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
         ROS_INFO("夹取目标物体");
         this->server->move_p(msg1, false);
         ROS_INFO("抬起目标");
-        msg1.position.y = msg.get()->pose.position.y +0.1;
+        msg1.position.y = msg.get()->pose.position.y + 0.1;
         this->server->move_p(msg1, false);
         ROS_INFO("移动到指定位置");
         this->server->Set_Tool_DO(2, false);
@@ -147,6 +145,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
     if (m_isSelecting)
     {
+        this->m_isImage = false;
         m_endPos = event->pos();
         update(); // 强制重绘以显示选择区域
         // std::cout<<"mo "<<m_endPos.x()<<"  "<<m_endPos.y()<<std::endl;
@@ -168,11 +167,24 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
             image_publisher_.publish(this->convertQPixmapToSensorImage(screenshot));
             ros::spinOnce();
             // 截取选择区域的屏幕
+            QLabel *label = new QLabel();
             label->setPixmap(screenshot);
             label->resize(screenshot.size());
             label->show();
+            // 创建 QTimer 对象
+            QTimer *timer = new QTimer(this);
+            // 连接 QTimer 的 timeout 信号到槽函数，用于在超时后删除 QLabel 对象
+            connect(timer, &QTimer::timeout, [=]()
+                    {
+                        label->hide();
+                        delete label;
+                        timer->deleteLater(); // 在删除 QTimer 对象后，确保释放内存
+                    });
+            // 设置 QTimer 的超时时间为 3 秒（3000 毫秒）
+            timer->start(3000); // 3 秒后触发 timeout 信号
         }
         update();
+        this->m_isImage = true;
     }
 }
 void MainWindow::imageCallback(const sensor_msgs::CompressedImageConstPtr &msg)
@@ -184,14 +196,16 @@ void MainWindow::imageCallback(const sensor_msgs::CompressedImageConstPtr &msg)
             // 将ROS图像消息转换为OpenCV格式
             // cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, "bgr8");
             cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::RGB8);
+            if (!cv_ptr->image.empty())
+            {
+                // 将OpenCV图像转换为Qt格式
+                QImage img(cv_ptr->image.data, cv_ptr->image.cols, cv_ptr->image.rows, cv_ptr->image.step, QImage::Format_RGB888);
+                QPixmap pixmap = QPixmap::fromImage(img);
 
-            // 将OpenCV图像转换为Qt格式
-            QImage img(cv_ptr->image.data, cv_ptr->image.cols, cv_ptr->image.rows, cv_ptr->image.step, QImage::Format_RGB888);
-            QPixmap pixmap = QPixmap::fromImage(img);
-
-            // 在ImageBox中显示图像
-            this->ui->imageBox->setPixmap(pixmap);
-            this->ui->imageBox->setScaledContents(true);
+                // 在ImageBox中显示图像
+                this->ui->imageBox->setPixmap(pixmap);
+                this->ui->imageBox->setScaledContents(true);
+            }
         }
     }
     catch (cv_bridge::Exception &e)

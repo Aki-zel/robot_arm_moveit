@@ -76,7 +76,6 @@ private:
     ros::Subscriber objection_subscriber_;
     ros::Publisher image_publisher_;
     MoveitServer *server;
-    QLabel *label ;
 };
 
 #endif // MAINWINDOW_H
