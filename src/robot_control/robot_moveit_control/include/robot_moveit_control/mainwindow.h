@@ -78,7 +78,7 @@ private:
     ros::Subscriber image_subscriber_;
     ros::Subscriber objection_subscriber_;
     ros::Publisher image_publisher_;
-    robotControl *server;
+    MoveitServer *server;
 };
 
 #endif // MAINWINDOW_H

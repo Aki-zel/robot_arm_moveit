@@ -104,6 +104,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
     if (m_isSelecting)
     {
+        this->m_isImage = false;
         m_endPos = event->pos();
         // update(); // 强制重绘以显示选择区域
         // std::cout<<"mo "<<m_endPos.x()<<"  "<<m_endPos.y()<<std::endl;
