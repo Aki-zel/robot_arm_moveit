@@ -16,7 +16,7 @@ private:
     ros::Subscriber moveJ_sub;
     ros::Subscriber moveL_sub;
     ros::Subscriber moveP_sub;
-    ros::Publisher tool_do_pub;
+
     ros::Publisher moveJ_pub;
     ros::Publisher moveL_pub;
     ros::Publisher moveP_pub;
@@ -24,8 +24,6 @@ private:
 
 public:
     robotControl(/* args */);
-    void Set_Tool_DO(int num, bool state); // 控制夹爪开合
-    void initializeClaw();
     void MoveJ_cmd(const float pose[]);
     void MoveJ_cmd(const std::vector<double> pose);
     void MoveP_cmd(const double x, const double y, const double z);

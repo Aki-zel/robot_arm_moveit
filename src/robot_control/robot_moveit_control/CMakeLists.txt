@@ -33,8 +33,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV 4 REQUIRED)
-find_package(Qt5 REQUIRED COMPONENTS Core Widgets )
-set(QT_LIBRARIES Qt5::Core Qt5::Widgets)
+find_package(Qt5 REQUIRED COMPONENTS Core Widgets Gui )
+
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -127,7 +127,7 @@ catkin_package(
 #  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
-
+set(QT_LIBRARIES Qt5::Core Qt5::Widgets Qt5::Gui)
 ###########
 ## Build ##
 ###########
@@ -144,8 +144,9 @@ include/robot_moveit_control
 link_directories(${OpenCV_LIBRARY_DIRS})
 file(GLOB QT_FORMS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ui/*.ui)
 file(GLOB QT_RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} resources/*.qrc)
-file(GLOB_RECURSE QT_MOC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS include/robot_moveit_control/*.hpp *.h)
-file(GLOB_RECURSE QT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS src/ydrobot.cpp mainwindow.cpp)
+file(GLOB_RECURSE QT_MOC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS include/robot_moveit_control/*.h )
+file(GLOB_RECURSE QT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS src/mainwindow.cpp ydrobot.cpp)
+# 添加下面三行，启用 Qt5 。
 QT5_ADD_RESOURCES(QT_RESOURCES_CPP ${QT_RESOURCES})
 QT5_WRAP_UI(QT_FORMS_HPP ${QT_FORMS})
 QT5_WRAP_CPP(QT_MOC_HPP ${QT_MOC})
@@ -159,9 +160,13 @@ message(STATUS "正在設置項目: ${PROJECT_NAME} ${QT_SOURCES} ${QT_RESOURCES
 add_library(MoveitServer_h
   # include/MoveitServer.h
   src/MoveitServer.cpp
+
+)
+add_library(robotControl_h
+  # include/MoveitServer.h
+
   src/robotControl.cpp
 )
-
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -171,7 +176,7 @@ add_library(MoveitServer_h
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/robot_moveit_control_node.cpp)
-add_executable(ydrobot ${QT_SOURCES} ${QT_MOC} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
+add_executable(ydrobot ${QRC_FILES} ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
 add_executable(MoveitServer src/test.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -190,7 +195,8 @@ add_dependencies(MoveitServer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPOR
 
 # target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES})
 target_link_libraries(MoveitServer_h ${catkin_LIBRARIES}   )
-target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES} MoveitServer_h)
+target_link_libraries(robotControl_h ${catkin_LIBRARIES}  MoveitServer_h )
+target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES} robotControl_h)
 target_link_libraries(MoveitServer
   MoveitServer_h
   ${catkin_LIBRARIES}

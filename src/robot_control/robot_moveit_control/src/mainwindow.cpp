@@ -12,11 +12,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     image_subscriber_ = nh.subscribe("/camera/color/image_raw/compressed", 10, &MainWindow::imageCallback, this);
     objection_subscriber_ = nh.subscribe("object_position", 10, &MainWindow::objectionCallback, this);
     nh.setCallbackQueue(&queue);
-    ros::AsyncSpinner spinner(2,&queue);
+    ros::AsyncSpinner spinner(2, &queue);
     spinner.start();
     this->server = new robotControl();
     image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
     this->addStart();
+    connect(this, SIGNAL(updateImageSignal(QImage)), this, SLOT(updateImageSlot(QImage)));
 }
 
 MainWindow::~MainWindow()
@@ -28,44 +29,7 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
 {
     try
     {
-        // double p[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y, msg.get()->pose.position.z};
-        // this->server->Set_Tool_DO(2, false);
-        // ROS_INFO("夹爪开");
-        // geometry_msgs::Pose msg1 = msg.get()->pose;
-        // msg1.position.y = msg.get()->pose.position.y + 0.05;
-        // this->server->move_p(msg1, false);
-        // ROS_INFO("夹取目标物体");
-        // ROS_INFO("移动到夹取位置");
-        // this->server->move_p(msg.get()->pose, false);;
-        // ROS_INFO("夹取目标物体");
-        // std::vector<double> joint = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
-        // this->server->move_j(joint, false);
-        // ROS_INFO("回到初始位置");
-        // std::vector<double> joint1 = {0, 0.33, 1.064, 0, 1.6747, 0};
-        // this->server->move_j(joint1, false);
-        // ROS_INFO("移动到指定位置");
-        // this->server->Set_Tool_DO(2, false);
-        // std::vector<double> joint2 = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
-        // this->server->move_j(joint2, false);
-        // ROS_INFO("回到初始位置");
-        // double p[3] = {msg.get()->pose.position.x, msg.get()->pose.position.y, msg.get()->pose.position.z};
-        // geometry_msgs::Pose msg1 = msg.get()->pose;
-        // msg1.position.z = msg.get()->pose.position.z + 0.1;
-        // ROS_INFO("夹爪开");
-        // this->server->move_p(msg1, false);
-        // ROS_INFO("移动到目标上方");
-        // this->server->move_p(msg.get()->pose, false);
-        // ROS_INFO("移动到夹取位置");
-        // ROS_INFO("夹取目标物体");
-        // this->server->move_p(msg1, false);
-        // ROS_INFO("抬起目标");
-        // msg1.position.y = msg.get()->pose.position.y - 0.1;
-        // this->server->move_p(msg1, false);
-        // ROS_INFO("移动到指定位置");
-        // ROS_INFO("夹爪开");
-        // std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
-        // this->server->move_j(joint, false);
-        // ROS_INFO("回到初始位置");
+      
     }
 
     catch (const std::exception &e)
@@ -73,6 +37,7 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
         std::cerr << e.what() << '\n';
     }
 }
+
 void MainWindow::on_closeButton_clicked()
 {
     this->close();
@@ -140,7 +105,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
     if (m_isSelecting)
     {
         m_endPos = event->pos();
-        update(); // 强制重绘以显示选择区域
+        // update(); // 强制重绘以显示选择区域
         // std::cout<<"mo "<<m_endPos.x()<<"  "<<m_endPos.y()<<std::endl;
     }
 }
@@ -176,7 +141,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
             // 设置 QTimer 的超时时间为 3 秒（3000 毫秒）
             timer->start(3000); // 3 秒后触发 timeout 信号
         }
-        update();
+        // update();
     }
 }
 void MainWindow::imageCallback(const sensor_msgs::CompressedImageConstPtr &msg)
@@ -188,14 +153,11 @@ void MainWindow::imageCallback(const sensor_msgs::CompressedImageConstPtr &msg)
             // 将ROS图像消息转换为OpenCV格式
             // cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, "bgr8");
             cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::RGB8);
-            if (cv_ptr->image.data == nullptr || cv_ptr->image.empty())
+            if (cv_ptr->image.data != nullptr || !cv_ptr->image.empty())
             {
                 // 将OpenCV图像转换为Qt格式
-                QImage img(cv_ptr->image.data, cv_ptr->image.cols, cv_ptr->image.rows, cv_ptr->image.step, QImage::Format_RGB888);
-                QPixmap pixmap = QPixmap::fromImage(img);
-                // 在ImageBox中显示图像
-                this->ui->imageBox->setPixmap(pixmap);
-                this->ui->imageBox->setScaledContents(true);
+                QImage img((unsigned char *)cv_ptr->image.data, cv_ptr->image.cols, cv_ptr->image.rows, cv_ptr->image.step, QImage::Format_RGB888);
+                emit updateImageSignal(img);
             }
         }
     }
@@ -203,6 +165,13 @@ void MainWindow::imageCallback(const sensor_msgs::CompressedImageConstPtr &msg)
     {
         ROS_ERROR("Could not convert . ");
     }
+}
+
+void MainWindow::updateImageSlot(const QImage &img)
+{
+    // 在ImageBox中显示图像
+    this->ui->imageBox->setPixmap(QPixmap::fromImage(img));
+    // this->ui->imageBox->setScaledContents(true);
 }
 sensor_msgs::ImagePtr MainWindow::convertQPixmapToSensorImage(const QPixmap &pixmap)
 {

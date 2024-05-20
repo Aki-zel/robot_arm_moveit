@@ -7,7 +7,6 @@ robotControl::robotControl(/* args */)
     ros::CallbackQueue queue1;
     // ros::CallbackQueue queue2;
     // ros::CallbackQueue queue3;
-    tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
     moveJ_pub = nh_.advertise<std_msgs::Float32MultiArray>("/robot/MoveJ_cmd", 20);
     moveP_pub = nh_.advertise<geometry_msgs::Pose>("/robot/MoveP_cmd", 20);
     moveL_pub = nh_.advertise<robot_msgs::MoveL_Data>("/robot/MoveL_cmd", 20);
@@ -17,7 +16,6 @@ robotControl::robotControl(/* args */)
     nh_.setCallbackQueue(&queue1);
     ros::AsyncSpinner spinner(3,&queue1);
     spinner.start();
-    initializeClaw();
 }
 
 robotControl::~robotControl()
@@ -64,26 +62,6 @@ void robotControl::MoveL_cmd(robot_msgs::MoveL_Data msgs)
 {
     this->moveL_pub.publish(msgs);
     ros::spinOnce();
-}
-void robotControl::Set_Tool_DO(int num, bool state) // 控制夹爪开合
-{
-    rm_msgs::Tool_Digital_Output tool_do_msg; // 创建工具端IO消息
-    tool_do_msg.num = num;
-    tool_do_msg.state = state;
-    tool_do_pub.publish(tool_do_msg);
-    ROS_INFO("Published Tool Digital Output message with num = %d and state = %s", num, state ? "true" : "false");
-}
-void robotControl::initializeClaw()
-{
-    Set_Tool_DO(1, false);
-    ros::Duration(1.0).sleep();
-    Set_Tool_DO(2, false);
-    ros::Duration(1.0).sleep();
-    Set_Tool_DO(1, true);
-    ros::Duration(1.0).sleep();
-    Set_Tool_DO(1, false);
-    ros::Duration(1.0).sleep();
-    ROS_INFO("Claw initialization completed");
 }
 void robotControl::MoveJ_cmd_callback(const std_msgs::Float32MultiArrayConstPtr joint)
 {

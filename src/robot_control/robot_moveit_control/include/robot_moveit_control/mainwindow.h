@@ -56,6 +56,7 @@ private slots:
     void on_backButton_clicked();
 
     void on_startButton_clicked();
+    void updateImageSlot(const QImage &img);
 
 protected:
     void on_detectButton_clicked();
@@ -63,7 +64,8 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     // void paintEvent(QPaintEvent *event) override;
-
+signals:
+  void updateImageSignal(const QImage &img);
 private:
     Ui::MainWindow *ui;
     ros::NodeHandle nh;

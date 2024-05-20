@@ -15,6 +15,8 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 	arm_.setPlannerId("TRRT");
 
 	tfListener = new tf2_ros::TransformListener(tfBuffer);
+	tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
+	initializeClaw();
 }
 
 bool MoveitServer::Planer() // 规划求解
@@ -26,12 +28,11 @@ bool MoveitServer::Planer() // 规划求解
 		moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
 		success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-		ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
+
 		if (success)
 		{
-			isPlan = my_plan;
+			ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
 			success = (this->arm_.execute(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-			isPlan.trajectory_.joint_trajectory.points.clear();
 		}
 	}
 	catch (const std::exception &e)
@@ -43,44 +44,33 @@ bool MoveitServer::Planer() // 规划求解
 }
 bool MoveitServer::asyncPlaner() // 规划求解
 {
+	bool success = false;
 	try
 	{
 
-		// 等待上一个异步任务完成
-		if (last_task_future.valid())
-			last_task_future.get(); // 等待上一个任务完成
+		moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
-		// 异步执行规划和执行动作
-		auto future = std::async(std::launch::async, [this]()
-								 {
-			moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-
-			bool success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-
+		success = (arm_.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+		if (success)
+		{
 			ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
-			if (success)
-			{
-				success = (this->arm_.execute(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-			} 	
-			return success; });
+			// success = (this->arm_.execute(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+			this->arm_.asyncExecute(my_plan);
+		}
 	}
 	catch (const std::exception &e)
 	{
 		ROS_ERROR("Exception caught while waiting for the asyncPlaner to complete: %s", e.what());
 	}
 
-	// 返回异步任务的future，以便在需要时检查任务是否完成或获取结果
-	return true;
+	return success;
 }
 
 void MoveitServer::go_pose(const std::string str) // 移动到预设位姿
 {
-	bool finished = arm_.getMoveGroupClient().waitForResult(ros::Duration(10.0));
-	if (finished)
-	{
-		arm_.setNamedTarget(str);
-		Planer();
-	}
+
+	arm_.setNamedTarget(str);
+	Planer();
 }
 geometry_msgs::Pose MoveitServer::setPoint(const double x, const double y, const double z)
 {
@@ -119,23 +109,6 @@ double MoveitServer::round(double num, int exponent)
 	double multiplied = std::round(num * std::pow(10, exponent));
 	double result = multiplied / std::pow(10, exponent);
 	return result;
-}
-void MoveitServer::tf_callback(const tf2_msgs::TFMessageConstPtr &tf)
-{
-	geometry_msgs::TransformStamped transformStamped;
-
-	try
-	{
-		transformStamped = this->tfBuffer.lookupTransform("base_link", "ee_link",
-														  ros::Time(0));
-
-		this->current_state = transformStamped.transform;
-	}
-	catch (tf2::TransformException &ex)
-	{
-		ROS_WARN("%s", ex.what());
-		// ros::Duration(1.0).sleep();
-	}
 }
 geometry_msgs::Transform MoveitServer::getCurrent_State()
 {
@@ -176,75 +149,60 @@ void MoveitServer::stop()
 }
 void MoveitServer::move_p(const std::vector<double> &pose, bool isAsync) // 按目标空间位姿移动(x,y,z,roll,pitch,yaw)
 {
-	bool finished = arm_.getMoveGroupClient().waitForResult(ros::Duration(10.0));
-	if (finished)
+	geometry_msgs::Pose target_pose;
+	target_pose = this->setPoint(pose);
+
+	arm_.setPoseTarget(target_pose);
+	if (isAsync)
 	{
-		geometry_msgs::Pose target_pose;
-		target_pose = this->setPoint(pose);
-
-		arm_.setPoseTarget(target_pose);
-		if (isAsync)
-		{
-			asyncPlaner();
-		}
-		Planer();
+		asyncPlaner();
 	}
+	Planer();
 }
-
+void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
+{
+    rm_msgs::Tool_Digital_Output tool_do_msg; // 创建工具端IO消息
+    tool_do_msg.num = num;
+    tool_do_msg.state = state;
+    tool_do_pub.publish(tool_do_msg);
+    ROS_INFO("Published Tool Digital Output message with num = %d and state = %s", num, state ? "true" : "false");
+}
+void MoveitServer::initializeClaw()
+{
+    Set_Tool_DO(1, false);
+    ros::Duration(1.0).sleep();
+    Set_Tool_DO(2, false);
+    ros::Duration(1.0).sleep();
+    Set_Tool_DO(1, true);
+    ros::Duration(1.0).sleep();
+    Set_Tool_DO(1, false);
+    ros::Duration(1.0).sleep();
+    ROS_INFO("Claw initialization completed");
+}
 void MoveitServer::move_p(const geometry_msgs::Pose &msg, bool isAsync) // 按目标空间位姿移动(接收目标物体位姿)
 {
-	bool finished = arm_.getMoveGroupClient().waitForResult(ros::Duration(10.0));
-	if (finished)
+	geometry_msgs::Pose target_pose;
+	target_pose = msg;
+	arm_.setPoseTarget(target_pose);
+	if (isAsync)
 	{
-		geometry_msgs::Pose target_pose;
-		target_pose = msg;
-		arm_.setPoseTarget(target_pose);
-		if (isAsync)
-		{
-			asyncPlaner();
-		}
-		Planer();
+		asyncPlaner();
 	}
+	Planer();
 }
 
 void MoveitServer::move_l(const std::vector<double> &pose) // 按目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
 {
-	bool finished = arm_.getMoveGroupClient().waitForResult(ros::Duration(10.0));
-	if (finished)
-	{
-		std::vector<geometry_msgs::Pose> waypoints; // 创建包含到达目标位姿所需的一系列中间点的容器
-		geometry_msgs::Pose target_pose;
-		target_pose = this->setPoint(pose);
-		waypoints.push_back(target_pose);
 
-		moveit_msgs::RobotTrajectory trajectory;
-		const double jump_threshold = 0.0; // 允许关节空间跳跃最大值
-		const double eef_step = 0.01;	   // 两个连续路径点间的最大移动距离
-		double fraction = 0.0;			   // 规划路径占原始请求路径的比例
-		int maxtries = 100;				   // 最大尝试次数
-		int attempts = 0;				   // 尝试次数
+	std::vector<geometry_msgs::Pose> waypoints; // 创建包含到达目标位姿所需的一系列中间点的容器
+	geometry_msgs::Pose target_pose;
+	target_pose = this->setPoint(pose);
+	waypoints.push_back(target_pose);
 
-		while (fraction < 1.0 && attempts < maxtries)
-		{
-			fraction = arm_.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory); // 计算经过中间点的笛卡尔空间路径
-			attempts++;
-		}
-
-		if (fraction == 1)
-		{
-			ROS_INFO("Path computed successfully. Moving the arm.");
-			moveit::planning_interface::MoveGroupInterface::Plan plan;
-			plan.trajectory_ = trajectory; // 计算轨迹传入
-			arm_.execute(plan);			   // 异步执行规划
-		}
-		else
-		{
-			ROS_INFO("Path planning failed with only %0.6f success after %d attempts.", fraction, maxtries);
-		}
-	}
+	this->move_l(waypoints);
 }
 
-void MoveitServer::move_l(const double (&position)[3]) // 按目标空间位姿直线移动(接收x,y,z，保持末端位姿)
+void MoveitServer::move_l(const std::array<double, 3> &position) // 按目标空间位姿直线移动(接收x,y,z，保持末端位姿)
 {
 	bool finished = arm_.getMoveGroupClient().waitForResult(ros::Duration(10.0));
 	if (finished)
@@ -258,30 +216,7 @@ void MoveitServer::move_l(const double (&position)[3]) // 按目标空间位姿�
 		target_pose.orientation = this->getCurrent_State().rotation;
 		waypoints.push_back(target_pose);
 
-		moveit_msgs::RobotTrajectory trajectory;
-		const double jump_threshold = 0.0;
-		const double eef_step = 0.01;
-		double fraction = 0.0;
-		int maxtries = 100;
-		int attempts = 0;
-
-		while (fraction < 1.0 && attempts < maxtries)
-		{
-			fraction = arm_.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
-			attempts++;
-		}
-
-		if (fraction == 1)
-		{
-			ROS_INFO("Path computed successfully. Moving the arm.");
-			moveit::planning_interface::MoveGroupInterface::Plan plan;
-			plan.trajectory_ = trajectory;
-			arm_.execute(plan);
-		}
-		else
-		{
-			ROS_INFO("Path planning failed with only %0.6f success after %d attempts.", fraction, maxtries);
-		}
+		this->move_l(waypoints);
 	}
 }
 
@@ -295,6 +230,10 @@ void MoveitServer::move_l(const std::vector<std::vector<double>> &posees) // 按
 		waypoints.push_back(target_pose);
 	}
 
+	this->move_l(waypoints);
+}
+void MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points)
+{
 	moveit_msgs::RobotTrajectory trajectory;
 	const double jump_threshold = 0.0;
 	const double eef_step = 0.01;
@@ -304,7 +243,7 @@ void MoveitServer::move_l(const std::vector<std::vector<double>> &posees) // 按
 
 	while (fraction < 1.0 && attempts < maxtries)
 	{
-		fraction = arm_.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+		fraction = arm_.computeCartesianPath(Points, eef_step, jump_threshold, trajectory);
 		attempts++;
 	}
 
@@ -320,7 +259,6 @@ void MoveitServer::move_l(const std::vector<std::vector<double>> &posees) // 按
 		ROS_INFO("Path planning failed with only %0.6f success after %d attempts.", fraction, maxtries);
 	}
 }
-
 MoveitServer::~MoveitServer()
 {
 	delete this;

@@ -8,7 +8,8 @@
 				"/home/ydt/rwm_moveit",
 				"-j2",
 				"-DCATKIN_WHITELIST_PACKAGES=''",
-				"-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+				"-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+				"-DPYTHON_EXECUTABLE=/usr/bin/python"
 			],
 			"problemMatcher": [
 				"$catkin-gcc"
