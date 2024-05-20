@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     nh.setCallbackQueue(&queue);
     ros::AsyncSpinner spinner(2, &queue);
     spinner.start();
-    this->server = new robotControl();
+    // this->server = new robotControl();
     image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
     this->addStart();
     connect(this, SIGNAL(updateImageSignal(QImage)), this, SLOT(updateImageSlot(QImage)));
@@ -64,7 +64,7 @@ void MainWindow::on_startButton_clicked()
     // std::vector<double> joint = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
     // this->server->move_j(joint, true);
     std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
-    this->server->MoveJ_cmd(joint);
+    // this->server->MoveJ_cmd(joint);
 }
 
 void MainWindow::on_detectButton_clicked()

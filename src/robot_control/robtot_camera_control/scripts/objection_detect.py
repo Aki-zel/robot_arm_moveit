@@ -15,11 +15,11 @@ import tf2_geometry_msgs
 from robot_msgs.srv import *
 current_work_dir = os.path.dirname(__file__)
 class yolo:
-    def __init__(self, config, device):
+    def __init__(self, config):
         self.result = None
         self.model = None
         self.config = config
-        self.setOption(device)
+        self.setOption(self.config["device"])
         self.loadModel()
         self.cv_image=None
         self.depth_img = None
@@ -70,11 +70,17 @@ class yolo:
     def cameraInfoCallback(self, msg):
         self.camera_info = msg
 
-    def image_callback(self,msg):
+    def image_callback(self, msg):
         try:
             self.cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")   
         except Exception as e:
             print(e)
+    def visual(self, img):
+        vis_im = vision.vis_detection(
+            img, self.result, score_threshold=self.config["threshold"]["confidence"]
+        )
+        # cv2.imwrite("/home/akria/rwm_moveit/src/robot_arm/arm_controller_code/scripts/img/"+str(time.time())+".jpg",vis_im)
+        return vis_im
 
     def getObject3DPosition(self, x, y):
         if self.depth_img is None or self.camera_info is None:
@@ -144,6 +150,8 @@ class yolo:
             # print (object_info)
             filtered_objects.append(object_info)
         return filtered_objects
+    
+    
 def getObjCoordinate(request):
     global model
     labels = []
@@ -153,11 +161,12 @@ def getObjCoordinate(request):
     try:
         if run:
             color_image=model.cv_image
-            # cv2.imshow("img",color_image)
+
             t_start = time.time()  # 开始计时
             model.Predicts(color_image)
             t_end = time.time()  # 结束计时\
-            model.visual(color_image)
+            img=model.visual(color_image)
+            # cv2.imshow("img",img)
             print("预测时间"+str((t_end-t_start)*1000))
             object_list=model.getFilteredObjects()
             if object_list:
@@ -184,17 +193,16 @@ def getObjCoordinate(request):
 
 if __name__ == '__main__':
     global model
-    print("[INFO] wait for init")
     config_path=current_work_dir + '/config/yolov5s.yaml'
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
     rospy.init_node("camrea_node")    
     model = yolo(config)
-    rospy.Subscriber('/camera/color/image_raw', Image, yolo.image_callback)
+    rospy.Subscriber('/camera/color/image_raw', Image, model.image_callback)
     rospy.Subscriber('/camera/aligned_depth_to_color/image_raw',
-                     Image, yolo.depth_image_callback)
+                     Image, model.depthImageCallback)
     rospy.Subscriber('/camera/aligned_depth_to_color/camera_info',
-                     CameraInfo, yolo.camera_info_callback)
+                     CameraInfo, model.cameraInfoCallback)
     service=rospy.Service("objection_detect",Hand_Catch,getObjCoordinate)
     rospy.spin()
     cv2.destroyAllWindows()

@@ -5,7 +5,7 @@
 			"type": "catkin_make",
 			"args": [
 				"--directory",
-				"/home/ydt/rwm_moveit",
+				"/home/ydt/ssd/rwm_moveit",
 				"-j2",
 				"-DCATKIN_WHITELIST_PACKAGES=''",
 				"-DCMAKE_BUILD_TYPE=RelWithDebInfo",
