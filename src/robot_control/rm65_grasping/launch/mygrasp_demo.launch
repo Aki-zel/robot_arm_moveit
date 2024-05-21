@@ -4,20 +4,15 @@
   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
   </include> 
 
-<!-- eyehand -->
-  <include file="$(find easy_handeye)/launch/publish.launch">
-  </include>
-
 <!-- detect -->
-  <include file="$(find find_object_2d)/launch/ros1/find_object_3d_grasp.launch">
-  </include>
+  <node name="template_detect" pkg="robot_moveit_control" type="template_detect.py" output="screen" /> 
 
-<!-- tf_listener -->
-  <node name="tf_listener" pkg="rm65_grasping" type="tf_listener.py" output="log">
-  </node>
- 
+<!-- tf_transform -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_To_cramera" args="-0.04608809103480994 0.031410818173565176 0.01680247490824934 
+0.004867876410342842 -0.010143691342199057 -0.7073319749610286 0.7067919683350531 Link6 camera_link"/>
+
 <!-- grasp_demo -->
-  <node name="mygrasp" pkg="rm65_grasping" type="mygrasp.py" output="screen">
+  <node name="mygrasp" pkg="rm65_grasping" type="grasp_demo.py" output="screen">
   </node>
 
 </launch>

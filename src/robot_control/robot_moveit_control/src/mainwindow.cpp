@@ -28,6 +28,7 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
 void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg)
 {
     if (!msg) {
@@ -41,40 +42,40 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
         
         this->server->Set_Tool_DO(2, false);
         ROS_INFO("夹爪开");
+        ros::Duration(1.0).sleep();
         
         std::array<double, 3> targetPositionAbove = {position[0], position[1], position[2] + 0.10};
         this->server->move_p(targetPositionAbove);
         ROS_INFO("移动到目标上方");
-        ros::Duration(2.0).sleep();
+        // ros::Duration(1.0).sleep();
         
         std::array<double, 3> grabPosition = {position[0], position[1], position[2]};
         this->server->move_p(grabPosition);
         ROS_INFO("移动到夹取位置");
-        ros::Duration(5.0).sleep();
+        // ros::Duration(1.0).sleep();
 
         this->server->Set_Tool_DO(2, true);
         ROS_INFO("夹取目标物体");
-        ros::Duration(2.0).sleep();
+        ros::Duration(1.0).sleep();
 
-        targetPositionAbove = {position[0], position[1], position[2] + 0.10};
         this->server->move_p(targetPositionAbove);
         ROS_INFO("抬起目标");
-        ros::Duration(2.0).sleep();
+        // ros::Duration(1.0).sleep();
 
         std::array<double, 3> movePosition = {position[0], position[1] + 0.20, position[2]};
         this->server->move_p(movePosition);
         ROS_INFO("移动到指定位置");
-        ros::Duration(3.0).sleep();
+        // ros::Duration(1.0).sleep();
 
         this->server->Set_Tool_DO(2, false);
         ROS_INFO("夹爪开");
-        ros::Duration(2.0).sleep();
+        ros::Duration(1.0).sleep();
         
         movePosition = {position[0], position[1] + 0.20, position[2] + 0.10};
         this->server->move_p(movePosition);
-        ros::Duration(2.0).sleep();
+        // ros::Duration(1.0).sleep();
         
-        std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
+        std::vector<double> joint = {0.175, 0.262, -1.152, 0, -1.885, -3.072};
         this->server->move_j(joint);
         ROS_INFO("回到初始位置");
     }
@@ -83,6 +84,7 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
         std::cerr << "捕获到异常: " << e.what() << '\n';
     }
 }
+
 void MainWindow::on_closeButton_clicked()
 {
     this->close();
@@ -108,7 +110,7 @@ void MainWindow::on_startButton_clicked()
 {
     this->addStart();
     this->m_isImage = true;
-    std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
+    std::vector<double> joint = {0.175, 0.262, -1.152, 0, -1.885, -3.072};
     this->server->move_j(joint);
     this->server->Set_Tool_DO(2, true);
 }
@@ -132,6 +134,7 @@ void MainWindow::addStart()
     auto robotmodel_ = this->manager_->createDisplay("rviz/RobotModel", "RobotModel", true);
     ROS_ASSERT(robotmodel_ != NULL);
 }
+
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton && m_isSelecting)
@@ -174,6 +177,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
         update();
     }
 }
+
 void MainWindow::imageCallback(const sensor_msgs::CompressedImageConstPtr &msg)
 {
     try
@@ -198,6 +202,7 @@ void MainWindow::imageCallback(const sensor_msgs::CompressedImageConstPtr &msg)
         ROS_ERROR("Could not convert . ");
     }
 }
+
 sensor_msgs::ImagePtr MainWindow::convertQPixmapToSensorImage(const QPixmap &pixmap)
 {
     // 将QPixmap转换为QImage

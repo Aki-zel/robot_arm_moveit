@@ -3,5 +3,5 @@ bool catch
 
 ---
 #respond
-string[] label
+string[] labels
 float32[] positions

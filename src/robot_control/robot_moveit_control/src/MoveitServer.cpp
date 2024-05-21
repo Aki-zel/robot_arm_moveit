@@ -41,7 +41,7 @@ bool MoveitServer::Executer() // 求解
 {
 	if (!this->myplan.trajectory_.joint_trajectory.points.empty())
 	{
-		bool success = (this->arm_.asyncExecute(this->myplan) == moveit::core::MoveItErrorCode::SUCCESS); //异步求解
+		bool success = (this->arm_.execute(this->myplan) == moveit::core::MoveItErrorCode::SUCCESS); //同步求解
 		return success;
 	}
 	return false;

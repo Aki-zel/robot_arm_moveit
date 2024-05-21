@@ -29,9 +29,9 @@ int main(int argc, char** argv) {
 	// Test 
 
 	// test for move_j
-	// cout<<"-----------------------test for move_j----------------------"<<endl;
-	// vector<double> joints ={0, -0.8028, 1.2740, 0, 1.850, 0};
-	// moveit_server.move_j(joints);
+	cout<<"-----------------------test for move_j----------------------"<<endl;
+	vector<double> joints ={0.175, 0.262, -1.152, 0, -1.885, -3.072};
+	moveit_server.move_j(joints);
 	// ros::Duration(5.0).sleep();
 
 	// test for move_p and move_l(1 point)
