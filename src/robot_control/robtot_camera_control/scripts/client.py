@@ -10,7 +10,7 @@ def add_two_ints_client(run):
         detect_service = rospy.ServiceProxy('objection_detect', Hand_Catch)
         # 创建请求对象并设置属性
         request = Hand_CatchRequest()
-        request.catch = run
+        request.run = run
         # 调用服务并获取响应
         resp1 = detect_service(request)
         print(resp1)

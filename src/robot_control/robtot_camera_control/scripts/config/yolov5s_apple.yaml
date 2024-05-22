@@ -3,7 +3,7 @@ class_name: ['apple']
 
 # # 阈值设置
 threshold:
-  iou: 0.4
+  iou: 0.7
   confidence: 0.6
 # 计算设备
 # - cpu

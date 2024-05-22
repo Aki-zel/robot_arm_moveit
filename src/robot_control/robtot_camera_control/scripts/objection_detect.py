@@ -143,7 +143,7 @@ class yolo:
         score_threshold=self.config["threshold"]["confidence"] # 获取置信度阈值
         iou=self.config["threshold"]["iou"] # 获取IoU阈值
         # 使用OpenCV的非极大值抑制(NMS)来筛选检测框
-        filtered=cv2.dnn.NMSBoxes(self.result.boxes,self.result.scores,score_threshold,iou)
+        filtered=cv2.dnn.NMSBoxes(self.result.boxes, self.result.scores, score_threshold, iou)
         
         # 遍历筛选后的索引，获取对应的物体信息
         for i in filtered:
@@ -160,7 +160,7 @@ def getObjCoordinate(request):
     global model
     labels = []
     positions = []
-    run = request.catch # 获取请求中的标志位，判断是否执行检测
+    run = request.run # 获取请求中的标志位，判断是否执行检测
     respond = Hand_CatchResponse() # 创建一个服务响应对象
     try:
         if run:
@@ -168,9 +168,16 @@ def getObjCoordinate(request):
             t_start = time.time()  # 开始计时
             model.Predicts(color_image)
             t_end = time.time()  # 结束计时
-            model.visual(color_image) # 可视化检测结果
+            res = model.visual(color_image) # 可视化检测结果
+            # # 在 OpenCV 窗口中显示图像
+            # cv2.imshow("Visualization", res)
+            # # 等待按下任意键继续执行后面的代码
+            # cv2.waitKey(0)
+            # # 关闭所有 OpenCV 窗口
+            # cv2.destroyAllWindows()
             print("预测时间" + str((t_end-t_start)*1000)) # 打印预测时间
             object_list = model.getFilteredObjects() # 获取筛选后的目标信息列表
+            print("目标数量" + str(len(object_list)))
             if object_list:
                 for obj in object_list:
                     label = obj['label']
@@ -181,11 +188,14 @@ def getObjCoordinate(request):
                     # 获取物体的三维坐标
                     camera_xyz = model.getObject3DPosition(ux,uy)
                     camera_xyz = np.round(np.array(camera_xyz), 3).tolist()  # 转成3位小数
-                    if camera_xyz[2] < 100.0 and camera_xyz[2]!=0:
-                        # camera_xyz=model.tf_transform(camera_xyz) # 将目标物体从相机坐标系转换到世界坐标系
-                        # model.tf_broad(camera_xyz)
-                        positions.extend(camera_xyz)
-                        labels.append(label)
+                    # if camera_xyz[2] < 100.0 and camera_xyz[2]!=0:
+                        # world_pose = model.tf_transform(camera_xyz) # 将目标物体从相机坐标系转换到世界坐标系
+                        # # model.tf_broad(camera_xyz)
+                        # if world_pose is not None:
+                        #     world_position = [world_pose.pose.position.x, world_pose.pose.position.y, world_pose.pose.position.z]
+                        # positions.extend(world_position)
+                    positions.extend(camera_xyz)
+                    labels.append(label)
             respond.labels = labels
             respond.positions = positions
             print (respond)

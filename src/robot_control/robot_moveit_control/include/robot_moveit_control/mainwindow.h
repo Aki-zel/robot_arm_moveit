@@ -26,6 +26,8 @@
 #include <geometry_msgs/Pose.h>
 #include <MoveitServer.h>
 #include <opencv2/highgui.hpp>
+#include <robot_msgs/Hand_Catch.h>
+
 namespace Ui
 {
     class MainWindow;
@@ -74,6 +76,12 @@ private:
     ros::Subscriber objection_subscriber_;
     ros::Publisher image_publisher_;
     MoveitServer *server;
+    //detect
+    cv::Mat m_cvImage;
+    ros::ServiceClient client;
+    bool callDetectService();
+    void processDetectionResults(const robot_msgs::Hand_CatchResponse &response);
+    void controlRobotToGrab(float x, float y, float z);
 };
 
 #endif // MAINWINDOW_H
