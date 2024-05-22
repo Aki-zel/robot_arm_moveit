@@ -10,7 +10,8 @@
 #include <string>
 #include <iostream>
 #include <MoveitServer.h>
-
+#include <robot_msgs/Hand_Catch.h>
+#include <robot_msgs/Hand_CatchRequest.h>
 using namespace std;
 
 int main(int argc, char **argv)
@@ -22,6 +23,8 @@ int main(int argc, char **argv)
 	ros::AsyncSpinner spinner(1);
 	ros::NodeHandle nh;
 	spinner.start();
+	robot_msgs::Hand_Catch srv;
+	srv.request.run=false;
 	// std::string PLANNING_GROUP = "arm";
 	// // moveit::planning_interface::MoveGroupInterface arm(PLANNING_GROUP);
 	// MoveitServer moveit_server(PLANNING_GROUP);

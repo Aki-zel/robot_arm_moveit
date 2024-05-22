@@ -16,6 +16,7 @@ robotControl::robotControl(/* args */)
     nh_.setCallbackQueue(&queue1);
     ros::AsyncSpinner spinner(3,&queue1);
     spinner.start();
+    
 }
 
 robotControl::~robotControl()

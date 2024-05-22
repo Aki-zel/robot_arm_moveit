@@ -5,11 +5,11 @@
 			"type": "catkin_make",
 			"args": [
 				"--directory",
-				"/home/ydt/ssd/rwm_moveit",
-				"-j2",
+				"${workspaceFolder}",
+				"-j6",
 				"-DCATKIN_WHITELIST_PACKAGES=''",
 				"-DCMAKE_BUILD_TYPE=RelWithDebInfo",
-				"-DPYTHON_EXECUTABLE=/usr/bin/python"
+				"-DPYTHON_EXECUTABLE=/usr/bin/python3"
 			],
 			"problemMatcher": [
 				"$catkin-gcc"

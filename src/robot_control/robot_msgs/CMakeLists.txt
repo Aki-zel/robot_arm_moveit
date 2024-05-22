@@ -53,7 +53,7 @@ add_message_files(
   FILES
   # Message1.msg
   # Message2.msg
-  # MoveL_Data.msg
+  MoveL_Data.msg
 )
 
 ## Generate services in the 'srv' folder

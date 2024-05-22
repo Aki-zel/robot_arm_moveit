@@ -156,7 +156,7 @@ def getObjCoordinate(request):
     global model
     labels = []
     positions = []
-    run=request.catch
+    run=request.run
     respond=Hand_CatchResponse()
     try:
         if run:
