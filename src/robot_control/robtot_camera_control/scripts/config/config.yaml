@@ -1,4 +1,0 @@
-model_file: /home/akira/arm_moveit/src/arm_controller_code/model/model.pdmodel
-params_file: /home/akira/arm_moveit/src/arm_controller_code/model/model.pdiparams
-config_file: /home/akira/arm_moveit/src/arm_controller_code/model/infer_cfg.yml
-score: 0.7

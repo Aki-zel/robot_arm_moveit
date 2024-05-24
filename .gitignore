@@ -27,3 +27,4 @@ core
 .vscode/c_cpp_properties.json
 .vscode/settings.json
 camera_pose.txt
+**/__pycache__
