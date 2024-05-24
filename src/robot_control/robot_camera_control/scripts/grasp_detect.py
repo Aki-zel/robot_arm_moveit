@@ -1,6 +1,7 @@
 import os
 import time
 
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -12,7 +13,7 @@ from utils.device import get_device
 from inference.post_process import post_process_output
 from utils.data.camera_data import CameraData
 from utils.dataset_processing.grasp import detect_grasps
-# from utils.visualisation.plot import plot_grasp
+
 current_work_dir = os.path.dirname(__file__)
 print(current_work_dir)
 
@@ -121,21 +122,28 @@ class GraspGenerator:
             target.shape = (3, 1)
             print('\ntarget: ', target)
 
-            # Convert camera to robot coordinates
-            camera2robot = self.cam_pose
-            target_position = np.dot(camera2robot[0:3, 0:3], target) + camera2robot[0:3, 3:]
-            target_position = target_position[0:3, 0]
+            # # Convert camera to robot coordinates
+            # camera2robot = self.cam_pose
+            # target_position = np.dot(camera2robot[0:3, 0:3], target) + camera2robot[0:3, 3:]
+            # target_position = target_position[0:3, 0]
 
             # Convert camera to robot angle
             angle = np.asarray([0, 0, grasps[0].angle])
-            angle.shape = (3, 1)
-            target_angle = np.dot(camera2robot[0:3, 0:3], angle)
-            print('\ntarget_angle: ', target_angle)
-            # Concatenate grasp pose with grasp angle
-            grasp_pose = np.append(target_position, target_angle[2])
+            # angle.shape = (3, 1)
+            # target_angle = np.dot(camera2robot[0:3, 0:3], angle)
+            # print('\ntarget_angle: ', target_angle)
+            # # Concatenate grasp pose with grasp angle
+            grasp_pose = np.append(target, angle)
 
             print('\ngrasp_pose: ', grasp_pose)
+            if self.visualize:
+                for g in grasps:
+                    color = (0, 255, 0)  # 绿色
+                    thickness = 2
+                    cv2.circle(rgb, (g.center[1] + self.cam_data.top_left[1] ,g.center[0] + self.cam_data.top_left[0]), 3, color, thickness)
 
+            cv2.imshow('Rectangle', rgb)
+            cv2.waitKey(1)
             return grasp_pose
         
     def run(self):

@@ -1,20 +1,21 @@
 import os
 import time
-
+current_work_dir = os.path.dirname(__file__)
+print(current_work_dir)
+import sys
+sys.path.append(current_work_dir+"/../")
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import rospy
 from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge, CvBridgeError
-
+import cv2
 from utils.device import get_device
 from inference.post_process import post_process_output
 from utils.data.camera_data import CameraData
 from utils.dataset_processing.grasp import detect_grasps
 from utils.visualisation.plot import plot_grasp
-current_work_dir = os.path.dirname(__file__)
-print(current_work_dir)
 
 class GraspGenerator:
     def __init__(self, saved_model_path, visualize=False):
@@ -23,7 +24,7 @@ class GraspGenerator:
         self.device = None
         self.visualize = visualize
 
-        self.cam_data = CameraData(include_depth=True, include_rgb=True)
+        self.cam_data = CameraData(include_depth=False, include_rgb=True,output_size=480)
         self.bridge = CvBridge()
         self.scale = 0.001 
 
@@ -38,16 +39,16 @@ class GraspGenerator:
         self.camera_info = None
 
         # # Load camera pose and depth scale (from running calibration)
-        self.cam_pose = np.loadtxt('/home/ydt/rwm_moveit/src/robot_control/robot_camera_control/scripts/1.txt', delimiter=' ')
+        self.cam_pose = np.loadtxt('/home/ydz/Downloads/rwm_moveit/src/robot_control/robot_camera_control/scripts/1.txt', delimiter=' ')
 
-        if visualize:
-            self.fig = plt.figure(figsize=(10, 10))
-        else:
-            self.fig = None
+        # if visualize:
+        #     self.fig = plt.figure(figsize=(10, 10))
+        # else:
+        #     self.fig = None
 
     def rgb_callback(self, data):
         try:
-            self.rgb_image = self.bridge.imgmsg_to_cv2(data, "rgb8")
+            self.rgb_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
 
@@ -116,19 +117,28 @@ class GraspGenerator:
 
             # np.save(self.grasp_pose, grasp_pose)
         
-            if self.fig:
-                plot_grasp(fig=self.fig, rgb_img=self.cam_data.get_rgb(rgb, False), grasps=grasps, save=False)
+            # if self.fig:
+            #     plot_grasp(fig=self.fig, rgb_img=self.cam_data.get_rgb(rgb, False), grasps=grasps, save=False)
+            if self.visualize:
+                for g in grasps:
+                    color = (0, 255, 0)  # 绿色
+                    thickness = 2
+                    cv2.circle(rgb, (g.center[1] + self.cam_data.top_left[1] ,g.center[0] + self.cam_data.top_left[0]), 3, color, thickness)
+
+        cv2.imshow('Rectangle', rgb)
+        cv2.waitKey(1)
 
     def run(self):
         print("start")
         while not rospy.is_shutdown():
             self.generate()
+        cv2.destroyAllWindows()
         
 
 
 if __name__ == '__main__':
-    saved_model_path = '/home/ydt/rwm_moveit/src/robot_control/robot_camera_control/model/model_cornell_0.98'
+    saved_model_path = '/home/ydz/Downloads/rwm_moveit/src/robot_control/robot_camera_control/scripts/weights/epoch_44_iou_0.51'
     visualize = True  # Set to True if visualization is needed
     grasp_gen = GraspGenerator(saved_model_path, visualize)
-    # grasp_gen.load_model()
+    grasp_gen.load_model()
     grasp_gen.run()

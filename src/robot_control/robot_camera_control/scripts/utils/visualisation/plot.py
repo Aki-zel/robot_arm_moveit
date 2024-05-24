@@ -104,7 +104,6 @@ def plot_grasp(
     ax = plt.subplot(111)
     ax.imshow(rgb_img)
     for g in grasps:
-        print(g)
         g.plot(ax)
     ax.set_title('Grasp')
     ax.axis('off')
