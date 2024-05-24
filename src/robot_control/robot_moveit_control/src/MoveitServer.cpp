@@ -91,6 +91,18 @@ geometry_msgs::Pose MoveitServer::setPoint(const std::vector<double> &pose)
 		target_pose1.position.z = pose[2];
 		target_pose1.orientation = this->getCurrent_State().rotation;
 	}
+	else if (pose.size() == 6)
+	{
+		target_pose1.position.x = pose[0];
+		target_pose1.position.y = pose[1];
+		target_pose1.position.z = pose[2];
+		tf2::Quaternion qua;
+		qua.setRPY(pose[3],pose[4],pose[5]);
+		target_pose1.orientation.x=qua.getX();
+		target_pose1.orientation.y=qua.getY();
+		target_pose1.orientation.z=qua.getZ();
+		target_pose1.orientation.w=qua.getW();
+	}
 	else if (pose.size() == 7)
 	{
 		target_pose1.position.x = pose[0];

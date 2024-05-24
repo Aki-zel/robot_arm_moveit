@@ -24,6 +24,8 @@
 #include <queue>
 #include <mutex>
 #include <condition_variable>
+#include <tf2/LinearMath/Quaternion.h>
+#include <cmath>
 
 typedef actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction> MoveGroupClient;
 
@@ -50,6 +52,10 @@ public:
 	geometry_msgs::Pose setPoint(const std::vector<double> &pose);
 	void stop();
 	void initializeClaw();
+	double degreesToRadians(double degrees)
+	{
+		return degrees * M_PI / 180.0;
+	}
 	~MoveitServer();
 
 private:
@@ -62,7 +68,6 @@ private:
 	// ros::Subscriber tf_sub;
 	geometry_msgs::Transform current_state;
 	ros::Publisher tool_do_pub;
-	
 };
 
 #endif /* MOVEITSERVER_H_ */
