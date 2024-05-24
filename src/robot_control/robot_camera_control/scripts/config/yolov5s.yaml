@@ -13,11 +13,12 @@ threshold:
   iou: 0.4
   confidence: 0.6
 # 计算设备
+# - cpu
+# - 0 <- 使用GPU
 device: 'openvino'
-
 model_type: 'yolov5'
 # 模型权重路径
-model_file: src/rm_robot/arm_controller_code/model/best1.onnx
+model_file: /home/yds/rwm_moveit/src/robot_control/robtot_camera_control/model/yolov5s.onnx
 params_file: ""
 config_file: ""
 

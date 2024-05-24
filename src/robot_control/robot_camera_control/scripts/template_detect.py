@@ -68,7 +68,6 @@ class TemplateDetect:
         if object_position is not None:
             rospy.loginfo("Object position in world coordinates: {}".format(object_position))
             self.tf_transform(object_position)
-
         else:
             rospy.logwarn("Unable to determine object position.")
 

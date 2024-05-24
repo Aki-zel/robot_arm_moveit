@@ -5,3 +5,4 @@ bool run
 #respond
 string[] labels
 float32[] positions
+sensor_msgs/Image detect_image

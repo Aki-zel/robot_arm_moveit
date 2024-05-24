@@ -1,0 +1,17 @@
+# 标签名称
+class_name: ['apple']
+
+# # 阈值设置
+threshold:
+  iou: 0.7
+  confidence: 0.6
+# 计算设备
+# - cpu
+# - 0 <- 使用GPU
+device: 'openvino'
+model_type: 'yolov5'
+# 模型权重路径
+model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/apple.onnx
+params_file: ""
+config_file: ""
+

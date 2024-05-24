@@ -27,4 +27,6 @@ core
 .vscode/c_cpp_properties.json
 .vscode/settings.json
 camera_pose.txt
+.qtc_clangd
 **/__pycache__
+src/robot_control/robot_camera_control/model

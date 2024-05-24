@@ -28,6 +28,8 @@
 #include <QLabel>
 #include <thread>
 #include <robotControl.h>
+#include <robot_msgs/Hand_Catch.h>
+
 namespace Ui
 {
     class MainWindow;
@@ -49,6 +51,8 @@ private slots:
 
     void on_closeButton_clicked();
 
+    void on_detectButton_clicked();
+
     void on_chooseButton_clicked();
 
     void on_settingButton_clicked();
@@ -59,7 +63,6 @@ private slots:
     void updateImageSlot(const QImage &img);
 
 protected:
-    void on_detectButton_clicked();
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
@@ -79,6 +82,12 @@ private:
     ros::Subscriber objection_subscriber_;
     ros::Publisher image_publisher_;
     MoveitServer *server;
+    //detect
+    cv::Mat m_cvImage;
+    ros::ServiceClient client;
+    bool callDetectService();
+    void processDetectionResults(const robot_msgs::Hand_CatchResponse &response);
+    void controlRobotToGrab(float x, float y, float z);
 };
 
 #endif // MAINWINDOW_H
