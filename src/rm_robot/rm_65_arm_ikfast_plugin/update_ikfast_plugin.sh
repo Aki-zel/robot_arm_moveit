@@ -5,9 +5,9 @@ moveit_config_pkg=rm_65_moveit_config
 robot_name=rm_65
 planning_group_name=arm
 ikfast_plugin_pkg=rm_65_arm_ikfast_plugin
-base_link_name=base_link
+base_link_name=base_link_rm
 eef_link_name=Link6
-ikfast_output_path=/home/ydt/rwm_moveit/src/rm_robot/rm_65_arm_ikfast_plugin/src/rm_65_arm_ikfast_solver.cpp
+ikfast_output_path=/home/ydf/Documents/rwm_moveit/src/rm_robot/rm_65_arm_ikfast_plugin/src/rm_65_arm_ikfast_solver.cpp
 
 rosrun moveit_kinematics create_ikfast_moveit_plugin.py\
   --search_mode=$search_mode\

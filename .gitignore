@@ -26,3 +26,4 @@ src/moveit_calibration
 core
 .vscode/c_cpp_properties.json
 .vscode/settings.json
+camera_pose.txt

@@ -21,7 +21,7 @@
   </link>
   
   <!-- ///////////////////////////////////////   bottom_joint   ////////////////////////////////////////// -->
-  <joint name="bottom_joint" type="fixed">
+  <!-- <joint name="bottom_joint" type="fixed">
     <origin xyz="0 0 0" rpy="0 0 0" />
     <parent link="base_link"/>
     <child link="bottom_link"/>
@@ -43,10 +43,10 @@
       </geometry>
     </collision>
     <xacro:Box_inertial_matrix m="500" l="1" w="1" h="0.02"/>
-  </link>
+  </link> -->
   
   <link
-    name="base_link">
+    name="base_link_rm">
     <inertial>
       <origin
         xyz="-0.000433277303987328 -3.54664423471128E-05 0.0599427668933796"
@@ -86,7 +86,7 @@
     </collision>
   </link>
   
-  <gazebo reference="base_link">
+  <gazebo reference="base_link_rm">
     <mu1 value="200000.0"/>
     <mu2 value="200000.0"/>
     <kp value="100000000.0"/>
@@ -95,7 +95,7 @@
   
   <joint name="dummy_joint" type="fixed">
     <parent link="world" />
-    <child link="base_link" />
+    <child link="base_link_rm" />
   </joint>
   
   <link
@@ -145,7 +145,7 @@
       xyz="0 0 0.2405"
       rpy="0 0 0" />
     <parent
-      link="base_link" />
+      link="base_link_rm" />
     <child
       link="Link1" />
     <axis
