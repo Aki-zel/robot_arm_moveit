@@ -11,7 +11,7 @@ threshold:
 device: 'openvino'
 model_type: 'yolov5'
 # 模型权重路径
-model_file: /home/yds/rwm_moveit/src/robot_control/robtot_camera_control/model/apple.onnx
+model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/apple.onnx
 params_file: ""
 config_file: ""
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import time
 import rospy
 from sensor_msgs.msg import Image, CameraInfo
@@ -137,7 +139,7 @@ class yolo:
         self.tf_broadcaster.sendTransform(tfs)
 
     def getFilteredObjects(self):
-        filtered=[] # 存储NMS筛选后的目标
+        filtered=[] # 存储NMS筛选后的目标索引
         filtered_objects = [] # 存储最终目标信息
         object_info = {} # 暂存单个目标信息
         score_threshold=self.config["threshold"]["confidence"] # 获取置信度阈值
@@ -153,13 +155,16 @@ class yolo:
                 'box_coordinates': self.result.boxes[i] # 获取物体的边界框坐标
             }
             filtered_objects.append(object_info) # 将物体信息添加到结果列表中
+        # 根据每个目标的置信度对目标列表进行排序
+        sorted_objects = sorted(filtered_objects, key=lambda x: x['score'], reverse=True)
         
-        return filtered_objects # 返回筛选后的物体信息列表
+        return sorted_objects # 返回筛选后的物体信息列表
     
 def getObjCoordinate(request):
     global model
     labels = []
     positions = []
+
     run = request.run # 获取请求中的标志位，判断是否执行检测
     respond = Hand_CatchResponse() # 创建一个服务响应对象
     try:
@@ -169,12 +174,7 @@ def getObjCoordinate(request):
             model.Predicts(color_image)
             t_end = time.time()  # 结束计时
             res = model.visual(color_image) # 可视化检测结果
-            # # 在 OpenCV 窗口中显示图像
-            # cv2.imshow("Visualization", res)
-            # # 等待按下任意键继续执行后面的代码
-            # cv2.waitKey(0)
-            # # 关闭所有 OpenCV 窗口
-            # cv2.destroyAllWindows()
+            respond.detect_image = CvBridge().cv2_to_imgmsg(res, encoding="bgr8")
             print("预测时间" + str((t_end-t_start)*1000)) # 打印预测时间
             object_list = model.getFilteredObjects() # 获取筛选后的目标信息列表
             print("目标数量" + str(len(object_list)))
@@ -188,17 +188,17 @@ def getObjCoordinate(request):
                     # 获取物体的三维坐标
                     camera_xyz = model.getObject3DPosition(ux,uy)
                     camera_xyz = np.round(np.array(camera_xyz), 3).tolist()  # 转成3位小数
-                    # if camera_xyz[2] < 100.0 and camera_xyz[2]!=0:
-                        # world_pose = model.tf_transform(camera_xyz) # 将目标物体从相机坐标系转换到世界坐标系
-                        # # model.tf_broad(camera_xyz)
-                        # if world_pose is not None:
-                        #     world_position = [world_pose.pose.position.x, world_pose.pose.position.y, world_pose.pose.position.z]
-                        # positions.extend(world_position)
-                    positions.extend(camera_xyz)
-                    labels.append(label)
+                    if camera_xyz[2] < 100.0 and camera_xyz[2]!=0:
+                        world_pose = model.tf_transform(camera_xyz) # 将目标物体从相机坐标系转换到世界坐标系
+                        # model.tf_broad(camera_xyz)
+                        if world_pose is not None:
+                            world_position = [world_pose.pose.position.x, world_pose.pose.position.y, world_pose.pose.position.z]
+                        positions.extend(world_position)
+                    # positions.extend(camera_xyz)
+                        labels.append(label)
             respond.labels = labels
             respond.positions = positions
-            print (respond)
+            print (respond.labels, respond.positions)
             return respond
     except Exception as r:
         rospy.loginfo("[ERROR] %s"%r)

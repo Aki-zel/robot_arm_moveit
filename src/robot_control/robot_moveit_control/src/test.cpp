@@ -10,6 +10,10 @@
 #include <string>
 #include <iostream>
 #include <MoveitServer.h>
+#include <robot_msgs/Hand_Catch.h>
+#include <opencv2/opencv.hpp>
+#include <cv_bridge/cv_bridge.h>
+
 
 using namespace std;
 
@@ -25,6 +29,7 @@ int main(int argc, char** argv) {
 	std::string PLANNING_GROUP = "arm";
 	// moveit::planning_interface::MoveGroupInterface arm(PLANNING_GROUP);
 	MoveitServer moveit_server(PLANNING_GROUP);
+	ros::ServiceClient client = nh.serviceClient<robot_msgs::Hand_Catch>("objection_detect"); // 创建目标检测服务客户端
 
 	// Test 
 
@@ -79,8 +84,40 @@ int main(int argc, char** argv) {
 	// moveit_server.Set_Tool_DO(2, false);
 	// ros::Duration(2.0).sleep();
 	// moveit_server.Set_Tool_DO(2, true);
+	
+
+	// 调用目标检测服务
+	robot_msgs::Hand_Catch srv;
+    srv.request.run = true;  // 设置请求标志位
+    if (client.call(srv))
+    {
+        ROS_INFO("Service call succeeded");
+        // processDetectionResults(srv.response); // 处理检测结果
+		const robot_msgs::Hand_CatchResponse& response = srv.response;
+		for (size_t i = 0; i < response.labels.size(); ++i)
+		{
+			std::string label = response.labels[i];
+			float x = response.positions[3 * i];
+			float y = response.positions[3 * i + 1];
+			float z = response.positions[3 * i + 2];
+			ROS_INFO("Detected object: %s at (%.3f, %.3f, %.3f)", label.c_str(), x, y, z);
+
+			// controlRobotToGrab(x, y, z);
+		}
+
+		// 显示检测结果图像
+		cv::Mat detect_image = cv_bridge::toCvCopy(response.detect_image, sensor_msgs::image_encodings::BGR8)->image;
+		cv::imshow("Detection Results", detect_image);
+		cv::waitKey(0); // 按下任意键继续
+		cv::destroyAllWindows();
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service objection_detect");
+        return -1;
+    }
+
 	ros::waitForShutdown();
 	return 0;
 
 }
-

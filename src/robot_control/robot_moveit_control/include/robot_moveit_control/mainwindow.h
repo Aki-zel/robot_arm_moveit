@@ -49,6 +49,8 @@ private slots:
 
     void on_closeButton_clicked();
 
+    void on_detectButton_clicked();
+
     void on_chooseButton_clicked();
 
     void on_settingButton_clicked();
@@ -58,7 +60,6 @@ private slots:
     void on_startButton_clicked();
 
 protected:
-    void on_detectButton_clicked();
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;

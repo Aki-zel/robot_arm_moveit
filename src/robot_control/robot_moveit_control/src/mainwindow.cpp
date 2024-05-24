@@ -209,21 +209,11 @@ sensor_msgs::ImagePtr MainWindow::convertQPixmapToSensorImage(const QPixmap &pix
 // 目标检测
 void MainWindow::on_detectButton_clicked()
 {
-    if (m_cvImage.empty())
-    {
-        ROS_WARN("No image received yet");
-        return;
-    }
+    // 移动到检测位置
+    std::vector<double> joint = {0, 0.349, -0.524, 0, -1.047, -3.142};
+    this->server->move_j(joint);
 
-    if (callDetectService()) 
-    {
-        // 显示检测图像
-        QLabel *label = new QLabel;
-        QImage qimage(m_cvImage.data, m_cvImage.cols, m_cvImage.rows, m_cvImage.step, QImage::Format_RGB888);
-        label->setPixmap(QPixmap::fromImage(qimage));
-        label->resize(qimage.size());
-        label->show();
-    }
+    callDetectService();
 }
 
 bool MainWindow::callDetectService() // 调用检测服务
@@ -246,20 +236,30 @@ bool MainWindow::callDetectService() // 调用检测服务
 
 void MainWindow::processDetectionResults(const robot_msgs::Hand_CatchResponse& response) // 处理检测结果
 {
-    // 假设response.labels和response.positions是std::vector<std::string>和std::vector<float>类型
-    for (size_t i = 0; i < response.labels.size(); ++i)
-    {
-        std::string label = response.labels[i];
-        float x = response.positions[3 * i];
-        float y = response.positions[3 * i + 1];
-        float z = response.positions[3 * i + 2];
-        ROS_INFO("Detected object: %s at (%.2f, %.2f, %.2f)", label.c_str(), x, y, z);
-        // 在图像上绘制检测结果或其他处理
-        cv::rectangle(m_cvImage, cv::Point(x - 50, y - 50), cv::Point(x + 50, y + 50), cv::Scalar(0, 255, 0), 2);
-        cv::putText(m_cvImage, label, cv::Point(x - 50, y - 60), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2);
-
-        // controlRobotToGrab(x, y, z);
+    try {
+        // 显示检测结果图像
+        cv::Mat detect_image = cv_bridge::toCvCopy(response.detect_image, sensor_msgs::image_encodings::BGR8)->image;
+        cv::imshow("Detection Results", detect_image);
+        cv::waitKey(0); // 按下任意键继续
+        cv::destroyAllWindows();
+    } catch (const cv_bridge::Exception& e) {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
     }
+
+    if (response.labels.empty() || response.positions.size() < 3) {
+        ROS_ERROR("Detection response is empty or positions are insufficient.");
+        return;
+    }
+
+    // 获取置信度最高的物体的位置和标签
+    std::string label = response.labels[0];
+    float x = response.positions[0];
+    float y = response.positions[1];
+    float z = response.positions[2];
+    ROS_INFO("Detected object: %s at (%.3f, %.3f, %.3f)", label.c_str(), x, y, z);
+
+    controlRobotToGrab(x, y, z);
 }
 
 void MainWindow::controlRobotToGrab(float x, float y, float z)
@@ -268,15 +268,15 @@ void MainWindow::controlRobotToGrab(float x, float y, float z)
     {
         std::array<double, 3> position = {x, y, z};
         
+        // 移动到目标下方
+        std::array<double, 3> targetPosition = {position[0], position[1], position[2] - 0.10};
+        this->server->move_p(targetPosition);
+        ROS_INFO("移动到目标下方");
+        ros::Duration(1.0).sleep();
+
         // 打开夹爪
         this->server->Set_Tool_DO(2, false);
         ROS_INFO("夹爪开");
-        ros::Duration(1.0).sleep();
-        
-        // 移动到目标上方
-        std::array<double, 3> targetPositionAbove = {position[0], position[1], position[2] + 0.10};
-        this->server->move_p(targetPositionAbove);
-        ROS_INFO("移动到目标上方");
         ros::Duration(1.0).sleep();
         
         // 移动到抓取位置
@@ -290,15 +290,9 @@ void MainWindow::controlRobotToGrab(float x, float y, float z)
         ROS_INFO("夹取目标物体");
         ros::Duration(2.0).sleep();
 
-        // 抬起目标
-        this->server->move_p(targetPositionAbove);
-        ROS_INFO("抬起目标");
-        ros::Duration(1.0).sleep();
-
-        // 移动到指定位置
-        std::array<double, 3> movePosition = {position[0], position[1] + 0.20, position[2]};
-        this->server->move_p(movePosition);
-        ROS_INFO("移动到指定位置");
+        // 摘取目标物体
+        this->server->move_p(targetPosition);
+        ROS_INFO("摘取目标");
         ros::Duration(1.0).sleep();
 
         // 打开夹爪
@@ -307,7 +301,7 @@ void MainWindow::controlRobotToGrab(float x, float y, float z)
         ros::Duration(2.0).sleep();
         
         // 移动到初始位置
-        std::vector<double> joint = {0.175, 0.262, -1.152, 0, -1.885, -3.072};
+        std::vector<double> joint = {0, 0.349, -0.524, 0, -1.047, -3.142};
         this->server->move_j(joint);
         ROS_INFO("回到初始位置");
     }

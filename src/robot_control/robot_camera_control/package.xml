@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>robtot_camera_control</name>
+  <name>robot_camera_control</name>
   <version>0.0.0</version>
   <description>The robtot_camera_control package</description>
 
