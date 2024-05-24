@@ -210,7 +210,7 @@ sensor_msgs::ImagePtr MainWindow::convertQPixmapToSensorImage(const QPixmap &pix
 void MainWindow::on_detectButton_clicked()
 {
     // 移动到检测位置
-    std::vector<double> joint = {0, 0.349, -0.524, 0, -1.047, -3.142};
+    std::vector<double> joint = {0, 0.803, -1.239, 0, -0.942, -3.142};
     this->server->move_j(joint);
 
     callDetectService();
