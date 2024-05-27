@@ -75,14 +75,14 @@ void robotControl::MoveJ_cmd_callback(const std_msgs::Float32MultiArrayConstPtr 
         doubleData.push_back(static_cast<double>(floatData[i]));
     }
 
-    this->moveit_server->move_j(doubleData, false);
+    this->moveit_server->move_j(doubleData);
 }
 void robotControl::MoveP_cmd_callback(const geometry_msgs::PoseConstPtr pose)
 {
     geometry_msgs::Pose msg;
     msg.orientation = pose.get()->orientation;
     msg.position = pose.get()->position;
-    this->moveit_server->move_p(msg, false);
+    this->moveit_server->move_p(msg);
 }
 void robotControl::MoveL_cmd_callback(const robot_msgs::MoveL_DataConstPtr msgs)
 {

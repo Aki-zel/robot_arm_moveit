@@ -35,9 +35,10 @@ public:
 	MoveitServer(std::string &PLANNING_GROUP);
 	void go_home();
 	void go_pose(const std::string str);
-	void move_j(const std::vector<double> &joint_group_positions, bool isAsync);
-	void move_p(const std::vector<double> &pose, bool isAsync);
-	void move_p(const geometry_msgs::Pose &msg, bool isAsync);
+	void move_j(const std::vector<double> &joint_group_positions);
+	void move_p(const std::vector<double> &pose);
+	void move_p(const geometry_msgs::Pose &msg);
+	void move_p(const geometry_msgs::PoseStamped &msg);
 	void move_l(const std::vector<double> &pose);
 	void move_l(const std::array<double, 3> &position);
 	void move_l(const std::vector<std::vector<double>> &posees);
@@ -46,7 +47,6 @@ public:
 	// void tf_callback(const tf2_msgs::TFMessageConstPtr &transformStamped);
 	geometry_msgs::Transform getCurrent_State();
 	bool Planer();
-	bool asyncPlaner();
 	double round(double num, int exponent);
 	geometry_msgs::Pose setPoint(const double x, const double y, const double z);
 	geometry_msgs::Pose setPoint(const std::vector<double> &pose);

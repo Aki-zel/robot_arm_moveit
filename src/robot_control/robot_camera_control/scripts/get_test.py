@@ -6,6 +6,7 @@ import geometry_msgs.msg
 import tf2_geometry_msgs
 import numpy as np
 
+
 def get_transform():
     rospy.init_node('tf_listener')
 
@@ -15,7 +16,8 @@ def get_transform():
     rate = rospy.Rate(1.0)
     while not rospy.is_shutdown():
         try:
-            trans = tfBuffer.lookup_transform('base_link_rm', 'camera_color_optical_frame', rospy.Time(0))
+            trans = tfBuffer.lookup_transform(
+                'base_link_rm', 'camera_color_optical_frame', rospy.Time(0))
 
             # Extract the translation
             translation = trans.transform.translation
@@ -39,7 +41,8 @@ def get_transform():
             # target_position = np.dot(camera2robot[0:3, 0:3], target) + camera2robot[0:3, 3:]
             # target_position = target_position[0:3, 0]
             # Output the transformation matrix
-            rospy.loginfo("Transformation matrix from base_link to camera_link:")
+            rospy.loginfo(
+                "Transformation matrix from base_link to camera_link:")
             rospy.loginfo("\n" + str(T))
 
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
@@ -48,6 +51,7 @@ def get_transform():
             continue
 
         rate.sleep()
+
 
 if __name__ == '__main__':
     # try:
@@ -66,4 +70,3 @@ if __name__ == '__main__':
 
     # 将矩阵写入文件
     np.savetxt('camera_pose.txt', camera_pose, delimiter=' ')
-

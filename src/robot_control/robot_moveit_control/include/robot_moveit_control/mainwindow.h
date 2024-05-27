@@ -87,7 +87,7 @@ private:
     ros::ServiceClient client;
     bool callDetectService();
     void processDetectionResults(const robot_msgs::Hand_CatchResponse &response);
-    void controlRobotToGrab(float x, float y, float z);
+    void controlRobotToGrab(geometry_msgs::PoseStamped position);
 };
 
 #endif // MAINWINDOW_H

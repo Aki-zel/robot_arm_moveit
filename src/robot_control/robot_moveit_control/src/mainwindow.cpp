@@ -26,16 +26,16 @@ MainWindow::~MainWindow()
     delete this;
 }
 
-void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg) //模版匹配回调函数
+void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg) // 模版匹配回调函数
 {
-    if (!msg) {
+    if (!msg)
+    {
         ROS_ERROR("Received a null pose message.");
         return; // 提前返回，避免空指针解引用
     }
 
     try
     {
-      
     }
     catch (const std::exception &e)
     {
@@ -47,31 +47,6 @@ void MainWindow::on_closeButton_clicked()
 {
     this->close();
 }
-
-// void MainWindow::imageCallback(const sensor_msgs::CompressedImageConstPtr &msg) // 接收相机图像并显示
-// {
-//     try
-//     {
-//         if (this->m_isImage)
-//         {
-//             // 将ROS图像消息转换为OpenCV格式
-//             // cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, "bgr8");
-//             cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::RGB8);
-
-//             // 将OpenCV图像转换为Qt格式
-//             QImage img(cv_ptr->image.data, cv_ptr->image.cols, cv_ptr->image.rows, cv_ptr->image.step, QImage::Format_RGB888);
-//             QPixmap pixmap = QPixmap::fromImage(img);
-
-//             // 在ImageBox中显示图像
-//             this->ui->imageBox->setPixmap(pixmap);
-//             this->ui->imageBox->setScaledContents(true);
-//         }
-//     }
-//     catch (cv_bridge::Exception &e)
-//     {
-//         ROS_ERROR("Could not convert . ");
-//     }
-// }
 
 // 启动
 void MainWindow::on_startButton_clicked()
@@ -143,22 +118,22 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
             QPixmap screenshot = screen->grabWindow(this->ui->centralwidget->winId(), selectionRect.x(), selectionRect.y(), selectionRect.width(), selectionRect.height());
             image_publisher_.publish(this->convertQPixmapToSensorImage(screenshot));
             ros::spinOnce();
-            QLabel *label = new QLabel(); // 创建 QLabel 对象
-            label->setPixmap(screenshot);
-            label->resize(screenshot.size());
-            label->show();
+            // QLabel *label = new QLabel(); // 创建 QLabel 对象
+            // label->setPixmap(screenshot);
+            // label->resize(screenshot.size());
+            // label->show();
 
-            // 创建 QTimer 对象
-            QTimer *timer = new QTimer(this);
-            // 连接 QTimer 的 timeout 信号到槽函数，用于在超时后删除 QLabel 对象
-            connect(timer, &QTimer::timeout, [=]()
-                    {
-                        label->hide();
-                        delete label;
-                        timer->deleteLater(); // 在删除 QTimer 对象后，确保释放内存
-                    });
-            // 设置 QTimer 的超时时间为 3 秒（3000 毫秒）
-            timer->start(3000); // 3 秒后触发 timeout 信号
+            // // 创建 QTimer 对象
+            // QTimer *timer = new QTimer(this);
+            // // 连接 QTimer 的 timeout 信号到槽函数，用于在超时后删除 QLabel 对象
+            // connect(timer, &QTimer::timeout, [=]()
+            //         {
+            //             label->hide();
+            //             delete label;
+            //             timer->deleteLater(); // 在删除 QTimer 对象后，确保释放内存
+            //         });
+            // // 设置 QTimer 的超时时间为 3 秒（3000 毫秒）
+            // timer->start(3000); // 3 秒后触发 timeout 信号
         }
         // update();
     }
@@ -200,11 +175,13 @@ sensor_msgs::ImagePtr MainWindow::convertQPixmapToSensorImage(const QPixmap &pix
     // 将QImage转换为OpenCV格式
     cv::Mat cv_image(image.height(), image.width(), CV_8UC4, (uchar *)image.bits(), image.bytesPerLine());
     cv::cvtColor(cv_image, cv_image, cv::COLOR_RGBA2BGR); // Qt的QImage默认使用RGBA格式，而OpenCV默认使用BGR格式，需要进行通道转换
+    cv::imshow("Detection Results", cv_image);
+    cv::waitKey(0); // 按下任意键继续
+    cv::destroyAllWindows();
     // 创建一个cv_bridge::CvImage对象
     cv_bridge::CvImage cv_bridge_image;
     cv_bridge_image.image = cv_image;
     cv_bridge_image.encoding = "bgr8"; // 设置图像编码为BGR8
-
     // 将cv_bridge::CvImage对象转换为sensor_msgs::Image
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", cv_bridge_image.image).toImageMsg();
     return msg;
@@ -215,15 +192,14 @@ void MainWindow::on_detectButton_clicked()
 {
     // 移动到检测位置
     std::vector<double> joint = {0, 0.349, -0.524, 0, -1.047, -3.142};
-    this->server->move_j(joint,false);
-
+    this->server->move_j(joint);
     callDetectService();
 }
 
 bool MainWindow::callDetectService() // 调用检测服务
 {
     robot_msgs::Hand_Catch srv;
-    srv.request.run = true;  // 设置请求标志位
+    srv.request.run = true; // 设置请求标志位
 
     if (client.call(srv))
     {
@@ -238,43 +214,45 @@ bool MainWindow::callDetectService() // 调用检测服务
     }
 }
 
-void MainWindow::processDetectionResults(const robot_msgs::Hand_CatchResponse& response) // 处理检测结果
+void MainWindow::processDetectionResults(const robot_msgs::Hand_CatchResponse &response) // 处理检测结果
 {
-    try {
+    try
+    {
         // 显示检测结果图像
         cv::Mat detect_image = cv_bridge::toCvCopy(response.detect_image, sensor_msgs::image_encodings::BGR8)->image;
         cv::imshow("Detection Results", detect_image);
         cv::waitKey(0); // 按下任意键继续
         cv::destroyAllWindows();
-    } catch (const cv_bridge::Exception& e) {
+    }
+    catch (const cv_bridge::Exception &e)
+    {
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
 
-    if (response.labels.empty() || response.positions.size() < 3) {
+    if (response.labels.empty() || response.positions.size() < 3)
+    {
         ROS_ERROR("Detection response is empty or positions are insufficient.");
         return;
     }
 
     // 获取置信度最高的物体的位置和标签
     std::string label = response.labels[0];
-    float x = response.positions[0];
-    float y = response.positions[1];
-    float z = response.positions[2];
-    ROS_INFO("Detected object: %s at (%.3f, %.3f, %.3f)", label.c_str(), x, y, z);
+    auto position = response.positions[0];
+    ROS_INFO("Detected object: %s", label.c_str());
 
-    controlRobotToGrab(x, y, z);
+    controlRobotToGrab(position);
 }
 
-void MainWindow::controlRobotToGrab(float x, float y, float z)
+void MainWindow::controlRobotToGrab(geometry_msgs::PoseStamped position)
 {
     try
     {
-        std::array<double, 3> position = {x, y, z};
-        
+        geometry_msgs::Pose p = position.pose;
+
         // 移动到目标下方
-        std::vector<double> targetPosition = {position[0], position[1], position[2] - 0.10};
-        this->server->move_p(targetPosition,false);
+        p.position.z -= 0.10;
+        this->server->move_p(p);
         ROS_INFO("移动到目标下方");
         ros::Duration(1.0).sleep();
 
@@ -282,20 +260,19 @@ void MainWindow::controlRobotToGrab(float x, float y, float z)
         this->server->Set_Tool_DO(2, false);
         ROS_INFO("夹爪开");
         ros::Duration(1.0).sleep();
-        
+        p = position.pose;
         // 移动到抓取位置
-        std::vector<double> grabPosition = {position[0], position[1], position[2]};
-        this->server->move_p(grabPosition,false);
+        this->server->move_p(p);
         ROS_INFO("移动到抓取位置");
         ros::Duration(1.0).sleep();
-
+        p.position.z -= 0.10;
         // 关闭夹爪
         this->server->Set_Tool_DO(2, true);
         ROS_INFO("夹取目标物体");
         ros::Duration(2.0).sleep();
 
         // 摘取目标物体
-        this->server->move_p(targetPosition,false);
+        this->server->move_p(p);
         ROS_INFO("摘取目标");
         ros::Duration(1.0).sleep();
 
@@ -303,10 +280,10 @@ void MainWindow::controlRobotToGrab(float x, float y, float z)
         this->server->Set_Tool_DO(2, false);
         ROS_INFO("夹爪开");
         ros::Duration(2.0).sleep();
-        
+
         // 移动到初始位置
         std::vector<double> joint = {0, 0.349, -0.524, 0, -1.047, -3.142};
-        this->server->move_j(joint,false);
+        this->server->move_j(joint);
         ROS_INFO("回到初始位置");
     }
     catch (const std::exception &e)
@@ -314,7 +291,6 @@ void MainWindow::controlRobotToGrab(float x, float y, float z)
         std::cerr << "捕获到异常: " << e.what() << '\n';
     }
 }
-
 
 void MainWindow::on_settingButton_clicked()
 {

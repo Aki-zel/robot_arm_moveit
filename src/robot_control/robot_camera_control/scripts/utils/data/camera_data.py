@@ -35,6 +35,10 @@ class CameraData:
         self.bottom_right = (bottom, right)
         self.top_left = (top, left)
 
+    def setTopBottom(self,T,B):
+        self.bottom_right = B
+        self.top_left = T
+
     @staticmethod
     def numpy_to_torch(s):
         if len(s.shape) == 2:
