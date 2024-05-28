@@ -3,8 +3,10 @@
 
 #include <ros/ros.h>
 #include <moveit/move_group_interface/move_group_interface.h>
-#include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit_msgs/AttachedCollisionObject.h>
+#include <moveit_msgs/CollisionObject.h>
+#include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/CollisionObject.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -44,7 +46,6 @@ public:
 	void move_l(const std::vector<std::vector<double>> &posees);
 	void move_l(const std::vector<geometry_msgs::Pose> Points);
 	void Set_Tool_DO(int num, bool state);
-	// void tf_callback(const tf2_msgs::TFMessageConstPtr &transformStamped);
 	geometry_msgs::Transform getCurrent_State();
 	bool Planer();
 	double round(double num, int exponent);

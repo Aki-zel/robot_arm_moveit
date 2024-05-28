@@ -55,6 +55,7 @@ void MainWindow::on_startButton_clicked()
     // std::vector<double> joint = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
     // this->server->move_j(joint, true);
     std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
+    this->server->move_j(joint);
     // this->server->MoveJ_cmd(joint);
 }
 
