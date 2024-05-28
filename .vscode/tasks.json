@@ -7,6 +7,7 @@
 				"--directory",
 				"${workspaceFolder}",
 				"-j6",
+				"-l6",
 				"-DCATKIN_WHITELIST_PACKAGES=''",
 				"-DCMAKE_BUILD_TYPE=RelWithDebInfo",
 				"-DPYTHON_EXECUTABLE=/usr/bin/python3"

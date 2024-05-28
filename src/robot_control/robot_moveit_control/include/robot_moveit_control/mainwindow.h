@@ -46,6 +46,7 @@ public:
     void imageCallback(const sensor_msgs::CompressedImageConstPtr &msg);
     void objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg);
     sensor_msgs::ImagePtr convertQPixmapToSensorImage(const QPixmap &pixmap);
+    void setEnableButton(bool enbale);
 
 private slots:
 

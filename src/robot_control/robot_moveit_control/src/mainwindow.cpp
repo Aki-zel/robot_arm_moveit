@@ -15,6 +15,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     ros::AsyncSpinner spinner(2, &queue);
     spinner.start();
     // this->server = new robotControl();
+    std::string PLANNING_GROUP = "arm"; // 你的规划组名称
+    this->server = new MoveitServer(PLANNING_GROUP);
     image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
     this->addStart();
     connect(this, SIGNAL(updateImageSignal(QImage)), this, SLOT(updateImageSlot(QImage)));
@@ -22,8 +24,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 
 MainWindow::~MainWindow()
 {
-    delete ui;
-    delete this;
+    delete server;
 }
 
 void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg) // 模版匹配回调函数
@@ -36,6 +37,8 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
 
     try
     {
+        setEnableButton(false);
+        
     }
     catch (const std::exception &e)
     {
@@ -47,16 +50,26 @@ void MainWindow::on_closeButton_clicked()
 {
     this->close();
 }
-
+void MainWindow::setEnableButton(bool enbale)
+{
+    QList<QPushButton *> allButtons = this->findChildren<QPushButton *>();
+    for (auto button : allButtons)
+    {
+        button->setEnabled(enbale);
+    }
+}
 // 启动
 void MainWindow::on_startButton_clicked()
 {
     this->m_isImage = true;
-    // std::vector<double> joint = {-3.100, -0.575, 1.2036, 0, 1.7618, 0};
-    // this->server->move_j(joint, true);
+    setEnableButton(false);
     std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
-    this->server->move_j(joint);
-    // this->server->MoveJ_cmd(joint);
+    // this->server->move_j(joint);
+    std::thread moveThread([this, joint]()
+                           {
+        this->server->move_j(joint);
+        setEnableButton(true); });
+    moveThread.detach(); // 分离线程
 }
 
 void MainWindow::addStart()
@@ -70,7 +83,7 @@ void MainWindow::addStart()
     this->manager_->initialize();
     this->manager_->removeAllDisplays();
     this->manager_->startUpdate();
-    this->manager_->setFixedFrame("base_link");
+    this->manager_->setFixedFrame("world");
     auto grid_ = this->manager_->createDisplay("rviz/Grid", "adjustable grid", true);
     ROS_ASSERT(grid_ != NULL);
     auto robotmodel_ = this->manager_->createDisplay("rviz/RobotModel", "RobotModel", true);
@@ -100,7 +113,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
     {
         this->m_isImage = false;
         m_endPos = event->pos();
-        // update(); // 强制重绘以显示选择区域
+        update();
         // std::cout<<"mo "<<m_endPos.x()<<"  "<<m_endPos.y()<<std::endl;
     }
 }
@@ -118,25 +131,9 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
             // std::cout<<"re  "<<selectionRect.x()<<"  "<<selectionRect.y()<<std::endl;
             QPixmap screenshot = screen->grabWindow(this->ui->centralwidget->winId(), selectionRect.x(), selectionRect.y(), selectionRect.width(), selectionRect.height());
             image_publisher_.publish(this->convertQPixmapToSensorImage(screenshot));
-            ros::spinOnce();
-            // QLabel *label = new QLabel(); // 创建 QLabel 对象
-            // label->setPixmap(screenshot);
-            // label->resize(screenshot.size());
-            // label->show();
-
-            // // 创建 QTimer 对象
-            // QTimer *timer = new QTimer(this);
-            // // 连接 QTimer 的 timeout 信号到槽函数，用于在超时后删除 QLabel 对象
-            // connect(timer, &QTimer::timeout, [=]()
-            //         {
-            //             label->hide();
-            //             delete label;
-            //             timer->deleteLater(); // 在删除 QTimer 对象后，确保释放内存
-            //         });
-            // // 设置 QTimer 的超时时间为 3 秒（3000 毫秒）
-            // timer->start(3000); // 3 秒后触发 timeout 信号
+            this->m_isImage = true;
         }
-        // update();
+        update();
     }
 }
 void MainWindow::imageCallback(const sensor_msgs::CompressedImageConstPtr &msg)
@@ -166,7 +163,7 @@ void MainWindow::updateImageSlot(const QImage &img)
 {
     // 在ImageBox中显示图像
     this->ui->imageBox->setPixmap(QPixmap::fromImage(img));
-    // this->ui->imageBox->setScaledContents(true);
+    this->ui->imageBox->setScaledContents(true);
 }
 sensor_msgs::ImagePtr MainWindow::convertQPixmapToSensorImage(const QPixmap &pixmap) // 将Qt图像转换为ROS图像信息
 {

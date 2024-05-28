@@ -69,6 +69,7 @@ private:
 	// ros::Subscriber tf_sub;
 	geometry_msgs::Transform current_state;
 	ros::Publisher tool_do_pub;
+	ros::AsyncSpinner spinner;
 };
 
 #endif /* MOVEITSERVER_H_ */

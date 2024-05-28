@@ -1,8 +1,7 @@
 #include <MoveitServer.h>
 
-MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
+MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP),spinner(2)
 {
-	ros::AsyncSpinner spinner(1);
 	spinner.start();
 
 	// Set arm properties
@@ -11,7 +10,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 	arm_.setGoalJointTolerance(0.01);
 	arm_.setMaxAccelerationScalingFactor(0.3);
 	arm_.setMaxVelocityScalingFactor(0.3);
-	arm_.setPoseReferenceFrame("base_link");
+	// arm_.setPoseReferenceFrame("base_link_rm");
 	arm_.allowReplanning(true);
 	arm_.setPlanningTime(3.0);
 	arm_.setPlannerId("TRRT");
@@ -19,7 +18,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP)
 		arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 	tfListener = new tf2_ros::TransformListener(tfBuffer);
 	tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
-
+	ROS_INFO_NAMED("tutorial", "Start MOVEITSERVER");
 	initializeClaw();
 }
 
@@ -35,7 +34,7 @@ bool MoveitServer::Planer() // 规划求解
 		if (success)
 		{
 			ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
-			success = (this->arm_.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+			this->arm_.execute(my_plan);
 		}
 	}
 	catch (const std::exception &e)
