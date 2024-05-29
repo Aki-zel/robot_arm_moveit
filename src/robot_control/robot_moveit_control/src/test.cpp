@@ -35,14 +35,16 @@ int main(int argc, char** argv) {
 
 	// test for move_j
 	cout<<"-----------------------test for move_j----------------------"<<endl;
-	vector<double> joints ={0.175, 0.262, -1.152, 0, -1.885, -3.072};
+	vector<double> joints = {0, 0.803, -1.239, 0, -0.942, -3.142};
 	moveit_server.move_j(joints);
-	// ros::Duration(5.0).sleep();
+	ros::Duration(5.0).sleep();
 
 	// test for move_p and move_l(1 point)
 	// cout<<"-----------------------test for move_p and move_l---------------------"<<endl;
-	// vector<double> xyzrpy={0.3,0.1,0.4,-3.1415,0,0};
-	// moveit_server.move_p(xyzrpy);
+	vector<double> xyzrpy={0.15,0.05,0.88};
+	array<double, 3> position = {0.15,0.05,0.88};
+	moveit_server.move_p(position);
+	
 	// xyzrpy[2]=0.2;
 	// moveit_server.move_l(xyzrpy);
 
@@ -54,15 +56,6 @@ int main(int argc, char** argv) {
 	// xyzrpys.push_back(xyzrpy);
 	// xyzrpy[0]=0.4;
 	// moveit_server.move_l(xyzrpys);
-
-	// // test for move_p_with constrains
-	// cout<<"-----------------------test for move_p_with_constrains----------------------"<<endl;
-	// vector<double> pose1={0.4,0,0.4,0,3.141592/2,0};
-	// moveit_server.move_p(pose1);
-	// vector<double> pose2={0.4,0.2,0.2,0,3.141592/2,0};
-	// moveit_server.move_p_with_constrains(pose2);
-	// vector<double> pose3={0.0,0.5,0.3,0,3.141592/2,0};
-	// moveit_server.move_p_with_constrains(pose3);
 
 	// // test for my functions
 	// cout<<"-----------------------test for my move_function----------------------"<<endl;
@@ -85,37 +78,36 @@ int main(int argc, char** argv) {
 	// ros::Duration(2.0).sleep();
 	// moveit_server.Set_Tool_DO(2, true);
 	
-
 	// 调用目标检测服务
-	robot_msgs::Hand_Catch srv;
-    srv.request.run = true;  // 设置请求标志位
-    if (client.call(srv))
-    {
-        ROS_INFO("Service call succeeded");
-        // processDetectionResults(srv.response); // 处理检测结果
-		const robot_msgs::Hand_CatchResponse& response = srv.response;
-		for (size_t i = 0; i < response.labels.size(); ++i)
-		{
-			std::string label = response.labels[i];
-			float x = response.positions[3 * i];
-			float y = response.positions[3 * i + 1];
-			float z = response.positions[3 * i + 2];
-			ROS_INFO("Detected object: %s at (%.3f, %.3f, %.3f)", label.c_str(), x, y, z);
+	// robot_msgs::Hand_Catch srv;
+    // srv.request.run = true;  // 设置请求标志位
+    // if (client.call(srv))
+    // {
+    //     ROS_INFO("Service call succeeded");
+    //     // processDetectionResults(srv.response); // 处理检测结果
+	// 	const robot_msgs::Hand_CatchResponse& response = srv.response;
+	// 	for (size_t i = 0; i < response.labels.size(); ++i)
+	// 	{
+	// 		std::string label = response.labels[i];
+	// 		float x = response.positions[3 * i];
+	// 		float y = response.positions[3 * i + 1];
+	// 		float z = response.positions[3 * i + 2];
+	// 		ROS_INFO("Detected object: %s at (%.3f, %.3f, %.3f)", label.c_str(), x, y, z);
 
-			// controlRobotToGrab(x, y, z);
-		}
+	// 		// controlRobotToGrab(x, y, z);
+	// 	}
 
-		// 显示检测结果图像
-		cv::Mat detect_image = cv_bridge::toCvCopy(response.detect_image, sensor_msgs::image_encodings::BGR8)->image;
-		cv::imshow("Detection Results", detect_image);
-		cv::waitKey(0); // 按下任意键继续
-		cv::destroyAllWindows();
-    }
-    else
-    {
-        ROS_ERROR("Failed to call service objection_detect");
-        return -1;
-    }
+	// 	// 显示检测结果图像
+	// 	cv::Mat detect_image = cv_bridge::toCvCopy(response.detect_image, sensor_msgs::image_encodings::BGR8)->image;
+	// 	cv::imshow("Detection Results", detect_image);
+	// 	cv::waitKey(0); // 按下任意键继续
+	// 	cv::destroyAllWindows();
+    // }
+    // else
+    // {
+    //     ROS_ERROR("Failed to call service objection_detect");
+    //     return -1;
+    // }
 
 	ros::waitForShutdown();
 	return 0;

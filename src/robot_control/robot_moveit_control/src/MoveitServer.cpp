@@ -121,8 +121,6 @@ bool MoveitServer::move_p(const geometry_msgs::PoseStampedConstPtr &msg) // æŒ‰ç
 {
 	geometry_msgs::Pose target_pose;
 	target_pose = msg.get()->pose;
-	target_pose.position.x += 0.10;
-	target_pose.position.z += 0.18;
 	arm_.setStartStateToCurrentState();
 	arm_.setPoseTarget(target_pose);
 

@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #define Pi 3.1415926
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
                                           ui(new Ui::MainWindow)
 {
@@ -74,7 +75,7 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
         this->server->move_p(movePosition);
         // ros::Duration(1.0).sleep();
         
-        std::vector<double> joint = {0.175, 0.262, -1.152, 0, -1.885, -3.072};
+        std::vector<double> joint = {0, 0, -1.57, 0, -1.57, 3.142};
         this->server->move_j(joint);
         ROS_INFO("回到初始位置");
     }
@@ -120,7 +121,7 @@ void MainWindow::on_startButton_clicked()
 {
     this->addStart();
     this->m_isImage = true;
-    std::vector<double> joint = {0.175, 0.262, -1.152, 0, -1.885, -3.072};
+    std::vector<double> joint = {0, 0, -1.57, 0, -1.57, 3.142};
     this->server->move_j(joint);
     this->server->Set_Tool_DO(2, true);
 }
@@ -210,7 +211,7 @@ sensor_msgs::ImagePtr MainWindow::convertQPixmapToSensorImage(const QPixmap &pix
 void MainWindow::on_detectButton_clicked()
 {
     // 移动到检测位置
-    std::vector<double> joint = {0, 0.803, -1.239, 0, -0.942, -3.142};
+    std::vector<double> joint = {0, 0, -1.57, 0, -1.57, 3.142};
     this->server->move_j(joint);
 
     callDetectService();
@@ -269,7 +270,7 @@ void MainWindow::controlRobotToGrab(float x, float y, float z)
         std::array<double, 3> position = {x, y, z};
         
         // 移动到目标下方
-        std::array<double, 3> targetPosition = {position[0], position[1], position[2] - 0.10};
+        std::vector<double> targetPosition = {position[0], position[1], position[2] - 0.10};
         this->server->move_p(targetPosition);
         ROS_INFO("移动到目标下方");
         ros::Duration(1.0).sleep();
@@ -277,10 +278,10 @@ void MainWindow::controlRobotToGrab(float x, float y, float z)
         // 打开夹爪
         this->server->Set_Tool_DO(2, false);
         ROS_INFO("夹爪开");
-        ros::Duration(1.0).sleep();
+        ros::Duration(3.0).sleep();
         
         // 移动到抓取位置
-        std::array<double, 3> grabPosition = {position[0], position[1], position[2]};
+        std::vector<double> grabPosition = {position[0], position[1], position[2]};
         this->server->move_p(grabPosition);
         ROS_INFO("移动到抓取位置");
         ros::Duration(1.0).sleep();
@@ -301,7 +302,7 @@ void MainWindow::controlRobotToGrab(float x, float y, float z)
         ros::Duration(2.0).sleep();
         
         // 移动到初始位置
-        std::vector<double> joint = {0, 0.349, -0.524, 0, -1.047, -3.142};
+        std::vector<double> joint = {0, 0, -1.57, 0, -1.57, 3.142};
         this->server->move_j(joint);
         ROS_INFO("回到初始位置");
     }

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import time
 import rospy
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge
 import cv2
 import os
@@ -10,15 +10,14 @@ import yaml
 import numpy as np
 import fastdeploy.vision as vision
 import fastdeploy as fd
+import tf2_ros
+from geometry_msgs.msg import PoseStamped, TransformStamped
+import tf2_geometry_msgs
 from robot_msgs.srv import *
-from transform import Transform
 
 
-class yolo(Transform):
+class yolo:
     def __init__(self, config):
-        super(yolo, self).__init__()
-        rospy.Subscriber('/camera/color/image_raw', Image, self.image_callback)
-
         self.result = None
         self.model = None
         self.config = config
@@ -28,6 +27,10 @@ class yolo(Transform):
         self.depth_img = None
         self.camera_info = None
         self.setflag = 0
+        self.tf_buffer = tf2_ros.Buffer()
+        self.listener = tf2_ros.TransformListener(self.tf_buffer)
+        self.bridge = CvBridge()
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster()  # 创建TF广播
 
     def loadModel(self):
         if self.config['model_type'] == "ppyoloe":
@@ -62,6 +65,12 @@ class yolo(Transform):
             self.option.trt_option.serialize_file = current_work_dir+"/cache/model.trt"
         return self.option
 
+    def depthImageCallback(self, msg):
+        self.depth_img = self.bridge.imgmsg_to_cv2(msg)
+
+    def cameraInfoCallback(self, msg):
+        self.camera_info = msg
+
     def image_callback(self, msg):
         try:
             self.cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
@@ -74,9 +83,61 @@ class yolo(Transform):
         )
         return vis_im
 
+    def getObject3DPosition(self, x, y):
+        if self.depth_img is None or self.camera_info is None:
+            return None
+
+        # 获取相机固有参数
+        fx = self.camera_info.K[0]
+        fy = self.camera_info.K[4]
+        cx = self.camera_info.K[2]
+        cy = self.camera_info.K[5]
+        depth_value = self.depth_img[y, x]
+
+        # 将像素坐标转换为三维点
+        X = (x - cx) * depth_value / fx / 1000
+        Y = (y - cy) * depth_value / fy / 1000
+        Z = depth_value/1000
+
+        return [X, Y, Z]
+
+    def tf_transform(self, position):
+        x, y, z = position
+        camera_point = PoseStamped()
+        camera_point.header.frame_id = "camera_color_optical_frame"
+        camera_point.pose.position.x = x
+        camera_point.pose.position.y = y
+        camera_point.pose.position.z = z
+        camera_point.pose.orientation.w = 1
+
+        try:
+            # 使用tf2将机械臂摄像头坐标系转换到base_link坐标系
+            transform = self.tf_buffer.lookup_transform(
+                'base_link', 'camera_color_optical_frame', rospy.Time(0), rospy.Duration(1))
+            world_point = tf2_geometry_msgs.do_transform_pose(
+                camera_point, transform)
+            if world_point is not None:
+                rospy.loginfo("World point: %s", world_point)
+                return world_point
+            else:
+                return None
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+            rospy.logwarn("Exception while transforming: %s", e)
+            return None
+
     def Predicts(self, img):
         self.result = self.model.predict(img)
         return self.result
+
+    def tf_broad(self, position):
+        tfs = TransformStamped()  # 创建广播数据
+        tfs.header.frame_id = "base_link"  # 参考坐标系
+        tfs.header.stamp = rospy.Time.now()
+        tfs.child_frame_id = "object"  # 目标坐标系
+        tfs.transform.translation = position.pose.position
+        tfs.transform.rotation = position.pose.orientation
+        # 发布tf变换
+        self.tf_broadcaster.sendTransform(tfs)
 
     def getFilteredObjects(self):
         filtered = []  # 存储NMS筛选后的目标索引
@@ -103,6 +164,7 @@ class yolo(Transform):
 
         return sorted_objects  # 返回筛选后的物体信息列表
 
+
 def getObjCoordinate(request):
     global model
     labels = []
@@ -113,15 +175,14 @@ def getObjCoordinate(request):
     try:
         if run:
             color_image = model.cv_image
-            # t_start = time.time()  # 开始计时
+            t_start = time.time()  # 开始计时
             model.Predicts(color_image)
-            # t_end = time.time()  # 结束计时
-            # print("预测时间" + str((t_end-t_start)*1000))  # 打印预测时间
+            t_end = time.time()  # 结束计时
             res = model.visual(color_image)  # 可视化检测结果
             respond.detect_image = CvBridge().cv2_to_imgmsg(res, encoding="bgr8")
+            print("预测时间" + str((t_end-t_start)*1000))  # 打印预测时间
             object_list = model.getFilteredObjects()  # 获取筛选后的目标信息列表
-            # print("目标数量" + str(len(object_list)))
-            tf_published = False  # 布尔变量，用于跟踪是否已经发布了TF坐标系
+            print("目标数量" + str(len(object_list)))
             if object_list:
                 for obj in object_list:
                     label = obj['label']
@@ -130,22 +191,20 @@ def getObjCoordinate(request):
                     uy = int((box_coords[1] + box_coords[3]) / 2)  # 计算物体中心点y坐标
                     print("[INFO] detect success")
                     # 获取物体的三维坐标
-                    camera_xyz = model.get_object_3d_position(ux, uy)
+                    camera_xyz = model.getObject3DPosition(ux, uy)
                     camera_xyz = np.round(
                         np.array(camera_xyz), 3).tolist()  # 转成3位小数
                     print(camera_xyz)
                     if camera_xyz[2] < 100.0 and camera_xyz[2] != 0:
                         world_pose = model.tf_transform(
                             camera_xyz)  # 将目标物体从相机坐标系转换到世界坐标系
+                        # model.tf_broad(camera_xyz)
                         if world_pose is not None:
                             world_position = [
                                 world_pose.pose.position.x, world_pose.pose.position.y, world_pose.pose.position.z]
                         positions.extend(world_position)
+                    # positions.extend(camera_xyz)
                         labels.append(label)
-                        # 仅发布第一个位置的TF坐标系
-                        if len(positions) == 3 and not tf_published:  # 只发布置信度最高的目标TF
-                            model.tf_broad(world_position)
-                            tf_published = True  # 将标志位设置为True，表示已发布TF坐标系
             respond.labels = labels
             respond.positions = positions
             print(respond.labels, respond.positions)
@@ -156,11 +215,16 @@ def getObjCoordinate(request):
 
 if __name__ == '__main__':
     current_work_dir = os.path.dirname(__file__)
-    config_path = os.path.join(current_work_dir, 'config/yolov5s_apple.yaml')
+    config_path = '/home/yds/rwm_moveit/src/robot_control/robot_camera_control/scripts/config/yolov5s_apple.yaml'
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
-    rospy.init_node("yolo_detect")
+    rospy.init_node("camera_node")
     model = yolo(config)
     rospy.Subscriber('/camera/color/image_raw', Image, model.image_callback)
+    rospy.Subscriber('/camera/aligned_depth_to_color/image_raw',
+                     Image, model.depthImageCallback)
+    rospy.Subscriber('/camera/aligned_depth_to_color/camera_info',
+                     CameraInfo, model.cameraInfoCallback)
     service = rospy.Service("objection_detect", Hand_Catch, getObjCoordinate)
     rospy.spin()
+    cv2.destroyAllWindows()
