@@ -17,10 +17,10 @@
 
 using namespace std;
 
-
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
 	// 设置编码
-	setlocale(LC_ALL,"");
+	setlocale(LC_ALL, "");
 
 	ros::init(argc, argv, "moveit_control_server_cpp");
 	ros::AsyncSpinner spinner(1);
@@ -111,5 +111,4 @@ int main(int argc, char** argv) {
 
 	ros::waitForShutdown();
 	return 0;
-
 }

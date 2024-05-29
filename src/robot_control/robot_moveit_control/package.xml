@@ -91,6 +91,9 @@
   <build_depend>moveit_ros_planning_interface</build_depend>
   <build_export_depend>moveit_ros_planning_interface</build_export_depend>
   <exec_depend>moveit_ros_planning_interface</exec_depend>   
+  <build_depend>robot_msgs</build_depend>
+  <build_export_depend>robot_msgs</build_export_depend>
+  <exec_depend>robot_msgs</exec_depend>   
   
   <!-- The export tag contains other, unspecified, tags -->
   <export>

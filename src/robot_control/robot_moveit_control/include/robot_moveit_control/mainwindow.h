@@ -24,8 +24,10 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
-#include <MoveitServer.h>
 #include <opencv2/highgui.hpp>
+#include <QLabel>
+#include <thread>
+#include <robotControl.h>
 #include <robot_msgs/Hand_Catch.h>
 
 namespace Ui
@@ -44,6 +46,7 @@ public:
     void imageCallback(const sensor_msgs::CompressedImageConstPtr &msg);
     void objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg);
     sensor_msgs::ImagePtr convertQPixmapToSensorImage(const QPixmap &pixmap);
+    void setEnableButton(bool enbale);
 
 private slots:
 
@@ -58,15 +61,18 @@ private slots:
     void on_backButton_clicked();
 
     void on_startButton_clicked();
+    void updateImageSlot(const QImage &img);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     // void paintEvent(QPaintEvent *event) override;
-
+signals:
+  void updateImageSignal(const QImage &img);
 private:
     Ui::MainWindow *ui;
+    ros::NodeHandle nh;
     rviz::RenderPanel *render_panel_;     // rviz显示容器
     rviz::VisualizationManager *manager_; // rviz控制器
     QPoint m_startPos;
@@ -82,7 +88,7 @@ private:
     ros::ServiceClient client;
     bool callDetectService();
     void processDetectionResults(const robot_msgs::Hand_CatchResponse &response);
-    void controlRobotToGrab(float x, float y, float z);
+    void controlRobotToGrab(geometry_msgs::PoseStamped position);
 };
 
 #endif // MAINWINDOW_H

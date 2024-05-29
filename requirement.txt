@@ -1,0 +1,8 @@
+numpy
+matplotlib
+scikit-image
+imageio
+torchsummary
+tensorboardX
+pyrealsense2
+Pillow
