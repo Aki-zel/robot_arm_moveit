@@ -14,4 +14,4 @@ model_type: 'yolov5'
 model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/apple.onnx
 params_file: ""
 config_file: ""
-gmodel_file: weights/model_cornell_0.98
+gmodel_file: /home/ydf/Documents/rwm_moveit/src/robot_control/robot_camera_control/scripts/weights/epoch_44_iou_0.51

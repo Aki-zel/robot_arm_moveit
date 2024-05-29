@@ -13,7 +13,7 @@ from utils.device import get_device
 from inference.post_process import post_process_output
 from utils.data.camera_data import CameraData
 from utils.dataset_processing.grasp import detect_grasps
-
+from utils.visualisation.plot import plot_grasp
 current_work_dir = os.path.dirname(__file__)
 print(current_work_dir)
 
@@ -24,7 +24,8 @@ class GraspGenerator:
         self.model = None
         self.device = None
         self.visualize = visualize
-        self.cam_data = CameraData(include_depth=True, include_rgb=True)
+        self.cam_data = CameraData(
+            include_depth=True, include_rgb=True, output_size=480)
         self.scale = 0.001
 
     def load_model(self):
@@ -53,10 +54,8 @@ class GraspGenerator:
         grasps = detect_grasps(q_img, ang_img, width_img, no_grasps=1)
 
         if len(grasps) != 0:
-            pos_x = np.multiply(
-                grasps[0].center[1] + self.cam_data.top_left[1])
-            pos_y = np.multiply(
-                grasps[0].center[0] + self.cam_data.top_left[0])
+            pos_x =grasps[0].center[1] + self.cam_data.top_left[1]
+            pos_y =grasps[0].center[0] + self.cam_data.top_left[0]
 
             target = np.asarray([pos_x, pos_y])
             target.shape = (2, 1)
@@ -70,12 +69,11 @@ class GraspGenerator:
                 for g in grasps:
                     color = (0, 255, 0)  # 绿色
                     thickness = 2
-                    cv2.circle(rgb, (g.center[1] + self.cam_data.top_left[1],
-                               g.center[0] + self.cam_data.top_left[0]), 3, color, thickness)
-                    cv2.rectangle(rgb, (g.as_gr().point))
+                    cv2.circle(rgb, (pos_x,
+                               pos_y), 3, color, thickness)
 
             cv2.imshow('Rectangle', rgb)
-            cv2.waitKey(0)
+            cv2.waitKey(1000)
             cv2.destroyAllWindows()
             return grasp_pose
 

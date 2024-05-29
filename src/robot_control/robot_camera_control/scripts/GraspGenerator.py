@@ -28,7 +28,7 @@ class GraspGenerator:
         self.visualize = visualize
 
         self.cam_data = CameraData(
-            include_depth=False, include_rgb=True, output_size=480
+            include_depth=True, include_rgb=True, output_size=250
         )
         self.bridge = CvBridge()
         self.scale = 0.001
@@ -49,14 +49,14 @@ class GraspGenerator:
 
         # # Load camera pose and depth scale (from running calibration)
         self.cam_pose = np.loadtxt(
-            "/home/ydz/Downloads/rwm_moveit/src/robot_control/robot_camera_control/scripts/1.txt",
+            "/home/ydf/Documents/rwm_moveit/src/robot_control/robot_camera_control/scripts/1.txt",
             delimiter=" ",
         )
 
-        # if visualize:
-        #     self.fig = plt.figure(figsize=(10, 10))
-        # else:
-        #     self.fig = None
+        if visualize:
+            self.fig = plt.figure(figsize=(10, 10))
+        else:
+            self.fig = None
 
     def rgb_callback(self, data):
         try:
@@ -147,25 +147,25 @@ class GraspGenerator:
 
             # np.save(self.grasp_pose, grasp_pose)
 
-            # if self.fig:
-            #     plot_grasp(fig=self.fig, rgb_img=self.cam_data.get_rgb(rgb, False), grasps=grasps, save=False)
-            if self.visualize:
-                for g in grasps:
-                    color = (0, 255, 0)  # 绿色
-                    thickness = 2
-                    cv2.circle(
-                        rgb,
-                        (
-                            g.center[1] + self.cam_data.top_left[1],
-                            g.center[0] + self.cam_data.top_left[0],
-                        ),
-                        3,
-                        color,
-                        thickness,
-                    )
+            if self.fig:
+                plot_grasp(fig=self.fig, rgb_img=self.cam_data.get_rgb(rgb, False), grasps=grasps, save=False)
+        #     if self.visualize:
+        #         for g in grasps:
+        #             color = (0, 255, 0)  # 绿色
+        #             thickness = 2
+        #             cv2.circle(
+        #                 rgb,
+        #                 (
+        #                     g.center[1] + self.cam_data.top_left[1],
+        #                     g.center[0] + self.cam_data.top_left[0],
+        #                 ),
+        #                 3,
+        #                 color,
+        #                 thickness,
+        #             )
 
-        cv2.imshow("Rectangle", rgb)
-        cv2.waitKey(1)
+        # cv2.imshow("Rectangle", rgb)
+        # cv2.waitKey(1)
 
     def run(self):
         print("start")
@@ -175,7 +175,7 @@ class GraspGenerator:
 
 
 if __name__ == "__main__":
-    saved_model_path = "/home/ydz/Downloads/rwm_moveit/src/robot_control/robot_camera_control/scripts/weights/epoch_44_iou_0.51"
+    saved_model_path = "/home/ydf/Documents/rwm_moveit/src/robot_control/robot_camera_control/scripts/weights/model_cornell_0.98"
     visualize = True  # Set to True if visualization is needed
     grasp_gen = GraspGenerator(saved_model_path, visualize)
     grasp_gen.load_model()

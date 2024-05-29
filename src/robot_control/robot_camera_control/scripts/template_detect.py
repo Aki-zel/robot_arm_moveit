@@ -17,7 +17,8 @@ class TemplateDetect:
     def __init__(self):
         # 创建cv_bridge，声明图像的发布者和订阅者
         self.bridge = CvBridge()
-        self.image_pub = rospy.Publisher("template_detect_image", Image, queue_size=1)
+        self.image_pub = rospy.Publisher(
+            "template_detect_image", Image, queue_size=1)
         rospy.Subscriber(
             "/camera/color/image_raw/", Image, self.image_callback
         )  # 订阅相机图像
@@ -42,7 +43,8 @@ class TemplateDetect:
             "object_position", PoseStamped, queue_size=10
         )
 
-        self.grasp_deter = GraspGenerator("weights/model_cornell_0.98", True)
+        self.grasp_deter = GraspGenerator("/home/ydf/Documents/rwm_moveit/src/robot_control/robot_camera_control/scripts/weights/model_cornell_0.98", True)
+        self.grasp_deter.load_model()
 
     def image_callback(self, data):
         # 使用cv_bridge将ROS的图像数据转换成OpenCV的图像格式
@@ -57,18 +59,27 @@ class TemplateDetect:
             return
 
         # 进行模板匹配
-        res = cv2.matchTemplate(cv_image, self.template_image, cv2.TM_CCOEFF_NORMED)
+        res = cv2.matchTemplate(
+            cv_image, self.template_image, cv2.TM_CCOEFF_NORMED)
         # 获取匹配结果中的最大值和其对应的位置
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-
+        template_height, template_width = self.template_image.shape[:2]
+        # 计算边界
+        top = max_loc[1]
+        bottom = top + template_height
+        left = max_loc[0]
+        right = left + template_width
         # 计算模板在原始图像中的中心坐标
         template_center_x = max_loc[0] + self.template_image.shape[1] // 2
         template_center_y = max_loc[1] + self.template_image.shape[0] // 2
         bottom_right = (
-            self.template_image.shape[0] - 100,
-            max_loc[0] + self.template_image.shape[1] + 100,
+            min(480, bottom + 100),
+            min(640, right + 100),
         )
-        top_left = (max_loc[1] - 100, max_loc[0] + 100)
+        top_left = (
+            max(0, top - 100),
+            max(left - 100, 0),
+        )
         grasp = self.grasp_deter.Predict(
             cv_image, self.depth_img, self.camera_info, top_left, bottom_right
         )
@@ -78,45 +89,32 @@ class TemplateDetect:
                 template_center_x, template_center_y
             )
         )
-        rospy.loginfo("Grasp center point: ({}, {})".format(grasp[0], grasp[1]))
-        # 在原始图像中绘制模板的位置
-        cv2.rectangle(
-            cv_image,
-            max_loc,
-            (
-                max_loc[0] + self.template_image.shape[1],
-                max_loc[1] + self.template_image.shape[0],
-            ),
-            (0, 255, 0),
-            2,
-        )
-
-        # 发布处理后的图像
-        try:
-            self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
-        except CvBridgeError as e:
-            print(e)
-        self.template_image = None
-        # 将物体中心点像素坐标转换为世界坐标系下的三维坐标
-        object_position = self.get_object_3d_position(grasp[0], grasp[1])
-        if object_position is not None:
+        if (len(grasp)!=0):
             rospy.loginfo(
-                "Object position in world coordinates: {}".format(object_position)
-            )
-            self.tf_transform(object_position, grasp)
-        else:
-            rospy.logwarn("Unable to determine object position.")
+                "Grasp center point: ({}, {})".format(grasp[0], grasp[1]))
+            self.template_image = None
+            # 将物体中心点像素坐标转换为世界坐标系下的三维坐标
+            object_position = self.get_object_3d_position(int(grasp[0]), int(grasp[1]))
+            if object_position is not None:
+                rospy.loginfo(
+                    "Object position in world coordinates: {}".format(
+                        object_position)
+                )
+                self.tf_transform(object_position, grasp)
+            else:
+                rospy.logwarn("Unable to determine object position.")
 
     def template_cb(self, data):
         # 使用cv_bridge将ROS的图像数据转换成OpenCV的图像格式
         try:
             self.template_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            self.template_image = cv2.cvtColor(self.template_image, cv2.COLOR_BGR2RGB)
+            self.template_image = cv2.cvtColor(
+                self.template_image, cv2.COLOR_BGR2RGB)
             # 获取原始图像的宽度和高度
             original_height, original_width, _ = self.template_image.shape
             # 计算新的宽度和高度
-            new_width = int(original_width / 451 * 1280)
-            new_height = int(original_height / 419 * 720)
+            new_width = int(original_width / 451 * 640)
+            new_height = int(original_height / 419 * 480)
             # 缩放图像
             self.template_image = cv2.resize(
                 self.template_image, (new_width, new_height)
@@ -166,12 +164,13 @@ class TemplateDetect:
         try:
             # 使用tf2将机械臂摄像头坐标系转换到base_link坐标系
             transform = self.tf_buffer.lookup_transform(
-                "base_link",
+                "base_link_rm",
                 "camera_color_optical_frame",
                 rospy.Time(0),
                 rospy.Duration(1),
             )
-            world_point = tf2_geometry_msgs.do_transform_pose(camera_point, transform)
+            world_point = tf2_geometry_msgs.do_transform_pose(
+                camera_point, transform)
             if world_point is not None:
                 rospy.loginfo("World point: %s", world_point)
                 self.object_position_pub.publish(world_point)
@@ -190,7 +189,7 @@ class TemplateDetect:
 
     def tf_broad(self, position):
         tfs = TransformStamped()  # 创建广播数据
-        tfs.header.frame_id = "base_link"  # 参考坐标系
+        tfs.header.frame_id = "base_link_rm"  # 参考坐标系
         tfs.header.stamp = rospy.Time.now()
         tfs.child_frame_id = "object"  # 目标坐标系
         tfs.transform.translation = position.pose.position

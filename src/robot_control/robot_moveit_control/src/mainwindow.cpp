@@ -37,8 +37,19 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
 
     try
     {
+        this->server->Set_Tool_DO(2, false);
+        this->server->Set_Tool_DO(2, false);
         setEnableButton(false);
-        
+        geometry_msgs::Pose pos = msg.get()->pose;
+        pos.position.z += 0.15;
+        this->server->move_p(pos);
+
+        this->server->move_p(msg.get()->pose);
+        this->server->Set_Tool_DO(2, true);
+        std::vector<double> joint = {0, 0, this->server->degreesToRadians(-90), 0, this->server->degreesToRadians(-90), this->server->degreesToRadians(180)};
+        this->server->move_j(joint);
+        this->server->Set_Tool_DO(2, false);
+        setEnableButton(true);
     }
     catch (const std::exception &e)
     {
@@ -63,7 +74,8 @@ void MainWindow::on_startButton_clicked()
 {
     this->m_isImage = true;
     setEnableButton(false);
-    std::vector<double> joint = {0, -0.8028, 1.2740, 0, 1.850, 0};
+    this->server->Set_Tool_DO(2, true);
+    std::vector<double> joint = {0, 0, this->server->degreesToRadians(-90), 0, this->server->degreesToRadians(-90), this->server->degreesToRadians(180)};
     // this->server->move_j(joint);
     std::thread moveThread([this, joint]()
                            {
@@ -131,7 +143,6 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
             // std::cout<<"re  "<<selectionRect.x()<<"  "<<selectionRect.y()<<std::endl;
             QPixmap screenshot = screen->grabWindow(this->ui->centralwidget->winId(), selectionRect.x(), selectionRect.y(), selectionRect.width(), selectionRect.height());
             image_publisher_.publish(this->convertQPixmapToSensorImage(screenshot));
-            this->m_isImage = true;
         }
         update();
     }
@@ -173,9 +184,13 @@ sensor_msgs::ImagePtr MainWindow::convertQPixmapToSensorImage(const QPixmap &pix
     // 将QImage转换为OpenCV格式
     cv::Mat cv_image(image.height(), image.width(), CV_8UC4, (uchar *)image.bits(), image.bytesPerLine());
     cv::cvtColor(cv_image, cv_image, cv::COLOR_RGBA2BGR); // Qt的QImage默认使用RGBA格式，而OpenCV默认使用BGR格式，需要进行通道转换
-    cv::imshow("Detection Results", cv_image);
-    cv::waitKey(0); // 按下任意键继续
-    cv::destroyAllWindows();
+    std::thread showimage([this, cv_image]()
+                          {
+                            cv::imshow("Detection Results", cv_image);
+                            cv::waitKey(0); // 按下任意键继续
+                            cv::destroyAllWindows(); });
+    showimage.detach(); // 分离线程
+    this->m_isImage = true;
     // 创建一个cv_bridge::CvImage对象
     cv_bridge::CvImage cv_bridge_image;
     cv_bridge_image.image = cv_image;

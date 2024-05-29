@@ -9,8 +9,8 @@ class CameraData:
     Dataset wrapper for the camera data.
     """
     def __init__(self,
-                 width=1280,
-                 height=720,
+                 width=640,
+                 height=480,
                  output_size=224,
                  include_depth=True,
                  include_rgb=True
