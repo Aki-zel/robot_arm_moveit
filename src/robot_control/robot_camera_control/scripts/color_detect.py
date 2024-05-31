@@ -1,44 +1,52 @@
 import rospy
 import cv2
-from cv_bridge import CvBridgeError
+from cv_bridge import CvBridge, CvBridgeError
 import numpy as np
 from sensor_msgs.msg import Image
+from geometry_msgs.msg import PoseStamped
+from robot_msgs.srv import Hand_Catch, Hand_CatchResponse
+from tf.transformations import quaternion_from_euler, quaternion_multiply
 from transform import Transform
-from robot_msgs.srv import *
 
 
 class ColorDetectServer(Transform):
     def __init__(self):
         super(ColorDetectServer, self).__init__()
-        rospy.Subscriber("/camera/color/image_raw", Image,
-                         self.image_callback)  # 订阅相机图像
+        self.bridge = CvBridge()
+        self.cv_image = None
+        rospy.Subscriber("/camera/color/image_raw", Image, self.image_callback)
         self.service = rospy.Service(
             "color_detect", Hand_Catch, self.handle_color_detection)
+        
+        rospy.loginfo("ColorDetectServer initialized")
 
     def image_callback(self, msg):
         try:
             self.cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-        except Exception as e:
-            print(e)
+        except CvBridgeError as e:
+            rospy.logerr(e)
 
     def color_thresholding(self, cv_image):
-        # 定义三种颜色的阈值范围（在 RGB 颜色空间中）
-        lower_red = np.array([0, 0, 100])
-        upper_red = np.array([80, 80, 255])
-
-        lower_green = np.array([0, 100, 0])
-        upper_green = np.array([80, 255, 80])
-
-        lower_blue = np.array([100, 0, 0])
-        upper_blue = np.array([255, 80, 80])
-
-        # 转换图像到 HSV 颜色空间
+        # 将图像转换为HSV颜色空间
         hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+        # 定义颜色的阈值范围（在HSV颜色空间中）
+        lower_red1 = np.array([0, 80, 180])
+        upper_red1 = np.array([10, 255, 255])
+        lower_red2 = np.array([160, 80, 180])
+        upper_red2 = np.array([180, 255, 255])
+
+        lower_green = np.array([40, 80, 180])
+        upper_green = np.array([80, 255, 255])
+
+        lower_blue = np.array([100, 80, 180])
+        upper_blue = np.array([130, 255, 255])
 
         # 对于每种颜色，进行颜色分割
-        mask_red = cv2.inRange(cv_image, lower_red, upper_red)
-        mask_green = cv2.inRange(cv_image, lower_green, upper_green)
-        mask_blue = cv2.inRange(cv_image, lower_blue, upper_blue)
+        mask_red1 = cv2.inRange(hsv_image, lower_red1, upper_red1)
+        mask_red2 = cv2.inRange(hsv_image, lower_red2, upper_red2)
+        mask_red = mask_red1 + mask_red2
+        mask_green = cv2.inRange(hsv_image, lower_green, upper_green)
+        mask_blue = cv2.inRange(hsv_image, lower_blue, upper_blue)
 
         # 合并三种颜色的掩码
         mask = mask_red + mask_green + mask_blue
@@ -47,59 +55,110 @@ class ColorDetectServer(Transform):
         contours, _ = cv2.findContours(
             mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # 保存检测到的物体的位置和颜色信息
-        labels = []
-        positions = []
+        objects_info = []  # 存储检测到的物体信息
 
-        # 对每个轮廓进行处理
         for contour in contours:
-            # 计算轮廓的矩形边界
-            x, y, w, h = cv2.boundingRect(contour)
-            # 计算物体中心点坐标
-            center_x = x + w // 2
-            center_y = y + h // 2
+            area = cv2.contourArea(contour)
+            if 5000 < area < 35000:
+                # 计算最小外接矩形
+                rect = cv2.minAreaRect(contour)
+                box = cv2.boxPoints(rect)
+                box = np.int0(box)
 
-            # 根据物体中心点的颜色确定物体颜色
-            color = ""
-            if mask_red[center_y, center_x] > 0:
-                color = "red"
-            elif mask_green[center_y, center_x] > 0:
-                color = "green"
-            elif mask_blue[center_y, center_x] > 0:
-                color = "blue"
+                # 绘制轮廓
+                cv2.drawContours(cv_image, [box], 0, (0, 255, 0), 2)
 
-            # 添加检测到的物体信息到列表中
-            labels.append(color)
-            positions.append((center_x, center_y))
+                # 计算物体中心点和角度
+                center_x, center_y = rect[0]
+                angle = rect[2]
 
-            # 在图像上标记检测到的物体中心
-            detect_image = cv2.circle(cv_image, (center_x, center_y), 5, (0, 255, 0), -1)
+                # 确定物体颜色
+                color = ""
+                if mask_red[int(center_y), int(center_x)] > 0:
+                    color = "red"
+                elif mask_green[int(center_y), int(center_x)] > 0:
+                    color = "green"
+                elif mask_blue[int(center_y), int(center_x)] > 0:
+                    color = "blue"
 
-        return labels, positions, detect_image
+                # 添加检测到的物体信息到列表中
+                objects_info.append({
+                    'label': color,
+                    'center_x': int(center_x),
+                    'center_y': int(center_y),
+                    'angle': angle
+                })
+
+        return objects_info, cv_image
 
     def handle_color_detection(self, request):
-         # 创建响应对象
-        run = request.run
         response = Hand_CatchResponse()
 
-        if run:
-            cv_image = self.bridge.imgmsg_to_cv2(self.cv_image, "bgr8")
-            labels, positions, detect_image = self.color_thresholding(cv_image)
-            response.labels = labels
-            response.positions = positions
-            # 发布处理后的图像
-            try:
-                response.detect_image = self.bridge.cv2_to_imgmsg(detect_image, "bgr8")
-            except CvBridgeError as e:
-                rospy.logerr(e)
-            return response
+        if request.run:
+            if self.cv_image is not None:
+                objects_info, processed_image = self.color_thresholding(self.cv_image)
+
+                tf_published = False  # 布尔变量，用于跟踪是否已经发布了TF坐标系
+                for obj in objects_info:
+                    label = obj['label']
+                    center_x = obj['center_x']
+                    center_y = obj['center_y']
+                    angle = obj['angle']
+
+                    # 获取物体的三维坐标
+                    camera_xyz = self.get_object_3d_position(
+                        center_x, center_y)
+                    camera_xyz = np.round(np.array(camera_xyz), 3).tolist()
+
+                    # 从相机坐标系到世界坐标系的转换
+                    world_position = self.tf_transform(camera_xyz)
+
+                    # 创建PoseStamped消息
+                    pose = PoseStamped()
+                    pose.header.stamp = rospy.Time.now()
+                    pose.header.frame_id = "camera_color_optical_frame"
+
+                    # 设置位置
+                    pose.pose.position.x = world_position.pose.position.x
+                    pose.pose.position.y = world_position.pose.position.y
+                    pose.pose.position.z = world_position.pose.position.z
+
+                    # 初始四元数
+                    initial_quaternion = [0, 1, 0, 0]
+                    # 计算绕 Z 轴旋转的四元数
+                    rotation_quaternion = quaternion_from_euler(0, 0, np.deg2rad(angle))
+                    # 合成四元数
+                    final_quaternion = quaternion_multiply(initial_quaternion, rotation_quaternion)
+                    # 设置姿态
+                    pose.pose.orientation.x = final_quaternion[0]
+                    pose.pose.orientation.y = final_quaternion[1]
+                    pose.pose.orientation.z = final_quaternion[2]
+                    pose.pose.orientation.w = final_quaternion[3]
+
+                    response.labels.append(label)
+                    response.positions.append(pose)
+                    # 仅发布第一个位置的TF坐标系
+                    if len(camera_xyz) == 3 and not tf_published:  # 只发布置信度最高的目标TF
+                        self.tf_broad(world_position)
+                        tf_published = True  # 将标志位设置为True，表示已发布TF坐标系
+
+                try:
+                    response.detect_image = self.bridge.cv2_to_imgmsg(
+                        processed_image, "bgr8")
+                except CvBridgeError as e:
+                    rospy.logerr("Error converting image to message: %s" % e)
+                else:
+                    rospy.loginfo("Image converted to message successfully")
+            else:
+                rospy.logwarn("No image received yet.")
+
+        return response
 
 
 if __name__ == '__main__':
     try:
         rospy.init_node("color_detect_server")
-        rospy.loginfo("Starting color_detect_server node")
-        color_detect_server = ColorDetectServer()
+        ColorDetectServer()
         rospy.spin()
     except rospy.ROSInterruptException:
         rospy.logerr("Interrupted")

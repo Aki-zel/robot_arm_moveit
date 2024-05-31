@@ -24,8 +24,8 @@ class yolo:
         self.result = None
         self.model = None
         self.config = config
-        # self.setOption(self.config["device"])  # 配置推理框架
-        # self.loadModel()
+        self.setOption(self.config["device"])  # 配置推理框架
+        self.loadModel()
         self.cv_image = None
         self.depth_img = None
         self.camera_info = None
@@ -81,8 +81,6 @@ class yolo:
     def image_callback(self, msg):
         try:
             self.cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-            cv2.imshow("111", self.cv_image)
-            cv2.waitKey(1)
         except Exception as e:
             print(e)
 
@@ -126,7 +124,7 @@ class yolo:
         try:
             # 使用tf2将机械臂摄像头坐标系转换到base_link坐标系
             transform = self.tf_buffer.lookup_transform(
-                "base_link_rm",
+                "base_link",
                 "camera_color_optical_frame",
                 rospy.Time(0),
                 rospy.Duration(1),
@@ -151,7 +149,7 @@ class yolo:
 
     def tf_broad(self, position):
         tfs = TransformStamped()  # 创建广播数据
-        tfs.header.frame_id = "base_link_rm"  # 参考坐标系
+        tfs.header.frame_id = "base_link"  # 参考坐标系
         tfs.header.stamp = rospy.Time.now()
         tfs.child_frame_id = "object"  # 目标坐标系
         tfs.transform.translation = position.pose.position
@@ -211,26 +209,15 @@ def getObjCoordinate(request):
                 for obj in object_list:
                     label = obj["label"]
                     box_coords = obj["box_coordinates"]
-                    # 计算边界
-                    top = box_coords[1]
-                    bottom = box_coords[3]
-                    left = box_coords[0]
-                    right = box_coords[2]
-                    bottom_right = (
-                        min(480, bottom + 100),
-                        min(640, right + 100),
-                    )
-                    top_left = (
-                        max(0, top - 100),
-                        max(left - 100, 0),
-                    )
+                    bottom_right = (box_coords[3] + 100, box_coords[2] + 100)
+                    top_left = (box_coords[1] + 100, box_coords[0] + 100)
                     # ux = int((box_coords[0] + box_coords[2]) / 2)  # 计算物体中心点x坐标
                     # uy = int((box_coords[1] + box_coords[3]) / 2)  # 计算物体中心点y坐标
                     grasp = model.grasp_gen.Predict(
                         color_image, depth_image, cam_info, top_left, bottom_right
                     )
                     # 获取物体的三维坐标
-                    camera_xyz = model.getObject3DPosition(int(grasp[0]), int(grasp[1]))
+                    camera_xyz = model.getObject3DPosition(grasp[0], grasp[1])
                     camera_xyz = np.round(
                         np.array(camera_xyz), 4
                     ).tolist()  # 转成x位小数

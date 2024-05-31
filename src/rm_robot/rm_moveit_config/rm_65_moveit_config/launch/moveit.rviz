@@ -1,6 +1,6 @@
 Panels:
   - Class: rviz/Displays
-    Help Height: 84
+    Help Height: 0
     Name: Displays
     Property Tree Widget:
       Expanded:
@@ -8,7 +8,7 @@ Panels:
         - /TF1
         - /TF1/Frames1
       Splitter Ratio: 0.7425600290298462
-    Tree Height: 103
+    Tree Height: 187
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -103,6 +103,15 @@ Visualization Manager:
             Show Trail: false
             Value: true
           base_link_rm:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          camera_bottom_screw_frame:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          camera_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -215,6 +224,15 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          camera_bottom_screw_frame:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          camera_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           ee_link:
             Alpha: 1
             Show Axes: false
@@ -270,16 +288,18 @@ Visualization Manager:
           Value: true
         camera_aligned_depth_to_color_frame:
           Value: false
+        camera_bottom_screw_frame:
+          Value: false
         camera_color_frame:
           Value: false
         camera_color_optical_frame:
-          Value: false
+          Value: true
         camera_depth_frame:
           Value: false
         camera_depth_optical_frame:
           Value: false
         camera_link:
-          Value: true
+          Value: false
         ee_link:
           Value: true
         finger1:
@@ -288,12 +308,10 @@ Visualization Manager:
           Value: false
         gripper_link:
           Value: false
-        object:
-          Value: true
         tool0:
           Value: false
         world:
-          Value: true
+          Value: false
       Marker Alpha: 1
       Marker Scale: 1
       Name: TF
@@ -309,25 +327,24 @@ Visualization Manager:
                   Link4:
                     Link5:
                       Link6:
-                        camera_link:
-                          camera_aligned_depth_to_color_frame:
-                            camera_color_optical_frame:
-                              {}
-                          camera_color_frame:
-                            {}
-                          camera_depth_frame:
-                            camera_depth_optical_frame:
-                              {}
                         ee_link:
                           {}
                         tool0:
+                          camera_bottom_screw_frame:
+                            camera_link:
+                              camera_aligned_depth_to_color_frame:
+                                camera_color_optical_frame:
+                                  {}
+                              camera_color_frame:
+                                {}
+                              camera_depth_frame:
+                                camera_depth_optical_frame:
+                                  {}
                           gripper_link:
                             finger1:
                               {}
                             finger2:
                               {}
-            object:
-              {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -371,6 +388,15 @@ Visualization Manager:
           Show Trail: false
           Value: true
         base_link_rm:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        camera_bottom_screw_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -452,7 +478,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 12.3768949508667
+      Distance: 1.655245065689087
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -460,17 +486,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -4.31141471862793
-        Y: 4.781609535217285
-        Z: -3.5804151821139385e-07
+        X: -0.0039955079555511475
+        Y: -0.0014035850763320923
+        Z: -3.60186277248431e-06
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.1346026211977005
+      Pitch: 0.1953975409269333
       Target Frame: dummy
-      Yaw: 5.483565330505371
+      Yaw: 0.32038161158561707
     Saved: ~
 Window Geometry:
   Displays:
@@ -484,9 +510,9 @@ Window Geometry:
     collapsed: false
   MotionPlanning - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000200000000000002a200000286fc0200000007fb000000100044006900730070006c006100790073010000003d000000f8000000c900fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a400fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000001600000016fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e0067010000013b000001880000017d00ffffff00000001000002000000039efc0200000001fb0000002a004d006f00740069006f006e00200050006c0061006e006e0069006e00670020005400610073006b0073000000003d0000039e0000000000000000000002100000028600000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000200000000000002a200000286fc0200000007fb000000100044006900730070006c006100790073010000003d000000f8000000c900fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a400fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000001600000016fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e0067010000013b000001880000017d00ffffff00000001000002000000039efc0200000001fb0000002a004d006f00740069006f006e00200050006c0061006e006e0069006e00670020005400610073006b0073000000003d0000039e00000000000000000000020e0000028600000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
-  Width: 1208
-  X: 72
-  Y: 27
+  Width: 1206
+  X: 218
+  Y: 72

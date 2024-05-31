@@ -1,6 +1,6 @@
 #include <MoveitServer.h>
 
-MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP),spinner(2)
+MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), spinner(2)
 {
 	spinner.start();
 

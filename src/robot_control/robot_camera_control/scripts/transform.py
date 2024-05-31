@@ -67,7 +67,7 @@ class Transform:
         try:
             # 使用tf2将机械臂摄像头坐标系转换到base_link坐标系
             transform = self.tf_buffer.lookup_transform(
-                'base_link', 'camera_color_optical_frame', rospy.Time(0), rospy.Duration(1))
+                'base_link_rm', 'camera_color_optical_frame', rospy.Time(0), rospy.Duration(1))
             world_point = tf2_geometry_msgs.do_transform_pose(
                 camera_point, transform)
             if world_point is not None:
@@ -91,5 +91,18 @@ class Transform:
         tfs.transform.translation.y = y
         tfs.transform.translation.z = z
         tfs.transform.rotation.w = 1
+        # 发布tf变换
+        self.tf_broadcaster.sendTransform(tfs)
+
+    # 发布物体的TF坐标系
+    def tf_broad(self, pose):
+        tfs = TransformStamped()  # 创建广播数据
+        tfs.header.frame_id = pose.header.frame_id  # 参考坐标系
+        tfs.header.stamp = pose.header.stamp
+        tfs.child_frame_id = "object"  # 目标坐标系
+        tfs.transform.translation.x = pose.pose.position.x
+        tfs.transform.translation.y = pose.pose.position.y
+        tfs.transform.translation.z = pose.pose.position.z
+        tfs.transform.rotation = pose.pose.orientation
         # 发布tf变换
         self.tf_broadcaster.sendTransform(tfs)
