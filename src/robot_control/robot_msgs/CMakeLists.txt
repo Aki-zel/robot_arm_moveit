@@ -114,7 +114,7 @@ catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES robot_msgs
  CATKIN_DEPENDS message_runtime roscpp rospy geometry_msgs std_msgs sensor_msgs
- DEPENDS system_lib
+#  DEPENDS system_lib
 )
 
 ###########

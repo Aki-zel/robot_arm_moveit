@@ -161,7 +161,7 @@ catkin_package(
   INCLUDE_DIRS include
   #LIBRARIES rm_msgs
   CATKIN_DEPENDS geometry_msgs rospy std_msgs roscpp
-  DEPENDS system_lib 
+  # DEPENDS system_lib 
 )
 
 ###########
