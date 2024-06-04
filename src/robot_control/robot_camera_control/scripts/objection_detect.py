@@ -124,7 +124,7 @@ class yolo:
         try:
             # 使用tf2将机械臂摄像头坐标系转换到base_link坐标系
             transform = self.tf_buffer.lookup_transform(
-                "base_link",
+                "base_link_rm",
                 "camera_color_optical_frame",
                 rospy.Time(0),
                 rospy.Duration(1),
@@ -149,7 +149,7 @@ class yolo:
 
     def tf_broad(self, position):
         tfs = TransformStamped()  # 创建广播数据
-        tfs.header.frame_id = "base_link"  # 参考坐标系
+        tfs.header.frame_id = "base_link_rm"  # 参考坐标系
         tfs.header.stamp = rospy.Time.now()
         tfs.child_frame_id = "object"  # 目标坐标系
         tfs.transform.translation = position.pose.position

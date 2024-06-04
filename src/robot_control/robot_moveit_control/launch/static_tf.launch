@@ -8,5 +8,5 @@ Link6 camera_link"/>
       args="0 0 0 -1.57079632679 0 -1.57079632679 camera_color_optical_frame camera_color_frame " /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
       args="-0.0473096 0.0308597 0.0775646   0.0108814 -0.715752 -0.0119326 0.698168 Link6 camera_color_optical_frame" /> -->
-
+  <node pkg="tf2_ros" type="static_transform_publisher" name="task_frame_broadcaster" args="0.1 -0.2 -0.310 0.0 0.0 0.0 1.0 base_link_rm task" />
 </launch>

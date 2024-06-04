@@ -9,13 +9,10 @@
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/CollisionObject.h>
-#include <tf2/LinearMath/Quaternion.h>
 #include <rm_msgs/Tool_Digital_Output.h>
 #include <rm_msgs/Tool_IO_State.h>
 #include <bits/stdc++.h>
 #include <sensor_msgs/JointState.h>
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/PoseStamped.h>
 #include <tf2/buffer_core.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
@@ -27,6 +24,11 @@
 #include <mutex>
 #include <condition_variable>
 #include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Transform.h>
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <cmath>
 
 typedef actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction> MoveGroupClient;
@@ -53,10 +55,9 @@ public:
 	geometry_msgs::Pose setPoint(const std::vector<double> &pose);
 	void stop();
 	void initializeClaw();
-	double degreesToRadians(double degrees)
-	{
-		return degrees * M_PI / 180.0;
-	}
+	double degreesToRadians(double degrees);
+	geometry_msgs::Pose transformPose(const geometry_msgs::Pose &pose, const tf2::Transform &transform);
+	geometry_msgs::Pose moveFromPose(const geometry_msgs::Pose &pose, double distance);
 	~MoveitServer();
 
 private:

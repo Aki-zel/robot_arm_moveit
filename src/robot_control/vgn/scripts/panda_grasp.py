@@ -21,9 +21,9 @@ class PandaGraspController(object):
         self.lookup_transforms()
         self.init_robot_connection()
         self.init_services()
-        self.vis = Visualizer()
+        self.vis = Visualizer("world")
         rospy.sleep(1.0)  # Wait for all connections to be established
-        rospy.loginfo("Ready to take action")
+        rospy.loginfo("zero to take action")
 
     def load_parameters(self):
         self.base_frame = rospy.get_param("~base_frame_id")
@@ -31,6 +31,8 @@ class PandaGraspController(object):
         self.task_frame = rospy.get_param("~task_frame_id")
         self.ee_grasp_offset = Transform.from_list(rospy.get_param("~ee_grasp_offset"))
         self.grasp_ee_offset = self.ee_grasp_offset.inv()
+        grasp= self.grasp_ee_offset.to_list()
+        rospy.loginfo("%s",grasp)
         self.scan_joints = rospy.get_param("~scan_joints")
 
     def lookup_transforms(self):
@@ -38,16 +40,17 @@ class PandaGraspController(object):
         self.T_base_task = tf.lookup(self.base_frame, self.task_frame)
 
     def init_robot_connection(self):
-        self.gripper = PandaGripperClient()
-        self.moveit = MoveItClient("panda_arm")
+        # self.gripper = PandaGripperClient()
+        self.moveit = MoveItClient("arm")
+        self.gripper =self.moveit
         self.moveit.move_group.set_end_effector_link(self.ee_frame)
 
-        # Add a box to the planning scene to avoid collisions with the table.
-        msg = geometry_msgs.msg.PoseStamped()
-        msg.header.frame_id = self.base_frame
-        msg.pose.position.x = 0.4
-        msg.pose.position.z = 0.08
-        self.moveit.scene.add_box("table", msg, size=(0.6, 0.6, 0.02))
+        # # Add a box to the planning scene to avoid collisions with the table.
+        # msg = geometry_msgs.msg.PoseStamped()
+        # msg.header.frame_id = self.base_frame
+        # msg.pose.position.x = 0.4
+        # msg.pose.position.z = 0.08
+        # self.moveit.scene.add_box("table", msg, size=(0.6, 0.6, 0.02))
 
     def init_services(self):
         self.reset_map = rospy.ServiceProxy("reset_map", Empty)
@@ -58,15 +61,14 @@ class PandaGraspController(object):
 
     def run(self):
         self.vis.clear()
-        self.gripper.move(0.08)
+        # self.gripper.move(0.08)
 
         self.vis.roi(self.task_frame, 0.3)
 
         rospy.loginfo("Reconstructing scene")
         self.scan_scene()
-        self.get_scene_cloud()
+        res_sense=self.get_scene_cloud()
         res = self.get_map_cloud()
-
         rospy.loginfo("Planning grasps")
         req = PredictGraspsRequest(res.voxel_size, res.map_cloud)
         res = self.predict_grasps(req)
@@ -80,30 +82,34 @@ class PandaGraspController(object):
         for msg in res.grasps:
             grasp, _ = from_grasp_config_msg(msg)
             grasps.append(grasp)
-
+        # self.vis.grasps(grasps)
         # Select the highest grasp
         scores = [grasp.pose.translation[2] for grasp in grasps]
         grasp = grasps[np.argmax(scores)]
 
         # Execute grasp
         rospy.loginfo("Executing grasp")
-        self.moveit.goto("ready")
+        self.moveit.goto([0.0, 0.0, -1.5707, 0, -1.5707, 3.1415])
         success = self.execute_grasp(grasp)
 
         # Drop object
         if success:
             rospy.loginfo("Dropping object")
-            self.moveit.goto([0.678, 0.097, 0.237, -1.63, -0.031, 1.756, 0.931])
-            self.gripper.move(0.08)
+            self.moveit.goto([0.0, 0.0, -1.5707, 0, -1.5707, 3.1415])
+            # self.gripper.move(0.08)
 
-        self.moveit.goto("ready")
+        # self.moveit.goto("zero")
 
     def scan_scene(self):
-        self.moveit.goto("ready")
+        # self.moveit.goto("zero")
+        self.moveit.goto([0.0, 0.0, -1.5707, 0, -1.5707, 3.1415])
         self.reset_map()
         self.toggle_integration(True)
         for joint_target in self.scan_joints:
-            self.moveit.goto(joint_target)
+            self.moveit.goto(joint_target,velocity_scaling=1, acceleration_scaling=1)
+            sense=self.get_scene_cloud()
+            res = self.get_map_cloud()
+            # break
         self.toggle_integration(False)
 
     def execute_grasp(self, grasp):
@@ -117,22 +123,59 @@ class PandaGraspController(object):
             grasp.pose.rotation = rot * Rotation.from_euler("z", np.pi)
 
         T_base_grasp = grasp.pose
+        print(T_base_grasp.rotation)
+        print(T_base_grasp.translation)
+        x=to_pose_stamped_msg(T_base_grasp,"task")
+        rospy.loginfo("x point: %s", x)
+        try:
+            import tf2_ros
+            import tf.transformations as tf
+            from geometry_msgs.msg import PoseStamped, TransformStamped
+            tf_buffer = tf2_ros.Buffer()
+            listener = tf2_ros.TransformListener(tf_buffer)
+            tf_broadcaster = tf2_ros.TransformBroadcaster()  # 创建TF广播
+            import tf2_geometry_msgs
+            # 使用tf2将机械臂摄像头坐标系转换到base_link坐标系
+            transform = tf_buffer.lookup_transform(
+                "base_link_rm",
+                "task",
+                rospy.Time(0),
+                rospy.Duration(1),
+            )
+            world_point = tf2_geometry_msgs.do_transform_pose(x, transform)
+            if world_point is not None:
+                rospy.loginfo("World point: %s", world_point)
+            tfs = TransformStamped()  # 创建广播数据
+            tfs.header.frame_id = "base_link_rm"  # 参考坐标系
+            tfs.header.stamp = rospy.Time.now()
+            tfs.child_frame_id = "object"  # 目标坐标系
+            tfs.transform.translation = x.pose.position
+            tfs.transform.rotation = x.pose.orientation
+            # 发布tf变换
+            tf_broadcaster.sendTransform(tfs)
+        except (
+            tf2_ros.LookupException,
+            tf2_ros.ConnectivityException,
+            tf2_ros.ExtrapolationException,
+        ) as e:
+            rospy.logwarn("Exception while transforming: %s", e)
+            return None
+        # T_grasp_pregrasp = Transform(Rotation.identity(), [0.0, 0.0, -0.05])
+        # T_grasp_retreat = Transform(Rotation.identity(), [0.0, 0.0, -0.05])
+        # T_base_pregrasp = T_base_grasp * T_grasp_pregrasp
+        # T_base_retreat = T_base_grasp * T_grasp_retreat
 
-        T_grasp_pregrasp = Transform(Rotation.identity(), [0.0, 0.0, -0.05])
-        T_grasp_retreat = Transform(Rotation.identity(), [0.0, 0.0, -0.05])
-        T_base_pregrasp = T_base_grasp * T_grasp_pregrasp
-        T_base_retreat = T_base_grasp * T_grasp_retreat
+        # self.moveit.goto(T_base_pregrasp * self.grasp_ee_offset, velocity_scaling=0.2)
+        self.moveit.goto(x)
+        # self.moveit.gotoL(T_base_grasp * self.grasp_ee_offset)
+        # # self.gripper.grasp(width=0.0, force=20.0)
+        # self.moveit.gotoL(T_base_retreat * self.grasp_ee_offset)
 
-        self.moveit.goto(T_base_pregrasp * self.grasp_ee_offset, velocity_scaling=0.2)
-        self.moveit.gotoL(T_base_grasp * self.grasp_ee_offset)
-        self.gripper.grasp(width=0.0, force=20.0)
-        self.moveit.gotoL(T_base_retreat * self.grasp_ee_offset)
+        # T_retreat_lift_base = Transform(Rotation.identity(), [0.0, 0.0, 0.1])
+        # T_base_lift = T_retreat_lift_base * T_base_retreat
+        # self.moveit.goto(T_base_lift * self.grasp_ee_offset)
 
-        T_retreat_lift_base = Transform(Rotation.identity(), [0.0, 0.0, 0.1])
-        T_base_lift = T_retreat_lift_base * T_base_retreat
-        self.moveit.goto(T_base_lift * self.grasp_ee_offset)
-
-        return self.gripper.read() > 0.004
+        return True
 
 
 if __name__ == "__main__":

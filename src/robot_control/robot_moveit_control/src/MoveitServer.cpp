@@ -1,6 +1,6 @@
 #include <MoveitServer.h>
 
-MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP),spinner(2)
+MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), spinner(2)
 {
 	spinner.start();
 
@@ -21,7 +21,31 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP),s
 	ROS_INFO_NAMED("tutorial", "Start MOVEITSERVER");
 	initializeClaw();
 }
+double MoveitServer::degreesToRadians(double degrees)
+{
+	return degrees * M_PI / 180.0;
+}
+geometry_msgs::Pose MoveitServer::transformPose(const geometry_msgs::Pose &pose, const tf2::Transform &transform)
+{
+	tf2::Transform pose_transform;
+	tf2::fromMsg(pose, pose_transform);
 
+	tf2::Transform result_transform = transform * pose_transform;
+	geometry_msgs::Pose result_pose;
+	tf2::toMsg(result_transform, result_pose);
+	return result_pose;
+}
+
+geometry_msgs::Pose MoveitServer::moveFromPose(const geometry_msgs::Pose &pose, double distance)
+{
+	// 构造一个后退的变换矩阵
+	tf2::Transform back_transform;
+	back_transform.setIdentity();
+	back_transform.setOrigin(tf2::Vector3(0.0, 0.0, distance)); // 这里假设后退的方向是沿Z轴负方向
+
+	// 将目标位置应用后退变换矩阵
+	return transformPose(pose, back_transform);
+}
 bool MoveitServer::Planer() // 规划求解
 {
 	bool success = false;
