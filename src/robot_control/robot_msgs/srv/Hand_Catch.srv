@@ -4,6 +4,5 @@ bool run
 ---
 #respond
 string[] labels
-# float32[] positions
 geometry_msgs/PoseStamped[] positions
 sensor_msgs/Image detect_image

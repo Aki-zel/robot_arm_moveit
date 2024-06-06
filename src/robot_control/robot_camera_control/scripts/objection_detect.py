@@ -26,18 +26,18 @@ class Yolo(BaseDetection):
         self.loadModel()
 
     def loadModel(self):
-        if self.config["model_type"] == "ppyoloe":
+        if self.config['model_type'] == "ppyoloe":
             self.model = vision.detection.PPYOLOE(
-                self.config["model_file"],
-                self.config["params_file"],
-                self.config["config_file"],
-                runtime_option=self.option,
+                self.config['model_file'],
+                self.config['params_file'],
+                self.config['config_file'],
+                runtime_option=self.option
             )
-        elif self.config["model_type"] == "yolov5":
+        elif self.config['model_type'] == "yolov5":
             self.model = vision.detection.YOLOv5(
-                self.config["model_file"],
-                self.config["params_file"],
-                runtime_option=self.option,
+                self.config['model_file'],
+                self.config['params_file'],
+                runtime_option=self.option
             )
 
     def setOption(self, type):
@@ -53,9 +53,7 @@ class Yolo(BaseDetection):
         if type == "trt":
             self.option.use_gpu()
             self.option.use_trt_backend()
-            self.option.trt_option.serialize_file = (
-                current_work_dir + "/cache/model.trt"
-            )
+            self.option.trt_option.serialize_file = current_work_dir+"/cache/model.trt"
         return self.option
 
     def visual(self, img):
@@ -89,7 +87,6 @@ class Yolo(BaseDetection):
         )
         return sorted_objects
 
-
 def getObjCoordinate(request):
     global model
     labels = []
@@ -100,16 +97,15 @@ def getObjCoordinate(request):
     try:
         if run:
             color_image = model.cv_image
-            depth_image = model.depth_img
-            cam_info = model.camera_info
-            t_start = time.time()  # 开始计时
+            # t_start = time.time()  # 开始计时
             model.Predicts(color_image)
-            t_end = time.time()  # 结束计时
+            # t_end = time.time()  # 结束计时
+            # print("预测时间" + str((t_end-t_start)*1000))  # 打印预测时间
             res = model.visual(color_image)  # 可视化检测结果
             respond.detect_image = CvBridge().cv2_to_imgmsg(res, encoding="bgr8")
-            print("预测时间" + str((t_end - t_start) * 1000))  # 打印预测时间
             object_list = model.getFilteredObjects()  # 获取筛选后的目标信息列表
-            print("目标数量" + str(len(object_list)))
+            # print("目标数量" + str(len(object_list)))
+            tf_published = False  # 布尔变量，用于跟踪是否已经发布了TF坐标系
             if object_list:
                 for obj in object_list:
                     label = obj["label"]
@@ -124,8 +120,8 @@ def getObjCoordinate(request):
                     # 获取物体的三维坐标
                     camera_xyz = model.getObject3DPosition(ux, uy)
                     camera_xyz = np.round(
-                        np.array(camera_xyz), 4
-                    ).tolist()  # 转成x位小数
+                        np.array(camera_xyz), 3).tolist()  # 转成3位小数
+                    print(camera_xyz)
                     if camera_xyz[2] < 100.0 and camera_xyz[2] != 0:
                         world_pose = model.tf_transform(
                             camera_xyz, [0,0,0]
@@ -134,6 +130,10 @@ def getObjCoordinate(request):
                         positions.extend(world_pose)
                         # positions.extend(camera_xyz)
                         labels.append(label)
+                        # 仅发布第一个位置的TF坐标系
+                        if len(positions) == 3 and not tf_published:  # 只发布置信度最高的目标TF
+                            model.tf_broad(world_position)
+                            tf_published = True  # 将标志位设置为True，表示已发布TF坐标系
             respond.labels = labels
             respond.positions = positions
             print(respond.labels, respond.positions)
@@ -142,7 +142,7 @@ def getObjCoordinate(request):
         rospy.loginfo("[ERROR] %s" % r)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     current_work_dir = os.path.dirname(__file__)
     config_path = current_work_dir + "/config/config.yaml"
     with open(config_path, "r") as file:
@@ -152,4 +152,3 @@ if __name__ == "__main__":
 
     service = rospy.Service("objection_detect", Hand_Catch, getObjCoordinate)
     rospy.spin()
-    cv2.destroyAllWindows()

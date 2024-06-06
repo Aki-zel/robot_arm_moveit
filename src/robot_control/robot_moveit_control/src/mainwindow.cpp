@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #define Pi 3.1415926
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
                                           ui(new Ui::MainWindow)
 {
@@ -61,6 +62,7 @@ void MainWindow::on_closeButton_clicked()
 {
     this->close();
 }
+
 void MainWindow::setEnableButton(bool enbale)
 {
     QList<QPushButton *> allButtons = this->findChildren<QPushButton *>();
@@ -69,6 +71,7 @@ void MainWindow::setEnableButton(bool enbale)
         button->setEnabled(enbale);
     }
 }
+
 // 启动
 void MainWindow::on_startButton_clicked()
 {
@@ -147,6 +150,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
         update();
     }
 }
+
 void MainWindow::imageCallback(const sensor_msgs::CompressedImageConstPtr &msg)
 {
     try
@@ -176,6 +180,7 @@ void MainWindow::updateImageSlot(const QImage &img)
     this->ui->imageBox->setPixmap(QPixmap::fromImage(img));
     this->ui->imageBox->setScaledContents(true);
 }
+
 sensor_msgs::ImagePtr MainWindow::convertQPixmapToSensorImage(const QPixmap &pixmap) // 将Qt图像转换为ROS图像信息
 {
     // 将QPixmap转换为QImage

@@ -11,8 +11,12 @@
 #include <iostream>
 #include <MoveitServer.h>
 #include <robot_msgs/Hand_Catch.h>
-#include <robot_msgs/Hand_CatchRequest.h>
+#include <opencv2/opencv.hpp>
+#include <cv_bridge/cv_bridge.h>
+
+
 using namespace std;
+
 
 int main(int argc, char **argv)
 {
@@ -23,13 +27,120 @@ int main(int argc, char **argv)
 	ros::AsyncSpinner spinner(1);
 	ros::NodeHandle nh;
 	spinner.start();
-	robot_msgs::Hand_Catch srv;
-	srv.request.run=false;
-	// std::string PLANNING_GROUP = "arm";
-	// // moveit::planning_interface::MoveGroupInterface arm(PLANNING_GROUP);
-	// MoveitServer moveit_server(PLANNING_GROUP);
+	std::string PLANNING_GROUP = "arm";
+	// moveit::planning_interface::MoveGroupInterface arm(PLANNING_GROUP);
+	MoveitServer moveit_server(PLANNING_GROUP);
+	ros::ServiceClient client = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect"); // 创建目标检测服务客户端
 
-	// Test
+	// Test 
+
+	// test for move_j
+	cout<<"-----------------------test for move_j----------------------"<<endl;
+	vector<double> joints = {0, 0, moveit_server.degreesToRadians(-90), 0, moveit_server.degreesToRadians(-90), moveit_server.degreesToRadians(180)};
+	moveit_server.move_j(joints);
+	ros::Duration(5.0).sleep();
+
+	// test for move_p and move_l(1 point)
+	// cout<<"-----------------------test for move_p and move_l---------------------"<<endl;
+	// vector<double> xyzrpy={0.31,0.067,0.11,0,1,0,0};
+	// moveit_server.move_p(xyzrpy);
+	
+	// xyzrpy[2]=0.2;
+	// moveit_server.move_l(xyzrpy);
+
+	// // test for move_l (>=2 points)
+	// cout<<"-----------------------test for move_l(more points)----------------------"<<endl;
+	// vector<vector<double>> xyzrpys;
+	// xyzrpys.push_back(xyzrpy);
+	// xyzrpy[1]=0.2;
+	// xyzrpys.push_back(xyzrpy);
+	// xyzrpy[0]=0.4;
+	// moveit_server.move_l(xyzrpys);
+
+	// // test for my functions
+	// cout<<"-----------------------test for my move_function----------------------"<<endl;
+	// double xyz[3]={-0.5,0.02,0.2};
+	// moveit_server.move_l(xyz);
+	// ros::Duration(5.0).sleep();
+	// xyz[2]=0.3;
+	// moveit_server.move_l(xyz);
+	// ros::Duration(5.0).sleep();
+	// vector<double> xyzrpy={0.3,0.1,0.4,-3.1415,0,0};
+	// vector<double> xyzrpy1={0.3,0.2,0.3,-3.1415,0,0};
+	// moveit_server.move_l({xyzrpy, xyzrpy1});
+	// xyz[2]=0.1;
+	// moveit_server.move_p_with_constrains(xyz);
+	
+	// 控制夹爪
+	// moveit_server.Set_Tool_DO(2, true);
+	// ros::Duration(2.0).sleep();
+	// moveit_server.Set_Tool_DO(2, false);
+	// ros::Duration(2.0).sleep();
+	// moveit_server.Set_Tool_DO(2, true);
+	
+	// 调用目标检测服务
+	robot_msgs::Hand_Catch srv;
+    srv.request.run = true;  // 设置请求标志位
+    if (client.call(srv))
+    {
+        ROS_INFO("Service call succeeded");
+        // processDetectionResults(srv.response); // 处理检测结果
+		const robot_msgs::Hand_CatchResponse& response = srv.response;
+		for (size_t i = 0; i < response.labels.size(); ++i)
+		{
+			std::string label = response.labels[i];
+            if (label == "red") {
+				geometry_msgs::PoseStamped p = response.positions[i];
+				std::cout << "Position:" << std::endl;
+				std::cout << "x: " << p.pose.position.x << std::endl;
+				std::cout << "y: " << p.pose.position.y << std::endl;
+				std::cout << "z: " << p.pose.position.z << std::endl;
+				std::cout << "Orientation:" << std::endl;
+				std::cout << "x: " << p.pose.orientation.x << std::endl;
+				std::cout << "y: " << p.pose.orientation.y << std::endl;
+				std::cout << "z: " << p.pose.orientation.z << std::endl;
+				std::cout << "w: " << p.pose.orientation.w << std::endl;
+
+				// 移动到目标下方
+				p.pose.position.z += 0.10;
+				moveit_server.move_p(p);
+				ROS_INFO("移动到目标上方");
+				ros::Duration(2.0).sleep();
+				// 打开夹爪
+				moveit_server.Set_Tool_DO(2, false);
+				ROS_INFO("夹爪开");
+				ros::Duration(1.0).sleep();
+				// 移动到抓取位置
+				p.pose.position.z -= 0.10;
+				moveit_server.move_p(p);
+				ROS_INFO("摘取目标");
+				ros::Duration(1.0).sleep();
+				// 关闭夹爪
+				moveit_server.Set_Tool_DO(2, true);
+				ros::Duration(2.0).sleep();
+
+				vector<double> joints = {0, 0, moveit_server.degreesToRadians(-90), 0, moveit_server.degreesToRadians(-90), moveit_server.degreesToRadians(180)};
+				moveit_server.move_j(joints);
+
+				// 打开夹爪
+				moveit_server.Set_Tool_DO(2, false);
+				ROS_INFO("夹爪开");
+				ros::Duration(1.0).sleep();
+				
+			}
+		}
+		// 显示检测结果图像
+		cv::Mat detect_image = cv_bridge::toCvCopy(response.detect_image, sensor_msgs::image_encodings::BGR8)->image;
+		cv::imshow("Detection Results", detect_image);
+		cv::waitKey(0); // 按下任意键继续
+		cv::destroyAllWindows();
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service objection_detect");
+    }
+
 	ros::waitForShutdown();
 	return 0;
+
 }
