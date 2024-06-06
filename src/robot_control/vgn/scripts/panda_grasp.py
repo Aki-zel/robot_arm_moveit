@@ -127,39 +127,6 @@ class PandaGraspController(object):
         print(T_base_grasp.translation)
         x=to_pose_stamped_msg(T_base_grasp,"task")
         rospy.loginfo("x point: %s", x)
-        try:
-            import tf2_ros
-            import tf.transformations as tf
-            from geometry_msgs.msg import PoseStamped, TransformStamped
-            tf_buffer = tf2_ros.Buffer()
-            listener = tf2_ros.TransformListener(tf_buffer)
-            tf_broadcaster = tf2_ros.TransformBroadcaster()  # 创建TF广播
-            import tf2_geometry_msgs
-            # 使用tf2将机械臂摄像头坐标系转换到base_link坐标系
-            transform = tf_buffer.lookup_transform(
-                "base_link_rm",
-                "task",
-                rospy.Time(0),
-                rospy.Duration(1),
-            )
-            world_point = tf2_geometry_msgs.do_transform_pose(x, transform)
-            if world_point is not None:
-                rospy.loginfo("World point: %s", world_point)
-            tfs = TransformStamped()  # 创建广播数据
-            tfs.header.frame_id = "base_link_rm"  # 参考坐标系
-            tfs.header.stamp = rospy.Time.now()
-            tfs.child_frame_id = "object"  # 目标坐标系
-            tfs.transform.translation = x.pose.position
-            tfs.transform.rotation = x.pose.orientation
-            # 发布tf变换
-            tf_broadcaster.sendTransform(tfs)
-        except (
-            tf2_ros.LookupException,
-            tf2_ros.ConnectivityException,
-            tf2_ros.ExtrapolationException,
-        ) as e:
-            rospy.logwarn("Exception while transforming: %s", e)
-            return None
         # T_grasp_pregrasp = Transform(Rotation.identity(), [0.0, 0.0, -0.05])
         # T_grasp_retreat = Transform(Rotation.identity(), [0.0, 0.0, -0.05])
         # T_base_pregrasp = T_base_grasp * T_grasp_pregrasp

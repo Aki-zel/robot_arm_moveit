@@ -1,40 +1,29 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import time
-import rospy
-from sensor_msgs.msg import Image, CameraInfo
-from cv_bridge import CvBridge
+
 import cv2
+from base_detect import BaseDetection
 import os
 import yaml
 import numpy as np
 import fastdeploy.vision as vision
 import fastdeploy as fd
 import threading
-import tf2_ros
-from geometry_msgs.msg import PoseStamped, TransformStamped
-import tf2_geometry_msgs
 from robot_msgs.srv import *
-from grasp_detect import GraspGenerator
-import tf.transformations as tf
+from cv_bridge import CvBridge
+import rospy
 
 
-class yolo:
+class Yolo(BaseDetection):
     def __init__(self, config):
+        super().__init__(config)
         self.result = None
         self.model = None
-        self.config = config
-        self.setOption(self.config["device"])  # 配置推理框架
-        self.loadModel()
         self.cv_image = None
-        self.depth_img = None
-        self.camera_info = None
         self.setflag = 0
-        self.tf_buffer = tf2_ros.Buffer()
-        self.listener = tf2_ros.TransformListener(self.tf_buffer)
-        self.bridge = CvBridge()
-        self.tf_broadcaster = tf2_ros.TransformBroadcaster()  # 创建TF广播
-        self.grasp_gen = GraspGenerator(self.config["gmodel_file"], True)
+        self.setOption(self.config["device"])
+        self.loadModel()
 
     def loadModel(self):
         if self.config["model_type"] == "ppyoloe":
@@ -50,17 +39,14 @@ class yolo:
                 self.config["params_file"],
                 runtime_option=self.option,
             )
-        self.grasp_gen.load_model()
 
     def setOption(self, type):
-        self.option = fd.RuntimeOption()  # 存储运行时的选项，配置推理设备和后端
-        # if type == "gpu":
-        #     self.option.use_gpu()
+        self.option = fd.RuntimeOption()
         if type == "cpu":
             self.option.use_cpu()
         if type == "openvino":
             self.option.use_cpu()
-            self.option.use_openvino_backend()  # 使用OpenVINO作为推理后端
+            self.option.use_openvino_backend()
         if type == "ort":
             self.option.use_cpu()
             self.option.use_ort_backend()
@@ -72,117 +58,36 @@ class yolo:
             )
         return self.option
 
-    def depthImageCallback(self, msg):
-        self.depth_img = self.bridge.imgmsg_to_cv2(msg)
-
-    def cameraInfoCallback(self, msg):
-        self.camera_info = msg
-
-    def image_callback(self, msg):
-        try:
-            self.cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-        except Exception as e:
-            print(e)
-
     def visual(self, img):
         vis_im = vision.vis_detection(
             img, self.result, score_threshold=self.config["threshold"]["confidence"]
         )
         return vis_im
 
-    def getObject3DPosition(self, x, y):
-        if self.depth_img is None or self.camera_info is None:
-            return None
-
-        # 获取相机固有参数
-        fx = self.camera_info.K[0]
-        fy = self.camera_info.K[4]
-        cx = self.camera_info.K[2]
-        cy = self.camera_info.K[5]
-        depth_value = self.depth_img[y, x]
-        if depth_value == 0:
-            rospy.logerr("未检测到深度信息!!!!!")
-        # 将像素坐标转换为三维点
-        X = (x - cx) * depth_value / fx / 1000
-        Y = (y - cy) * depth_value / fy / 1000
-        Z = depth_value / 1000
-
-        return [X, Y, Z]
-
-    def tf_transform(self, position, grasp):
-        x, y, z = position
-        camera_point = PoseStamped()
-        camera_point.header.frame_id = "camera_color_optical_frame"
-        camera_point.pose.position.x = x
-        camera_point.pose.position.y = y
-        camera_point.pose.position.z = z
-        quaternion = tf.quaternion_from_euler(grasp[2], grasp[3], grasp[4])
-        camera_point.pose.orientation.w = quaternion[3]
-        camera_point.pose.orientation.x = quaternion[0]
-        camera_point.pose.orientation.y = quaternion[1]
-        camera_point.pose.orientation.z = quaternion[2]
-        try:
-            # 使用tf2将机械臂摄像头坐标系转换到base_link坐标系
-            transform = self.tf_buffer.lookup_transform(
-                "base_link_rm",
-                "camera_color_optical_frame",
-                rospy.Time(0),
-                rospy.Duration(1),
-            )
-            world_point = tf2_geometry_msgs.do_transform_pose(camera_point, transform)
-            if world_point is not None:
-                rospy.loginfo("World point: %s", world_point)
-                return world_point
-            else:
-                return None
-        except (
-            tf2_ros.LookupException,
-            tf2_ros.ConnectivityException,
-            tf2_ros.ExtrapolationException,
-        ) as e:
-            rospy.logwarn("Exception while transforming: %s", e)
-            return None
-
     def Predicts(self, img):
         self.result = self.model.predict(img)
         return self.result
 
-    def tf_broad(self, position):
-        tfs = TransformStamped()  # 创建广播数据
-        tfs.header.frame_id = "base_link_rm"  # 参考坐标系
-        tfs.header.stamp = rospy.Time.now()
-        tfs.child_frame_id = "object"  # 目标坐标系
-        tfs.transform.translation = position.pose.position
-        tfs.transform.rotation = position.pose.orientation
-        # 发布tf变换
-        self.tf_broadcaster.sendTransform(tfs)
-
     def getFilteredObjects(self):
-        filtered = []  # 存储NMS筛选后的目标索引
-        filtered_objects = []  # 存储最终目标信息
-        object_info = {}  # 暂存单个目标信息
-        score_threshold = self.config["threshold"]["confidence"]  # 获取置信度阈值
-        iou = self.config["threshold"]["iou"]  # 获取IoU阈值
-        # 使用OpenCV的非极大值抑制(NMS)来筛选检测框
+        filtered = []
+        filtered_objects = []
+        object_info = {}
+        score_threshold = self.config["threshold"]["confidence"]
+        iou = self.config["threshold"]["iou"]
         filtered = cv2.dnn.NMSBoxes(
             self.result.boxes, self.result.scores, score_threshold, iou
         )
-
-        # 遍历筛选后的索引，获取对应的物体信息
         for i in filtered:
             object_info = {
-                # 获取物体的类别标签
                 "label": self.config["class_name"][self.result.label_ids[i]],
-                "score": self.result.scores[i],  # 获取物体的置信度得分
-                "box_coordinates": self.result.boxes[i],  # 获取物体的边界框坐标
+                "score": self.result.scores[i],
+                "box_coordinates": self.result.boxes[i],
             }
-            filtered_objects.append(object_info)  # 将物体信息添加到结果列表中
-        # 根据每个目标的置信度对目标列表进行排序
+            filtered_objects.append(object_info)
         sorted_objects = sorted(
             filtered_objects, key=lambda x: x["score"], reverse=True
         )
-
-        return sorted_objects  # 返回筛选后的物体信息列表
+        return sorted_objects
 
 
 def getObjCoordinate(request):
@@ -209,21 +114,21 @@ def getObjCoordinate(request):
                 for obj in object_list:
                     label = obj["label"]
                     box_coords = obj["box_coordinates"]
-                    bottom_right = (box_coords[3] + 100, box_coords[2] + 100)
-                    top_left = (box_coords[1] + 100, box_coords[0] + 100)
-                    # ux = int((box_coords[0] + box_coords[2]) / 2)  # 计算物体中心点x坐标
-                    # uy = int((box_coords[1] + box_coords[3]) / 2)  # 计算物体中心点y坐标
-                    grasp = model.grasp_gen.Predict(
-                        color_image, depth_image, cam_info, top_left, bottom_right
-                    )
+                    # bottom_right = (box_coords[3] + 100, box_coords[2] + 100)
+                    # top_left = (box_coords[1] + 100, box_coords[0] + 100)
+                    ux = int((box_coords[0] + box_coords[2]) / 2)  # 计算物体中心点x坐标
+                    uy = int((box_coords[1] + box_coords[3]) / 2)  # 计算物体中心点y坐标
+                    # grasp = model.grasp_gen.Predict(
+                    #     color_image, depth_image, cam_info, top_left, bottom_right
+                    # )
                     # 获取物体的三维坐标
-                    camera_xyz = model.getObject3DPosition(grasp[0], grasp[1])
+                    camera_xyz = model.getObject3DPosition(ux, uy)
                     camera_xyz = np.round(
                         np.array(camera_xyz), 4
                     ).tolist()  # 转成x位小数
                     if camera_xyz[2] < 100.0 and camera_xyz[2] != 0:
                         world_pose = model.tf_transform(
-                            camera_xyz, grasp
+                            camera_xyz, [0,0,0]
                         )  # 将目标物体从相机坐标系转换到世界坐标系
                         # model.tf_broad(camera_xyz)
                         positions.extend(world_pose)
@@ -239,20 +144,12 @@ def getObjCoordinate(request):
 
 if __name__ == "__main__":
     current_work_dir = os.path.dirname(__file__)
-    config_path = current_work_dir + "/config/yolov5s_apple.yaml"
+    config_path = current_work_dir + "/config/config.yaml"
     with open(config_path, "r") as file:
         config = yaml.safe_load(file)
     rospy.init_node("camera_node")
-    model = yolo(config)
-    rospy.Subscriber("/camera/color/image_raw", Image, model.image_callback)
-    rospy.Subscriber(
-        "/camera/aligned_depth_to_color/image_raw", Image, model.depthImageCallback
-    )
-    rospy.Subscriber(
-        "/camera/aligned_depth_to_color/camera_info",
-        CameraInfo,
-        model.cameraInfoCallback,
-    )
+    model = Yolo(config)
+
     service = rospy.Service("objection_detect", Hand_Catch, getObjCoordinate)
     rospy.spin()
     cv2.destroyAllWindows()

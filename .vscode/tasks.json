@@ -15,16 +15,16 @@
 			"problemMatcher": [
 				"$catkin-gcc"
 			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
+			"group": "build",
 			"label": "catkin_make: build"
 		},
 		{
 			"type": "catkin_build",
 			"task": "build",
-			"group": "build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
 			"problemMatcher": [],
 			"label": "catkin: build"
 		}

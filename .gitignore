@@ -30,3 +30,4 @@ camera_pose.txt
 .qtc_clangd
 **/__pycache__
 src/robot_control/robot_camera_control/model
+src/robot_control/robot_moveit_control/scripts/1.py

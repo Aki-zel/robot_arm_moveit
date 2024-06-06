@@ -41,14 +41,14 @@ void MainWindow::objectionCallback(const geometry_msgs::PoseStampedConstPtr &msg
         this->server->Set_Tool_DO(2, false);
         setEnableButton(false);
         geometry_msgs::Pose pos = msg.get()->pose;
-        pos.position.z += 0.15;
+        // pos.position.z += 0.15;
         this->server->move_p(pos);
 
-        this->server->move_p(msg.get()->pose);
-        this->server->Set_Tool_DO(2, true);
-        std::vector<double> joint = {0, 0, this->server->degreesToRadians(-90), 0, this->server->degreesToRadians(-90), this->server->degreesToRadians(180)};
-        this->server->move_j(joint);
-        this->server->Set_Tool_DO(2, false);
+        // this->server->move_p(msg.get()->pose);
+        // this->server->Set_Tool_DO(2, true);
+        // std::vector<double> joint = {0, 0, this->server->degreesToRadians(-90), 0, this->server->degreesToRadians(-90), this->server->degreesToRadians(180)};
+        // this->server->move_j(joint);
+        // this->server->Set_Tool_DO(2, false);
         setEnableButton(true);
     }
     catch (const std::exception &e)
