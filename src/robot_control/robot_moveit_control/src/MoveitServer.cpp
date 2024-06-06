@@ -181,6 +181,7 @@ void MoveitServer::initializeClaw()
 void MoveitServer::stop()
 {
 	arm_.stop();
+	arm_.clearPoseTarget();
 }
 void MoveitServer::move_j(const std::vector<double> &joint_group_positions) // 按目标关节位置移动
 {
