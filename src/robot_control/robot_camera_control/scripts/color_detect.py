@@ -138,7 +138,7 @@ class ColorDetectServer(Transform):
                     response.labels.append(label)
                     response.positions.append(pose)
                     # 仅发布第一个位置的TF坐标系
-                    if len(camera_xyz) == 3 and not tf_published:  # 只发布置一个目标TF
+                    if len(camera_xyz) == 3 and not tf_published:  # 只发布置信度最高的目标TF
                         self.tf_broad(world_position)
                         tf_published = True  # 将标志位设置为True，表示已发布TF坐标系
 

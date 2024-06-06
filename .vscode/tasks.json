@@ -6,8 +6,8 @@
 			"args": [
 				"--directory",
 				"${workspaceFolder}",
-				"-j2",
-				"-l2",
+				"-j4",
+				"-l4",
 				"-DCATKIN_WHITELIST_PACKAGES=''",
 				"-DCMAKE_BUILD_TYPE=RelWithDebInfo",
 				"-DPYTHON_EXECUTABLE=/usr/bin/python3"
@@ -15,12 +15,18 @@
 			"problemMatcher": [
 				"$catkin-gcc"
 			],
+			"group": "build",
+			"label": "catkin_make: build"
+		},
+		{
+			"type": "catkin_build",
+			"task": "build",
 			"group": {
 				"kind": "build",
 				"isDefault": true
 			},
-			"label": "catkin_make: build"
+			"problemMatcher": [],
+			"label": "catkin: build"
 		}
-		
 	]
 }

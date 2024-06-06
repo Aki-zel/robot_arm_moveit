@@ -86,8 +86,8 @@
       <arg name="json_file_path"           value="$(arg json_file_path)"/>
 
       <arg name="enable_pointcloud"        value="$(arg enable_pointcloud)"/>
-      <arg name="pointcloud_texture_stream" value="$(arg pointcloud_texture_stream)"/>
-      <arg name="pointcloud_texture_index"  value="$(arg pointcloud_texture_index)"/>
+      <!-- <arg name="pointcloud_texture_stream" value="$(arg pointcloud_texture_stream)"/> -->
+      <!-- <arg name="pointcloud_texture_index"  value="$(arg pointcloud_texture_index)"/> -->
       <arg name="enable_sync"              value="$(arg enable_sync)"/>
       <arg name="align_depth"              value="$(arg align_depth)"/>
 

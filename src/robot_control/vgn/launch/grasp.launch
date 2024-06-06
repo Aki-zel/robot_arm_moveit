@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <!-- Load configuration -->
+  <rosparam command="load" file="$(find vgn)/launch/grasp.yaml" subst_value="true" />
+  <!-- Launch Nodes -->
+  <node pkg="vgn" type="grasp_server.py" name="vgn_server"  output="screen"/>
+  
+
+</launch>
