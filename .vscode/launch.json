@@ -8,7 +8,7 @@
             "name": "ydrobot",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/devel/lib/robot_moveit_control/ydrobot",
+            "program": "${workspaceFolder}/devel/lib/robot_moveit_control/Moveitserver",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

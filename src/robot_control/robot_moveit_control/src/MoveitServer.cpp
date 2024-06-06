@@ -111,7 +111,7 @@ geometry_msgs::Transform MoveitServer::getCurrent_State()
 
 	try
 	{
-		transformStamped = this->tfBuffer.lookupTransform("base_link", "ee_link", ros::Time(0));
+		transformStamped = this->tfBuffer.lookupTransform("base_link_rm", "ee_link", ros::Time(0));
 		this->current_state = transformStamped.transform;
 		return transformStamped.transform;
 	}

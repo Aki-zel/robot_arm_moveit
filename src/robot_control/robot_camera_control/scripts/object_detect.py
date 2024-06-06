@@ -161,6 +161,5 @@ if __name__ == '__main__':
         config = yaml.safe_load(file)
     rospy.init_node("yolo_detect")
     model = yolo(config)
-    rospy.Subscriber('/camera/color/image_raw', Image, model.image_callback)
     service = rospy.Service("objection_detect", Hand_Catch, getObjCoordinate)
     rospy.spin()

@@ -80,7 +80,7 @@ class Transform:
             rospy.logwarn("Exception while transforming: %s", e)
             return None
 
-    # 发布物体的TF坐标系
+    # 发布物体的TF坐标系(位置)
     def tf_broad(self, position):
         x, y, z = position
         tfs = TransformStamped()  # 创建广播数据
@@ -94,7 +94,7 @@ class Transform:
         # 发布tf变换
         self.tf_broadcaster.sendTransform(tfs)
 
-    # 发布物体的TF坐标系
+    # 发布物体的TF坐标系(姿态)
     def tf_broad(self, pose):
         tfs = TransformStamped()  # 创建广播数据
         tfs.header.frame_id = pose.header.frame_id  # 参考坐标系
