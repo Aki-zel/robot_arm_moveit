@@ -1,6 +1,6 @@
 #include "rm_robot.h"
 #include <chrono>
-
+#include <std_msgs/Int16.h>
 ros::CallbackQueue queue_others;
 ros::CallbackQueue queue_armJog;
 ros::CallbackQueue queue_forcePositionMove;
@@ -8,6 +8,22 @@ ros::CallbackQueue queue_forcePositionMove;
 
 bool joint_flag = false;
 
+void SetCollisionStage_Callback(const std_msgs::Int16 msg)
+{
+    int res = 0;
+    int16_t state;
+    state = msg.data;
+
+    res = SetCollisionStage(state);
+    if (res == 0)
+    {
+        ROS_INFO("SetCollisionStage success!\n");
+    }
+    else
+    {
+        ROS_ERROR("SetCollisionStage failed!\n");
+    }
+}
 void SetToolVoltage_Callback(const std_msgs::Byte msg)
 {
     int res = 0;
@@ -1525,7 +1541,7 @@ int main(int argc, char **argv)
     Joint_En = nh_.subscribe("/rm_driver/Joint_Enable", 10, Joint_Enable_Callback);
     System_En = nh_.subscribe("/rm_driver/Clear_System_Err", 10, System_Enable_Callback);
     IO_Update = nh_.subscribe("/rm_driver/IO_Update", 1, IO_Update_Callback);
-    
+    Set_Collision=nh_.subscribe("/rm_driver/Set_Collision_Stage",1,SetCollisionStage_Callback);
 
     // Update:2023-7-25 @HermanYe
     // Get controller version

@@ -13,11 +13,60 @@
 #include <robot_msgs/Hand_Catch.h>
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/TransformStamped.h>
 
-
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <geometry_msgs/Pose.h>
 using namespace std;
+// geometry_msgs::Pose calculateTargetTransform(const geometry_msgs::Pose &target_pose, const geometry_msgs::Transform &relative_transform)
+// {
+// 	// Create transformation matrices
+// 	tf2::Quaternion q1(target_pose.orientation.x, target_pose.orientation.y, target_pose.orientation.z, target_pose.orientation.w);
+// 	tf2::Matrix3x3 m1(q1);
+// 	tf2::Vector3 t1(target_pose.position.x, target_pose.position.y, target_pose.position.z);
+// 	tf2::Quaternion q2(relative_transform.rotation.x, relative_transform.rotation.y, relative_transform.rotation.z, relative_transform.rotation.w);
+// 	tf2::Matrix3x3 m2(q2);
+// 	tf2::Vector3 t2(relative_transform.translation.x, relative_transform.translation.y, relative_transform.translation.z);
 
+// 	// Calculate link6 target transform
+// 	tf2::Matrix3x3 link6_target_matrix = m1 * m2.inverse();
+// 	tf2::Vector3 link6_target_position = t1 - (m1 * m2.inverse()) * t2;
 
+// 	tf2::Quaternion link6_target_orientation;
+// 	link6_target_matrix.getRotation(link6_target_orientation);
+
+// 	// Convert back to Pose
+// 	geometry_msgs::Pose link6_target_pose;
+// 	link6_target_pose.position.x = link6_target_position.x();
+// 	link6_target_pose.position.y = link6_target_position.y();
+// 	link6_target_pose.position.z = link6_target_position.z();
+// 	link6_target_pose.orientation.x = link6_target_orientation.x();
+// 	link6_target_pose.orientation.y = link6_target_orientation.y();
+// 	link6_target_pose.orientation.z = link6_target_orientation.z();
+// 	link6_target_pose.orientation.w = link6_target_orientation.w();
+
+// 	return link6_target_pose;
+// }
+geometry_msgs::Pose calculateTargetTransform(const geometry_msgs::Pose &target_pose, const geometry_msgs::Transform &relative_transform)
+{
+	// Create transformation from target_pose
+	tf2::Transform target_tf;
+	tf2::fromMsg(target_pose, target_tf);
+
+	// Create transformation from relative_transform
+	tf2::Transform relative_tf;
+	tf2::fromMsg(relative_transform, relative_tf);
+
+	// Calculate link6 target transform
+	tf2::Transform end_target_tf = target_tf * relative_tf.inverse();
+
+	// Convert back to Pose
+	geometry_msgs::Pose end_target_pose;
+	tf2::toMsg(end_target_tf, end_target_pose);
+	return end_target_pose;
+}
 int main(int argc, char **argv)
 {
 	// 设置编码
@@ -27,24 +76,93 @@ int main(int argc, char **argv)
 	ros::AsyncSpinner spinner(1);
 	ros::NodeHandle nh;
 	spinner.start();
+	tf2_ros::Buffer tfBuffer;
+	tf2_ros::TransformListener tfListener(tfBuffer);
 	std::string PLANNING_GROUP = "arm";
 	// moveit::planning_interface::MoveGroupInterface arm(PLANNING_GROUP);
 	MoveitServer moveit_server(PLANNING_GROUP);
-	ros::ServiceClient client = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect"); // 创建目标检测服务客户端
+	// ros::ServiceClient client = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect"); // 创建目标检测服务客户端
+	geometry_msgs::Pose pose;
+	tf2::Quaternion qua;
+	qua.setRPY(0, 0, 0);
+	pose.position.x = 0.3;
+	pose.position.y = 0;
+	pose.position.z = 0.650;
+	pose.orientation.x = qua.getX();
+	pose.orientation.y = qua.getY();
+	pose.orientation.z = qua.getZ();
+	pose.orientation.w = qua.getW();
 
-	// Test 
+	// pose.orientation.w = 1;
+	// pose = moveit_server.getCurrent_Pose();
+	geometry_msgs::TransformStamped transformStamped;
+	tf2::Transform transform;
+	try
+	{
+		// geometry_msgs::TransformStamped transform_base_to_camera;
+		// geometry_msgs::TransformStamped transform_base_to_ee;
+		// // 获取base_link到camera_link的变换
+		// transform_base_to_camera = tfBuffer.lookupTransform("base_link_rm", "camera_link", ros::Time(0));
+		// transform_base_to_ee = tfBuffer.lookupTransform("base_link_rm", "ee_link", ros::Time(0));
+		// // 反转ee_link到base_link的转换，得到base_link到ee_link的转换
+		// tf2::Transform ee_to_base_tf;
+		// tf2::fromMsg(transform_base_to_ee.transform, ee_to_base_tf);
+		// tf2::Transform base_to_ee_tf = ee_to_base_tf.inverse();
 
+		// // 将camera_link到base_link的转换应用于base_link到ee_link的转换，得到camera_link到ee_link的转换
+		// tf2::Transform camera_to_base_tf;
+		// tf2::fromMsg(transform_base_to_camera.transform, camera_to_base_tf);
+		// tf2::Transform camera_to_ee_tf = base_to_ee_tf * camera_to_base_tf;
+		// ROS_INFO("camera_to_ee_tfTranslation: (x: %.2f, y: %.2f, z: %.2f)",
+		// 		 camera_to_ee_tf.getOrigin().getX(),
+		// 		 camera_to_ee_tf.getOrigin().getY(),
+		// 		 camera_to_ee_tf.getOrigin().getZ());
+		// ROS_INFO("camera_to_ee_tfRotation: (x: %.2f, y: %.2f, z: %.2f, w: %.2f)",
+		// 		 camera_to_ee_tf.getRotation().x(),
+		// 		 camera_to_ee_tf.getRotation().y(),
+		// 		 camera_to_ee_tf.getRotation().z(),
+		// 		 camera_to_ee_tf.getRotation().w());
+		transformStamped = tfBuffer.lookupTransform("ee_link", "camera_link",
+													ros::Time(0));
+		ROS_INFO("Translation: (x: %.2f, y: %.2f, z: %.2f)",
+				 transformStamped.transform.translation.x,
+				 transformStamped.transform.translation.y,
+				 transformStamped.transform.translation.z);
+		ROS_INFO("Rotation: (x: %.2f, y: %.2f, z: %.2f, w: %.2f)",
+				 transformStamped.transform.rotation.x,
+				 transformStamped.transform.rotation.y,
+				 transformStamped.transform.rotation.z,
+				 transformStamped.transform.rotation.w);
+		geometry_msgs::Pose link6_target_pose = calculateTargetTransform(pose, transformStamped.transform);
+		// transformStamped.transform.rotation.x=0;
+		// transformStamped.transform.rotation.y=0;
+		// transformStamped.transform.rotation.z=0;
+		// transformStamped.transform.rotation.w=1;
+		// tf2::fromMsg(transformStamped.transform, transform);
+		// geometry_msgs::Pose trans_pose;
+		// trans_pose = moveit_server.transformPose(pose, transform);
+		// trans_pose = moveit_server.moveFromPose(pose, -0.1);
+		// moveit_server.move_p(trans_pose);
+		moveit_server.move_p(pose);
+		moveit_server.move_p(link6_target_pose);
+	}
+	catch (tf2::TransformException &ex)
+	{
+		ROS_WARN("%s", ex.what());
+	}
+	// Test
+	// moveit_server.transformPose();
 	// test for move_j
-	cout<<"-----------------------test for move_j----------------------"<<endl;
-	vector<double> joints = {0, 0, moveit_server.degreesToRadians(-90), 0, moveit_server.degreesToRadians(-90), moveit_server.degreesToRadians(180)};
-	moveit_server.move_j(joints);
-	ros::Duration(5.0).sleep();
+	// cout<<"-----------------------test for move_j----------------------"<<endl;
+	// vector<double> joints = {0, 0, moveit_server.degreesToRadians(-90), 0, moveit_server.degreesToRadians(-90), moveit_server.degreesToRadians(180)};
+	// moveit_server.move_j(joints);
+	// ros::Duration(5.0).sleep();
 
 	// test for move_p and move_l(1 point)
 	// cout<<"-----------------------test for move_p and move_l---------------------"<<endl;
 	// vector<double> xyzrpy={0.31,0.067,0.11,0,1,0,0};
 	// moveit_server.move_p(xyzrpy);
-	
+
 	// xyzrpy[2]=0.2;
 	// moveit_server.move_l(xyzrpy);
 
@@ -70,77 +188,76 @@ int main(int argc, char **argv)
 	// moveit_server.move_l({xyzrpy, xyzrpy1});
 	// xyz[2]=0.1;
 	// moveit_server.move_p_with_constrains(xyz);
-	
+
 	// 控制夹爪
 	// moveit_server.Set_Tool_DO(2, true);
 	// ros::Duration(2.0).sleep();
 	// moveit_server.Set_Tool_DO(2, false);
 	// ros::Duration(2.0).sleep();
 	// moveit_server.Set_Tool_DO(2, true);
-	
-	// 调用目标检测服务
-	robot_msgs::Hand_Catch srv;
-    srv.request.run = true;  // 设置请求标志位
-    if (client.call(srv))
-    {
-        ROS_INFO("Service call succeeded");
-        // processDetectionResults(srv.response); // 处理检测结果
-		const robot_msgs::Hand_CatchResponse& response = srv.response;
-		for (size_t i = 0; i < response.labels.size(); ++i)
-		{
-			std::string label = response.labels[i];
-            if (label == "red") {
-				geometry_msgs::PoseStamped p = response.positions[i];
-				std::cout << "Position:" << std::endl;
-				std::cout << "x: " << p.pose.position.x << std::endl;
-				std::cout << "y: " << p.pose.position.y << std::endl;
-				std::cout << "z: " << p.pose.position.z << std::endl;
-				std::cout << "Orientation:" << std::endl;
-				std::cout << "x: " << p.pose.orientation.x << std::endl;
-				std::cout << "y: " << p.pose.orientation.y << std::endl;
-				std::cout << "z: " << p.pose.orientation.z << std::endl;
-				std::cout << "w: " << p.pose.orientation.w << std::endl;
 
-				// 移动到目标下方
-				p.pose.position.z += 0.10;
-				moveit_server.move_p(p);
-				ROS_INFO("移动到目标上方");
-				ros::Duration(2.0).sleep();
-				// 打开夹爪
-				moveit_server.Set_Tool_DO(2, false);
-				ROS_INFO("夹爪开");
-				ros::Duration(1.0).sleep();
-				// 移动到抓取位置
-				p.pose.position.z -= 0.10;
-				moveit_server.move_p(p);
-				ROS_INFO("摘取目标");
-				ros::Duration(1.0).sleep();
-				// 关闭夹爪
-				moveit_server.Set_Tool_DO(2, true);
-				ros::Duration(2.0).sleep();
+	// // 调用目标检测服务
+	// robot_msgs::Hand_Catch srv;
+	// srv.request.run = true; // 设置请求标志位
+	// if (client.call(srv))
+	// {
+	// 	ROS_INFO("Service call succeeded");
+	// 	// processDetectionResults(srv.response); // 处理检测结果
+	// 	const robot_msgs::Hand_CatchResponse &response = srv.response;
+	// 	for (size_t i = 0; i < response.labels.size(); ++i)
+	// 	{
+	// 		std::string label = response.labels[i];
+	// 		if (label == "red")
+	// 		{
+	// 			geometry_msgs::PoseStamped p = response.positions[i];
+	// 			std::cout << "Position:" << std::endl;
+	// 			std::cout << "x: " << p.pose.position.x << std::endl;
+	// 			std::cout << "y: " << p.pose.position.y << std::endl;
+	// 			std::cout << "z: " << p.pose.position.z << std::endl;
+	// 			std::cout << "Orientation:" << std::endl;
+	// 			std::cout << "x: " << p.pose.orientation.x << std::endl;
+	// 			std::cout << "y: " << p.pose.orientation.y << std::endl;
+	// 			std::cout << "z: " << p.pose.orientation.z << std::endl;
+	// 			std::cout << "w: " << p.pose.orientation.w << std::endl;
 
-				vector<double> joints = {0, 0, moveit_server.degreesToRadians(-90), 0, moveit_server.degreesToRadians(-90), moveit_server.degreesToRadians(180)};
-				moveit_server.move_j(joints);
+	// 			// 移动到目标下方
+	// 			p.pose.position.z += 0.10;
+	// 			moveit_server.move_p(p);
+	// 			ROS_INFO("移动到目标上方");
+	// 			ros::Duration(2.0).sleep();
+	// 			// 打开夹爪
+	// 			moveit_server.Set_Tool_DO(2, false);
+	// 			ROS_INFO("夹爪开");
+	// 			ros::Duration(1.0).sleep();
+	// 			// 移动到抓取位置
+	// 			p.pose.position.z -= 0.10;
+	// 			moveit_server.move_p(p);
+	// 			ROS_INFO("摘取目标");
+	// 			ros::Duration(1.0).sleep();
+	// 			// 关闭夹爪
+	// 			moveit_server.Set_Tool_DO(2, true);
+	// 			ros::Duration(2.0).sleep();
 
-				// 打开夹爪
-				moveit_server.Set_Tool_DO(2, false);
-				ROS_INFO("夹爪开");
-				ros::Duration(1.0).sleep();
-				
-			}
-		}
-		// 显示检测结果图像
-		cv::Mat detect_image = cv_bridge::toCvCopy(response.detect_image, sensor_msgs::image_encodings::BGR8)->image;
-		cv::imshow("Detection Results", detect_image);
-		cv::waitKey(0); // 按下任意键继续
-		cv::destroyAllWindows();
-    }
-    else
-    {
-        ROS_ERROR("Failed to call service objection_detect");
-    }
+	// 			vector<double> joints = {0, 0, moveit_server.degreesToRadians(-90), 0, moveit_server.degreesToRadians(-90), moveit_server.degreesToRadians(180)};
+	// 			moveit_server.move_j(joints);
+
+	// 			// 打开夹爪
+	// 			moveit_server.Set_Tool_DO(2, false);
+	// 			ROS_INFO("夹爪开");
+	// 			ros::Duration(1.0).sleep();
+	// 		}
+	// 	}
+	// 	// 显示检测结果图像
+	// 	cv::Mat detect_image = cv_bridge::toCvCopy(response.detect_image, sensor_msgs::image_encodings::BGR8)->image;
+	// 	cv::imshow("Detection Results", detect_image);
+	// 	cv::waitKey(0); // 按下任意键继续
+	// 	cv::destroyAllWindows();
+	// }
+	// else
+	// {
+	// 	ROS_ERROR("Failed to call service objection_detect");
+	// }
 
 	ros::waitForShutdown();
 	return 0;
-
 }

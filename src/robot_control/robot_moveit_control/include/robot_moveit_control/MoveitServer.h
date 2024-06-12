@@ -29,6 +29,7 @@
 #include <tf2/LinearMath/Transform.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <std_msgs/Int16.h>
 #include <cmath>
 
 typedef actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction> MoveGroupClient;
@@ -49,6 +50,7 @@ public:
 	void move_l(const std::vector<geometry_msgs::Pose> Points);
 	void Set_Tool_DO(int num, bool state);
 	geometry_msgs::Transform getCurrent_State();
+	geometry_msgs::Pose getCurrent_Pose();
 	bool Planer();
 	double round(double num, int exponent);
 	geometry_msgs::Pose setPoint(const double x, const double y, const double z);
@@ -58,18 +60,21 @@ public:
 	double degreesToRadians(double degrees);
 	geometry_msgs::Pose transformPose(const geometry_msgs::Pose &pose, const tf2::Transform &transform);
 	geometry_msgs::Pose moveFromPose(const geometry_msgs::Pose &pose, double distance);
+	geometry_msgs::Pose calculateTargetTransform(const geometry_msgs::Pose &target_pose, const geometry_msgs::Transform &relative_transform);
 	~MoveitServer();
+
+public:
+	moveit::planning_interface::MoveGroupInterface arm_;
 
 private:
 	std::string reference_frame;
 	std::string end_effector_link;
 	ros::NodeHandle nh_;
-	moveit::planning_interface::MoveGroupInterface arm_;
 	tf2_ros::Buffer tfBuffer;
 	tf2_ros::TransformListener *tfListener;
 	// ros::Subscriber tf_sub;
 	geometry_msgs::Transform current_state;
-	ros::Publisher tool_do_pub;
+	ros::Publisher tool_do_pub, collision_stage_pub;
 	ros::AsyncSpinner spinner;
 };
 

@@ -29,10 +29,11 @@ class PandaGraspController(object):
         self.base_frame = rospy.get_param("~base_frame_id")
         self.ee_frame = rospy.get_param("~ee_frame_id")
         self.task_frame = rospy.get_param("~task_frame_id")
-        self.ee_grasp_offset = Transform.from_list(rospy.get_param("~ee_grasp_offset"))
+        self.ee_grasp_offset = Transform.from_list(
+            rospy.get_param("~ee_grasp_offset"))
         self.grasp_ee_offset = self.ee_grasp_offset.inv()
-        grasp= self.grasp_ee_offset.to_list()
-        rospy.loginfo("%s",grasp)
+        grasp = self.grasp_ee_offset.to_list()
+        rospy.loginfo("%s", grasp)
         self.scan_joints = rospy.get_param("~scan_joints")
 
     def lookup_transforms(self):
@@ -42,7 +43,7 @@ class PandaGraspController(object):
     def init_robot_connection(self):
         # self.gripper = PandaGripperClient()
         self.moveit = MoveItClient("arm")
-        self.gripper =self.moveit
+        self.gripper = self.moveit
         self.moveit.move_group.set_end_effector_link(self.ee_frame)
 
         # # Add a box to the planning scene to avoid collisions with the table.
@@ -54,10 +55,13 @@ class PandaGraspController(object):
 
     def init_services(self):
         self.reset_map = rospy.ServiceProxy("reset_map", Empty)
-        self.toggle_integration = rospy.ServiceProxy("toggle_integration", SetBool)
-        self.get_scene_cloud = rospy.ServiceProxy("get_scene_cloud", GetSceneCloud)
+        self.toggle_integration = rospy.ServiceProxy(
+            "toggle_integration", SetBool)
+        self.get_scene_cloud = rospy.ServiceProxy(
+            "get_scene_cloud", GetSceneCloud)
         self.get_map_cloud = rospy.ServiceProxy("get_map_cloud", GetMapCloud)
-        self.predict_grasps = rospy.ServiceProxy("predict_grasps", PredictGrasps)
+        self.predict_grasps = rospy.ServiceProxy(
+            "predict_grasps", PredictGrasps)
 
     def run(self):
         self.vis.clear()
@@ -67,7 +71,7 @@ class PandaGraspController(object):
 
         rospy.loginfo("Reconstructing scene")
         self.scan_scene()
-        res_sense=self.get_scene_cloud()
+        res_sense = self.get_scene_cloud()
         res = self.get_map_cloud()
         rospy.loginfo("Planning grasps")
         req = PredictGraspsRequest(res.voxel_size, res.map_cloud)
@@ -106,14 +110,29 @@ class PandaGraspController(object):
         self.reset_map()
         self.toggle_integration(True)
         for joint_target in self.scan_joints:
-            self.moveit.goto(joint_target,velocity_scaling=1, acceleration_scaling=1)
-            sense=self.get_scene_cloud()
+            self.moveit.goto(joint_target, velocity_scaling=1,
+                             acceleration_scaling=1)
+            sense = self.get_scene_cloud()
             res = self.get_map_cloud()
             # break
         self.toggle_integration(False)
 
     def execute_grasp(self, grasp):
-        # Transform to base frame
+        # grasp.pose = self.T_base_task * grasp.pose
+
+        # # Ensure that the camera is pointing forward.
+        # rot = grasp.pose.rotation
+        # axis = rot.as_matrix()[:, 0]
+        # if axis[0] < 0:
+        #     grasp.pose.rotation = rot * Rotation.from_euler("z", np.pi)
+
+        # T_base_grasp = grasp.pose
+        # print(T_base_grasp.rotation)
+        # print(T_base_grasp.translation)
+        # x = to_pose_stamped_msg(T_base_grasp, "task")
+        # rospy.loginfo("x point: %s", x)
+        # self.moveit.goto(x)
+       # Transform to base frame
         grasp.pose = self.T_base_task * grasp.pose
 
         # Ensure that the camera is pointing forward.
@@ -123,25 +142,20 @@ class PandaGraspController(object):
             grasp.pose.rotation = rot * Rotation.from_euler("z", np.pi)
 
         T_base_grasp = grasp.pose
-        print(T_base_grasp.rotation)
-        print(T_base_grasp.translation)
-        x=to_pose_stamped_msg(T_base_grasp,"task")
-        rospy.loginfo("x point: %s", x)
-        # T_grasp_pregrasp = Transform(Rotation.identity(), [0.0, 0.0, -0.05])
-        # T_grasp_retreat = Transform(Rotation.identity(), [0.0, 0.0, -0.05])
-        # T_base_pregrasp = T_base_grasp * T_grasp_pregrasp
-        # T_base_retreat = T_base_grasp * T_grasp_retreat
 
-        # self.moveit.goto(T_base_pregrasp * self.grasp_ee_offset, velocity_scaling=0.2)
-        self.moveit.goto(x)
-        # self.moveit.gotoL(T_base_grasp * self.grasp_ee_offset)
-        # # self.gripper.grasp(width=0.0, force=20.0)
-        # self.moveit.gotoL(T_base_retreat * self.grasp_ee_offset)
+        T_grasp_pregrasp = Transform(Rotation.identity(), [0.0, 0.0, -0.05])
+        T_grasp_retreat = Transform(Rotation.identity(), [0.0, 0.0, -0.05])
+        T_base_pregrasp = T_base_grasp * T_grasp_pregrasp
+        T_base_retreat = T_base_grasp * T_grasp_retreat
 
-        # T_retreat_lift_base = Transform(Rotation.identity(), [0.0, 0.0, 0.1])
-        # T_base_lift = T_retreat_lift_base * T_base_retreat
-        # self.moveit.goto(T_base_lift * self.grasp_ee_offset)
+        self.moveit.goto(T_base_pregrasp *
+                         self.grasp_ee_offset, velocity_scaling=0.2)
+        self.moveit.gotoL(T_base_grasp * self.grasp_ee_offset)
+        self.moveit.gotoL(T_base_retreat * self.grasp_ee_offset)
 
+        T_retreat_lift_base = Transform(Rotation.identity(), [0.0, 0.0, 0.1])
+        T_base_lift = T_retreat_lift_base * T_base_retreat
+        self.moveit.goto(T_base_lift * self.grasp_ee_offset)
         return True
 
 

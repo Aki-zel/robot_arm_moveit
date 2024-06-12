@@ -41,7 +41,7 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
-    - Acceleration_Scaling_Factor: 0.1
+    - Acceleration_Scaling_Factor: 1
       Class: moveit_rviz_plugin/MotionPlanning
       Enabled: true
       Move Group Namespace: ""
@@ -246,7 +246,7 @@ Visualization Manager:
         Show Robot Collision: false
         Show Robot Visual: true
       Value: true
-      Velocity_Scaling_Factor: 0.1
+      Velocity_Scaling_Factor: 1
     - Class: rviz/TF
       Enabled: true
       Filter (blacklist): ""
@@ -268,16 +268,6 @@ Visualization Manager:
           Value: false
         base_link_rm:
           Value: true
-        camera_aligned_depth_to_color_frame:
-          Value: false
-        camera_color_frame:
-          Value: false
-        camera_color_optical_frame:
-          Value: false
-        camera_depth_frame:
-          Value: false
-        camera_depth_optical_frame:
-          Value: false
         camera_link:
           Value: true
         ee_link:
@@ -289,6 +279,8 @@ Visualization Manager:
         gripper_link:
           Value: false
         task:
+          Value: true
+        task1:
           Value: true
         tool0:
           Value: false
@@ -310,14 +302,7 @@ Visualization Manager:
                     Link5:
                       Link6:
                         camera_link:
-                          camera_aligned_depth_to_color_frame:
-                            camera_color_optical_frame:
-                              {}
-                          camera_color_frame:
-                            {}
-                          camera_depth_frame:
-                            camera_depth_optical_frame:
-                              {}
+                          {}
                         ee_link:
                           {}
                         tool0:
@@ -327,6 +312,8 @@ Visualization Manager:
                             finger2:
                               {}
             task:
+              {}
+            task1:
               {}
       Update Interval: 0
       Value: true
@@ -516,7 +503,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 10.129729270935059
+      Distance: 4.312191486358643
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -524,17 +511,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -4.31141471862793
-        Y: 4.781609535217285
-        Z: -3.5804151821139385e-07
+        X: 0.39062023162841797
+        Y: 1.1254775524139404
+        Z: -4.772508077621751e-07
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.14460262656211853
+      Pitch: 0.01539729442447424
       Target Frame: dummy
-      Yaw: 5.478565216064453
+      Yaw: 4.513556957244873
     Saved: ~
 Window Geometry:
   Displays:

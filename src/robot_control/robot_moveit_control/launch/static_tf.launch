@@ -1,12 +1,14 @@
 <launch>
 <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="base_To_cramera" args="x y z qx qy qz qw base_link camera_link"/> -->
-<node pkg="tf2_ros" type="static_transform_publisher" name="base_To_cramera" args="
--0.06908809103480994 0.022410818173565176 0.01280247490824934
-0.004867876410342842 -0.7073319749610286 -0.010143691342199057  0.7067919683350531
-Link6 camera_link"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="base_To_cramera" args="
+    -0.06908809103480994 0.022410818173565176 0.01280247490824934
+    0.004867876410342842 -0.7073319749610286 -0.010143691342199057  0.7067919683350531
+    Link6 camera_link"/>
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_color_optical_frame"
       args="0 0 0 -1.57079632679 0 -1.57079632679 camera_color_optical_frame camera_color_frame " /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
       args="-0.0473096 0.0308597 0.0775646   0.0108814 -0.715752 -0.0119326 0.698168 Link6 camera_color_optical_frame" /> -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="task_frame_broadcaster" args="0.1 -0.2 -0.310 0.0 0.0 0.0 1.0 base_link_rm task" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="task_frame_broadcaster" args="0.1 -0.2 -0.310 0.0 0.0 0.0 1.0 base_link_rm task" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="task1_frame_broadcaster" args="0.3 -0.0 0.650 0.0 0.0 0.0 1.0 base_link_rm task1" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="tee_frame_broadcaster" args="0.0 0.0 0.523 1 0.0 0.0 0 ee_link offset" />
 </launch>

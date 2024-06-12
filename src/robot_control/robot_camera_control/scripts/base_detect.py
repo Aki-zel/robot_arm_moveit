@@ -10,7 +10,7 @@ import tf2_ros
 import tf2_geometry_msgs
 from geometry_msgs.msg import PoseStamped, TransformStamped
 import tf.transformations as tf
-from graspany_detect import GraspGenerator
+# from graspany_detect import GraspGenerator
 
 
 class BaseDetection:
@@ -26,6 +26,7 @@ class BaseDetection:
         # self.grasp_gen = GraspGenerator(config["gmodel_file"], True)
         # self.grasp_gen.load_model()
         self.initTopic()
+        print("111")
 
     def initTopic(self):
         rospy.Subscriber(self.config['camera']['color_topic'],
@@ -87,7 +88,7 @@ class BaseDetection:
                 camera_point, transform)
             if world_point is not None:
                 rospy.loginfo("World point: %s", world_point)
-                self.tf_broad(world_point)
+                # self.tf_broad(world_point)
                 return world_point
             else:
                 return None
@@ -103,7 +104,7 @@ class BaseDetection:
         tfs = TransformStamped()
         tfs.header.frame_id = self.config['robot']['base_frame_id']
         tfs.header.stamp = rospy.Time.now()
-        tfs.child_frame_id = "object"
+        tfs.child_frame_id = "object"+str(self.count)
         tfs.transform.translation = position.pose.position
         tfs.transform.rotation = position.pose.orientation
         self.tf_broadcaster.sendTransform(tfs)

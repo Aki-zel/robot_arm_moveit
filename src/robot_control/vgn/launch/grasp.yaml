@@ -2,7 +2,7 @@ panda_grasp:
   task_frame_id: task
   base_frame_id: base_link_rm
   ee_frame_id: ee_link
-  ee_grasp_offset: [0.211, 0.0, 0.211, 0, 1, 0,0]
+  ee_grasp_offset:  [0.0, 0.0, -0.382, 1, 0.0, 0.0, 0]
   scan_joints:
     - [0.0, 0.0, -1.5707, 0, -1.5707, 3.1415]
     - [0.715, -0.2443, -1.553, -0.4014, -1.53588, 3.3335]
