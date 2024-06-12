@@ -6,18 +6,17 @@ from sensor_msgs.msg import Image
 from geometry_msgs.msg import PoseStamped
 from robot_msgs.srv import Hand_Catch, Hand_CatchResponse
 from tf.transformations import quaternion_from_euler, quaternion_multiply
-from transform import Transform
+from base_detect import BaseDetection
+import os
+import yaml
 
 
-class ColorDetectServer(Transform):
-    def __init__(self):
-        super(ColorDetectServer, self).__init__()
+class ColorDetectServer(BaseDetection):
+    def __init__(self, config):
+        super(ColorDetectServer, self).__init__(config)
         self.bridge = CvBridge()
-        self.cv_image = None
-        rospy.Subscriber("/camera/color/image_raw", Image, self.image_callback)
         self.service = rospy.Service(
             "color_detect", Hand_Catch, self.handle_color_detection)
-        
         rospy.loginfo("ColorDetectServer initialized")
 
     def image_callback(self, msg):
@@ -106,7 +105,7 @@ class ColorDetectServer(Transform):
                     angle = obj['angle']
 
                     # 获取物体的三维坐标
-                    camera_xyz = self.get_object_3d_position(
+                    camera_xyz = self.getObject3DPosition(
                         center_x, center_y)
                     camera_xyz = np.round(np.array(camera_xyz), 3).tolist()
 
@@ -155,9 +154,13 @@ class ColorDetectServer(Transform):
 
 
 if __name__ == '__main__':
+    current_work_dir = os.path.dirname(__file__)
+    config_path = current_work_dir + "/config/config.yaml"
+    with open(config_path, "r") as file:
+        config = yaml.safe_load(file)
     try:
         rospy.init_node("color_detect_server")
-        ColorDetectServer()
+        ColorDetectServer(config)
         rospy.spin()
     except rospy.ROSInterruptException:
         rospy.logerr("Interrupted")

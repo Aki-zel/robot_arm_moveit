@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import time
 
 import cv2
 from base_detect import BaseDetection
@@ -19,7 +18,7 @@ class Yolo(BaseDetection):
         super().__init__(config)
         self.result = None
         self.model = None
-        self.cv_image = None
+        # self.cv_image = None
         self.setflag = 0
         self.setOption(self.config["device"])
         self.loadModel()
@@ -101,6 +100,8 @@ def getObjCoordinate(request):
             # t_end = time.time()  # 结束计时
             # print("预测时间" + str((t_end-t_start)*1000))  # 打印预测时间
             res = model.visual(color_image)  # 可视化检测结果
+            cv2.imshow("detect", res)
+            cv2.waitKey(100)
             respond.detect_image = CvBridge().cv2_to_imgmsg(res, encoding="bgr8")
             object_list = model.getFilteredObjects()  # 获取筛选后的目标信息列表
             # print("目标数量" + str(len(object_list)))
@@ -143,7 +144,7 @@ def getObjCoordinate(request):
 
 if __name__ == '__main__':
     current_work_dir = os.path.dirname(__file__)
-    config_path = current_work_dir + "/config/config.yaml"
+    config_path = current_work_dir + "/config.yaml"
     with open(config_path, "r") as file:
         config = yaml.safe_load(file)
     rospy.init_node("camera_node")
