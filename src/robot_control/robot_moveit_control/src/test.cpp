@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 				// 移动到抓取位置
 				p.pose.position.z -= 0.10;
 				moveit_server.move_p(p);
-				ROS_INFO("摘取目标");
+				ROS_INFO("夹取目标");
 
 				// 关闭夹爪
 				moveit_server.Set_Tool_DO(2, true);				

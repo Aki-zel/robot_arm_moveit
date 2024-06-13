@@ -1,5 +1,5 @@
 <launch>
   <node name="ydrobot" pkg="robot_moveit_control" type="ydrobot" output="screen" /> 
   <node name="template_detect" pkg="robot_camera_control" type="template_detect.py" output="screen" /> 
-  <node name="objection_detect" pkg="robot_camera_control" type="objection_detect.py" output="screen" /> 
+  <node name="objection_detect" pkg="robot_camera_control" type="object_detect.py" output="screen" /> 
 </launch>

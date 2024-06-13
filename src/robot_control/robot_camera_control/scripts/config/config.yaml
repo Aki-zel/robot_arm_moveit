@@ -20,6 +20,14 @@ camera:
 threshold:
   iou: 0.4
   confidence: 0.6
+  # 颜色与面积阈值
+  color_threshold:
+    lower: [90, 80, 100]
+    upper: [130, 255, 255]
+  area_threshold:
+    min_area: 5000
+    max_area: 50000
+
 # 计算设备
 # -cpu
 # -openvino
@@ -28,7 +36,7 @@ threshold:
 device: 'openvino'
 model_type: 'yolov5'
 # 模型权重路径
-model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/yolov5s.onnx
+model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/apple.onnx
 params_file: ""
 config_file: ""
 gmodel_file: ""

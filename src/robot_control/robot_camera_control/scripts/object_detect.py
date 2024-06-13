@@ -126,11 +126,11 @@ def getObjCoordinate(request):
                             camera_xyz, [0,0,0]
                         )  # 将目标物体从相机坐标系转换到世界坐标系
                         # model.tf_broad(camera_xyz)
-                        positions.extend(world_pose)
+                        positions.append(world_pose)
                         # positions.extend(camera_xyz)
                         labels.append(label)
                         # 仅发布第一个位置的TF坐标系
-                        if len(positions) == 3 and not tf_published:  # 只发布置信度最高的目标TF
+                        if not tf_published:  # 只发布置信度最高的目标TF
                             model.tf_broad(world_pose)
                             tf_published = True  # 将标志位设置为True，表示已发布TF坐标系
             respond.labels = labels
@@ -149,5 +149,5 @@ if __name__ == '__main__':
     rospy.init_node("camera_node")
     model = Yolo(config)
 
-    service = rospy.Service("objection_detect", Hand_Catch, getObjCoordinate)
+    service = rospy.Service("object_detect", Hand_Catch, getObjCoordinate)
     rospy.spin()

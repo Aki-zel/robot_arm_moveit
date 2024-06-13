@@ -64,7 +64,7 @@ class BaseDetection:
 
         return [X, Y, Z]
 
-    def tf_transform(self, position, grasp):
+    def tf_transform(self, position, grasp = [0,0,0]):
         x, y, z = position
         camera_point = PoseStamped()
         camera_point.header.frame_id = self.config['camera']['frame_id']
