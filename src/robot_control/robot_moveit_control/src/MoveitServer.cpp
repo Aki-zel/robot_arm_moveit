@@ -24,7 +24,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 }
 double MoveitServer::degreesToRadians(double degrees)
 {
-	return degrees * M_PI / 180.0;
+	return round((degrees * M_PI / 180.0),4);
 }
 geometry_msgs::Pose MoveitServer::calculateTargetTransform(const geometry_msgs::Pose &target_pose, const geometry_msgs::Transform &relative_transform)
 {
@@ -209,46 +209,46 @@ void MoveitServer::stop()
 	arm_.stop();
 	arm_.clearPoseTarget();
 }
-void MoveitServer::move_j(const std::vector<double> &joint_group_positions) // 按目标关节位置移动
+bool MoveitServer::move_j(const std::vector<double> &joint_group_positions) // 按目标关节位置移动
 {
 	arm_.setJointValueTarget(joint_group_positions);
-	Planer();
+	return Planer();
 }
 
-void MoveitServer::move_p(const std::vector<double> &pose) // 按目标空间位姿移动(x,y,z,roll,pitch,yaw)
+bool MoveitServer::move_p(const std::vector<double> &pose) // 按目标空间位姿移动(x,y,z,roll,pitch,yaw)
 {
 	geometry_msgs::Pose target_pose;
 	target_pose = this->setPoint(pose);
 
 	arm_.setPoseTarget(target_pose);
-	Planer();
+	return Planer();
 }
-void MoveitServer::move_p(const geometry_msgs::Pose &msg) // 按目标空间位姿移动(接收目标物体位姿)
+bool MoveitServer::move_p(const geometry_msgs::Pose &msg) // 按目标空间位姿移动(接收目标物体位姿)
 {
 	geometry_msgs::Pose target_pose;
 	target_pose = msg;
 	arm_.setPoseTarget(target_pose);
-	Planer();
+	return Planer();
 }
-void MoveitServer::move_p(const geometry_msgs::PoseStamped &msg) // 按目标空间位姿移动(接收目标物体位姿)
+bool MoveitServer::move_p(const geometry_msgs::PoseStamped &msg) // 按目标空间位姿移动(接收目标物体位姿)
 {
 	geometry_msgs::Pose target_pose;
 	target_pose = msg.pose;
 	arm_.setPoseTarget(target_pose);
-	Planer();
+	return Planer();
 }
 
-void MoveitServer::move_l(const std::vector<double> &pose) // 按目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
+bool MoveitServer::move_l(const std::vector<double> &pose) // 按目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
 {
 	std::vector<geometry_msgs::Pose> waypoints;
 	geometry_msgs::Pose target_pose;
 	target_pose = this->setPoint(pose);
 	waypoints.push_back(target_pose);
 
-	this->move_l(waypoints);
+	return this->move_l(waypoints);
 }
 
-void MoveitServer::move_l(const std::array<double, 3> &position) // 按目标空间位姿直线移动(接收x,y,z，保持末端位姿)
+bool MoveitServer::move_l(const std::array<double, 3> &position) // 按目标空间位姿直线移动(接收x,y,z，保持末端位姿)
 {
 	std::vector<geometry_msgs::Pose> waypoints;
 	geometry_msgs::Pose target_pose;
@@ -259,10 +259,10 @@ void MoveitServer::move_l(const std::array<double, 3> &position) // 按目标空
 	target_pose.orientation = getCurrent_State().rotation;
 	waypoints.push_back(target_pose);
 
-	this->move_l(waypoints);
+	return this->move_l(waypoints);
 }
 
-void MoveitServer::move_l(const std::vector<std::vector<double>> &posees) // 按多个目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
+bool MoveitServer::move_l(const std::vector<std::vector<double>> &posees) // 按多个目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
 {
 	std::vector<geometry_msgs::Pose> waypoints;
 	for (int i = 0; i < posees.size(); i++)
@@ -272,10 +272,10 @@ void MoveitServer::move_l(const std::vector<std::vector<double>> &posees) // 按
 		waypoints.push_back(target_pose);
 	}
 
-	this->move_l(waypoints);
+	return this->move_l(waypoints);
 }
 
-void MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points)
+bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points)
 {
 	moveit_msgs::RobotTrajectory trajectory;
 	const double jump_threshold = 0.0;
@@ -296,11 +296,13 @@ void MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points)
 		moveit::planning_interface::MoveGroupInterface::Plan plan;
 		plan.trajectory_ = trajectory;
 		arm_.execute(plan);
+		return true;
 	}
 	else
 	{
 		ROS_INFO("Path planning failed with only %0.6f success after %d attempts.", fraction, maxtries);
 	}
+	return false;
 }
 
 MoveitServer::~MoveitServer()

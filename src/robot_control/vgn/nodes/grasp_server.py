@@ -63,6 +63,8 @@ class GraspServer:
 
     def reset(self, req):
         self.tsdf = UniformTSDFVolume(self.length, self.resolution)
+        self.vis.clear()
+        self.vis.roi(self.frame_id,self.length)
         return std_srvs.srv.EmptyResponse()
 
     def toggle(self, req):

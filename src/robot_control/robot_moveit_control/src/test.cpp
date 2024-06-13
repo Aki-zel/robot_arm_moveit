@@ -49,6 +49,31 @@ using namespace std;
 
 // 	return link6_target_pose;
 // }
+
+void generateCirclePoints(const geometry_msgs::Pose &center_pose, double radius, double step_angle_degrees, std::vector<geometry_msgs::Pose> &waypoints)
+{
+	int num_points = static_cast<int>(360.0 / step_angle_degrees);
+	for (int i = 0; i < num_points; ++i)
+	{
+		double angle = step_angle_degrees * i * 3.1415926 / 180.0;
+		geometry_msgs::Pose target_pose = center_pose;
+
+		target_pose.position.x = center_pose.position.x + radius * cos(angle);
+		target_pose.position.y = center_pose.position.y + radius * sin(angle);
+
+		// // 计算指向圆心的方向
+		// tf2::Vector3 to_center(center_pose.position.x - target_pose.position.x, center_pose.position.y - target_pose.position.y, 0);
+		// tf2::Vector3 default_dir(1, 0, 0); // 默认方向
+
+		// // 计算四元数使其朝向圆心
+		// tf2::Quaternion quat;
+		// quat.setRotation(default_dir.cross(to_center).normalized(), std::acos(default_dir.dot(to_center.normalized())));
+
+		// target_pose.orientation = tf2::toMsg(quat);
+		waypoints.push_back(target_pose);
+	}
+}
+
 geometry_msgs::Pose calculateTargetTransform(const geometry_msgs::Pose &target_pose, const geometry_msgs::Transform &relative_transform)
 {
 	// Create transformation from target_pose
@@ -80,21 +105,29 @@ int main(int argc, char **argv)
 	tf2_ros::TransformListener tfListener(tfBuffer);
 	std::string PLANNING_GROUP = "arm";
 	// moveit::planning_interface::MoveGroupInterface arm(PLANNING_GROUP);
-	MoveitServer moveit_server(PLANNING_GROUP);
+	MoveitServer arm(PLANNING_GROUP);
 	// ros::ServiceClient client = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect"); // 创建目标检测服务客户端
 	geometry_msgs::Pose pose;
+	geometry_msgs::Pose pose1;
 	tf2::Quaternion qua;
-	qua.setRPY(0, 0, 0);
-	pose.position.x = 0.3;
-	pose.position.y = 0;
-	pose.position.z = 0.650;
-	pose.orientation.x = qua.getX();
-	pose.orientation.y = qua.getY();
-	pose.orientation.z = qua.getZ();
-	pose.orientation.w = qua.getW();
-
+	// qua.setRPY(-3.1415, 0, 0);s
+	// pose.position.x = 0.24;
+	// pose.position.y = 0;
+	// pose.position.z = 0.2;
+	// pose.orientation.x = qua.getX();
+	// pose.orientation.y = qua.getY();
+	// pose.orientation.z = qua.getZ();
+	// pose.orientation.w = qua.getW();
+	std::vector<double> pos = {0.2, 0, 0.20, -3.1415, 0, 0};
+	pose = arm.setPoint(pos);
+	double radius = 0.02;			 // 半径
+	double step_angle_degrees = 1.0; // 步进角度
+	std::vector<double> pos1 = {0.2, 0, 0.20, -3.1415, 0, 0};
+	pose1 = arm.setPoint(pos1);
+	std::vector<geometry_msgs::Pose> waypoints;
+	generateCirclePoints(pose, radius, step_angle_degrees, waypoints);
 	// pose.orientation.w = 1;
-	// pose = moveit_server.getCurrent_Pose();
+	// pose = arm.getCurrent_Pose();
 	geometry_msgs::TransformStamped transformStamped;
 	tf2::Transform transform;
 	try
@@ -122,7 +155,7 @@ int main(int argc, char **argv)
 		// 		 camera_to_ee_tf.getRotation().y(),
 		// 		 camera_to_ee_tf.getRotation().z(),
 		// 		 camera_to_ee_tf.getRotation().w());
-		transformStamped = tfBuffer.lookupTransform("ee_link", "camera_link",
+		transformStamped = tfBuffer.lookupTransform("ee_link", "camera_color_optical_frame",
 													ros::Time(0));
 		ROS_INFO("Translation: (x: %.2f, y: %.2f, z: %.2f)",
 				 transformStamped.transform.translation.x,
@@ -140,31 +173,32 @@ int main(int argc, char **argv)
 		// transformStamped.transform.rotation.w=1;
 		// tf2::fromMsg(transformStamped.transform, transform);
 		// geometry_msgs::Pose trans_pose;
-		// trans_pose = moveit_server.transformPose(pose, transform);
-		// trans_pose = moveit_server.moveFromPose(pose, -0.1);
-		// moveit_server.move_p(trans_pose);
-		moveit_server.move_p(pose);
-		moveit_server.move_p(link6_target_pose);
+		// trans_pose = arm.transformPose(pose, transform);
+		// trans_pose = arm.moveFromPose(pose, -0.1);
+		// arm.move_p(trans_pose);
+		arm.move_p(pose);
+		// arm.move_l(waypoints);
+		arm.move_p(link6_target_pose);
 	}
 	catch (tf2::TransformException &ex)
 	{
 		ROS_WARN("%s", ex.what());
 	}
 	// Test
-	// moveit_server.transformPose();
+	// arm.transformPose();
 	// test for move_j
 	// cout<<"-----------------------test for move_j----------------------"<<endl;
-	// vector<double> joints = {0, 0, moveit_server.degreesToRadians(-90), 0, moveit_server.degreesToRadians(-90), moveit_server.degreesToRadians(180)};
-	// moveit_server.move_j(joints);
+	// vector<double> joints = {0, 0, arm.degreesToRadians(-90), 0, arm.degreesToRadians(-90), arm.degreesToRadians(180)};
+	// arm.move_j(joints);
 	// ros::Duration(5.0).sleep();
 
 	// test for move_p and move_l(1 point)
 	// cout<<"-----------------------test for move_p and move_l---------------------"<<endl;
 	// vector<double> xyzrpy={0.31,0.067,0.11,0,1,0,0};
-	// moveit_server.move_p(xyzrpy);
+	// arm.move_p(xyzrpy);
 
 	// xyzrpy[2]=0.2;
-	// moveit_server.move_l(xyzrpy);
+	// arm.move_l(xyzrpy);
 
 	// // test for move_l (>=2 points)
 	// cout<<"-----------------------test for move_l(more points)----------------------"<<endl;
@@ -173,28 +207,28 @@ int main(int argc, char **argv)
 	// xyzrpy[1]=0.2;
 	// xyzrpys.push_back(xyzrpy);
 	// xyzrpy[0]=0.4;
-	// moveit_server.move_l(xyzrpys);
+	// arm.move_l(xyzrpys);
 
 	// // test for my functions
 	// cout<<"-----------------------test for my move_function----------------------"<<endl;
 	// double xyz[3]={-0.5,0.02,0.2};
-	// moveit_server.move_l(xyz);
+	// arm.move_l(xyz);
 	// ros::Duration(5.0).sleep();
 	// xyz[2]=0.3;
-	// moveit_server.move_l(xyz);
+	// arm.move_l(xyz);
 	// ros::Duration(5.0).sleep();
 	// vector<double> xyzrpy={0.3,0.1,0.4,-3.1415,0,0};
 	// vector<double> xyzrpy1={0.3,0.2,0.3,-3.1415,0,0};
-	// moveit_server.move_l({xyzrpy, xyzrpy1});
+	// arm.move_l({xyzrpy, xyzrpy1});
 	// xyz[2]=0.1;
-	// moveit_server.move_p_with_constrains(xyz);
+	// arm.move_p_with_constrains(xyz);
 
 	// 控制夹爪
-	// moveit_server.Set_Tool_DO(2, true);
+	// arm.Set_Tool_DO(2, true);
 	// ros::Duration(2.0).sleep();
-	// moveit_server.Set_Tool_DO(2, false);
+	// arm.Set_Tool_DO(2, false);
 	// ros::Duration(2.0).sleep();
-	// moveit_server.Set_Tool_DO(2, true);
+	// arm.Set_Tool_DO(2, true);
 
 	// // 调用目标检测服务
 	// robot_msgs::Hand_Catch srv;
@@ -222,27 +256,27 @@ int main(int argc, char **argv)
 
 	// 			// 移动到目标下方
 	// 			p.pose.position.z += 0.10;
-	// 			moveit_server.move_p(p);
+	// 			arm.move_p(p);
 	// 			ROS_INFO("移动到目标上方");
 	// 			ros::Duration(2.0).sleep();
 	// 			// 打开夹爪
-	// 			moveit_server.Set_Tool_DO(2, false);
+	// 			arm.Set_Tool_DO(2, false);
 	// 			ROS_INFO("夹爪开");
 	// 			ros::Duration(1.0).sleep();
 	// 			// 移动到抓取位置
 	// 			p.pose.position.z -= 0.10;
-	// 			moveit_server.move_p(p);
+	// 			arm.move_p(p);
 	// 			ROS_INFO("摘取目标");
 	// 			ros::Duration(1.0).sleep();
 	// 			// 关闭夹爪
-	// 			moveit_server.Set_Tool_DO(2, true);
+	// 			arm.Set_Tool_DO(2, true);
 	// 			ros::Duration(2.0).sleep();
 
-	// 			vector<double> joints = {0, 0, moveit_server.degreesToRadians(-90), 0, moveit_server.degreesToRadians(-90), moveit_server.degreesToRadians(180)};
-	// 			moveit_server.move_j(joints);
+	// 			vector<double> joints = {0, 0, arm.degreesToRadians(-90), 0, arm.degreesToRadians(-90), arm.degreesToRadians(180)};
+	// 			arm.move_j(joints);
 
 	// 			// 打开夹爪
-	// 			moveit_server.Set_Tool_DO(2, false);
+	// 			arm.Set_Tool_DO(2, false);
 	// 			ROS_INFO("夹爪开");
 	// 			ros::Duration(1.0).sleep();
 	// 		}

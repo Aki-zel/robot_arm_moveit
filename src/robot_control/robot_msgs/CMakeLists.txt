@@ -63,6 +63,7 @@ add_service_files(
   # Service1.srv
   # Service2.srv
   Hand_Catch.srv
+  Task_Call.srv
 )
 
 ## Generate actions in the 'action' folder

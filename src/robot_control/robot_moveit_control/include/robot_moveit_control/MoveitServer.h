@@ -31,7 +31,6 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Int16.h>
 #include <cmath>
-
 typedef actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction> MoveGroupClient;
 
 class MoveitServer
@@ -40,14 +39,14 @@ public:
 	MoveitServer(std::string &PLANNING_GROUP);
 	void go_home();
 	void go_pose(const std::string str);
-	void move_j(const std::vector<double> &joint_group_positions);
-	void move_p(const std::vector<double> &pose);
-	void move_p(const geometry_msgs::Pose &msg);
-	void move_p(const geometry_msgs::PoseStamped &msg);
-	void move_l(const std::vector<double> &pose);
-	void move_l(const std::array<double, 3> &position);
-	void move_l(const std::vector<std::vector<double>> &posees);
-	void move_l(const std::vector<geometry_msgs::Pose> Points);
+	bool move_j(const std::vector<double> &joint_group_positions);
+	bool move_p(const std::vector<double> &pose);
+	bool move_p(const geometry_msgs::Pose &msg);
+	bool move_p(const geometry_msgs::PoseStamped &msg);
+	bool move_l(const std::vector<double> &pose);
+	bool move_l(const std::array<double, 3> &position);
+	bool move_l(const std::vector<std::vector<double>> &posees);
+	bool move_l(const std::vector<geometry_msgs::Pose> Points);
 	void Set_Tool_DO(int num, bool state);
 	geometry_msgs::Transform getCurrent_State();
 	geometry_msgs::Pose getCurrent_Pose();

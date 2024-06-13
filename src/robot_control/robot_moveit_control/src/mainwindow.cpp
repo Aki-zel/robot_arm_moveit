@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     std::string PLANNING_GROUP = "arm"; // 你的规划组名称
     this->server = new MoveitServer(PLANNING_GROUP);
     image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
+    client=nh.serviceClient<robot_msgs::Hand_Catch>("objection_detect");
     this->addStart();
     connect(this, SIGNAL(updateImageSignal(QImage)), this, SLOT(updateImageSlot(QImage)));
     ui->stopButton->setEnabled(false);
