@@ -22,6 +22,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	ROS_INFO_NAMED("tutorial", "Start MOVEITSERVER");
 	initializeClaw();
 }
+
 double MoveitServer::degreesToRadians(double degrees)
 {
 	return round((degrees * M_PI / 180.0), 4);
@@ -116,7 +117,7 @@ geometry_msgs::Pose MoveitServer::setPoint(const double x, const double y, const
 	target_pose1.position.y = y;
 	target_pose1.position.z = z;
 	target_pose1.orientation = getCurrent_State().rotation;
-	;
+	
 	return target_pose1;
 }
 
@@ -156,7 +157,7 @@ geometry_msgs::Pose MoveitServer::setPoint(const std::vector<double> &pose)
 	return target_pose1;
 }
 
-double MoveitServer::round(double num, int exponent)
+double MoveitServer::round(double num, int exponent) // 四舍五入浮点数
 {
 	double multiplied = std::round(num * std::pow(10, exponent));
 	double result = multiplied / std::pow(10, exponent);

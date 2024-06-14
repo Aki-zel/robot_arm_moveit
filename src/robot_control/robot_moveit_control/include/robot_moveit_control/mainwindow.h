@@ -51,15 +51,10 @@ public:
 private slots:
 
     void on_closeButton_clicked();
-
     void on_detectButton_clicked();
-
     void on_chooseButton_clicked();
-
     void on_settingButton_clicked();
-
     void on_backButton_clicked();
-
     void on_startButton_clicked();
     void updateImageSlot(const QImage &img);
 
@@ -87,7 +82,7 @@ private:
     MoveitServer *server;
     //detect
     cv::Mat m_cvImage;
-    ros::ServiceClient client;
+    ros::ServiceClient object_client_;
     bool callDetectService();
     void processDetectionResults(const robot_msgs::Hand_CatchResponse &response);
     void controlRobotToGrab(geometry_msgs::PoseStamped position);

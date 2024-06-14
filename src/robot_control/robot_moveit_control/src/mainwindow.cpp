@@ -19,9 +19,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     std::string PLANNING_GROUP = "arm"; // 你的规划组名称
     this->server = new MoveitServer(PLANNING_GROUP);
     image_publisher_ = nh.advertise<sensor_msgs::Image>("/image_template", 10);
-    client=nh.serviceClient<robot_msgs::Hand_Catch>("objection_detect");
     this->addStart();
     connect(this, SIGNAL(updateImageSignal(QImage)), this, SLOT(updateImageSlot(QImage)));
+    object_client_ = nh.serviceClient<robot_msgs::Hand_Catch>("object_detect");
     ui->stopButton->setEnabled(false);
 }
 
@@ -212,7 +212,8 @@ sensor_msgs::ImagePtr MainWindow::convertQPixmapToSensorImage(const QPixmap &pix
 void MainWindow::on_detectButton_clicked()
 {
     // 移动到检测位置
-    std::vector<double> joint = {0, 0.349, -0.524, 0, -1.047, -3.142};
+    std::vector<double> joint = {0, 0, this->server->degreesToRadians(-90), 0, this->server->degreesToRadians(-90), this->server->degreesToRadians(180)};
+    // std::vector<double> joint = {0, 0.349, -0.524, 0, -1.047, -3.142};
     this->server->move_j(joint);
     callDetectService();
 }
@@ -222,7 +223,7 @@ bool MainWindow::callDetectService() // 调用检测服务
     robot_msgs::Hand_Catch srv;
     srv.request.run = true; // 设置请求标志位
 
-    if (client.call(srv))
+    if (object_client_.call(srv))
     {
         ROS_INFO("Service call succeeded");
         processDetectionResults(srv.response); // 处理检测结果
@@ -230,7 +231,7 @@ bool MainWindow::callDetectService() // 调用检测服务
     }
     else
     {
-        ROS_ERROR("Failed to call service objection_detect");
+        ROS_ERROR("Failed to call service object_detect");
         return false;
     }
 }
@@ -251,7 +252,7 @@ void MainWindow::processDetectionResults(const robot_msgs::Hand_CatchResponse &r
         return;
     }
 
-    if (response.labels.empty() || response.positions.size() < 3)
+    if (response.labels.empty() || response.positions.size() < 1)
     {
         ROS_ERROR("Detection response is empty or positions are insufficient.");
         return;

@@ -9,12 +9,7 @@ import cv2
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image, CameraInfo
 
-import tf2_ros
-import geometry_msgs.msg
-import tf2_geometry_msgs
-from geometry_msgs.msg import PoseStamped, TransformStamped
-from graspany_detect import GraspGenerator
-import tf.transformations as tf
+from geometry_msgs.msg import PoseStamped
 
 
 class TemplateDetect(BaseDetection):
