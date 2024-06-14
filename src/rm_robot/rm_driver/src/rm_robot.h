@@ -339,7 +339,7 @@ ros::Subscriber sub_setLiftSpeed, sub_lift_setHeight;
 ros::Subscriber sub_setHandPosture, sub_setHandSeq, sub_setHandAngle, sub_setHandSpeed, sub_setHandForce;
 
 // subscriber
-ros::Subscriber MoveJ_Cmd, MoveJ_P_Cmd, MoveL_Cmd, MoveC_Cmd, JointPos_Cmd, Arm_DO_Cmd, Arm_AO_Cmd, Tool_DO_Cmd, Tool_AO_Cmd, Gripper_Cmd, Gripper_Set_Cmd, Emergency_Stop, Joint_En, System_En, IO_Update, Sub_ChangeToolName, Sub_ChangeWorkFrame, Sub_GetArmState, sub_getArmStateTimerSwitch, Sub_StartMultiDragTeach, Sub_StopDragTeach, Sub_SetForcePosition, Sub_StopForcePostion, Sub_StartForcePositionMove, Sub_StopForcePositionMove, Sub_ForcePositionMovePose, Sub_ForcePositionMoveJiont, Sub_ToGetSixForce, Sub_ClearForceData, Sub_SetForceSensor, Sub_ManualSetForcePose, Sub_StopSetForceSensor, Sub_GetArmJoint;
+ros::Subscriber MoveJ_Cmd, MoveJ_P_Cmd, MoveL_Cmd, MoveC_Cmd, JointPos_Cmd, Arm_DO_Cmd, Arm_AO_Cmd, Tool_DO_Cmd, Tool_AO_Cmd, Gripper_Cmd, Gripper_Set_Cmd, Emergency_Stop, Joint_En, System_En, Set_Collision,IO_Update, Sub_ChangeToolName, Sub_ChangeWorkFrame, Sub_GetArmState, sub_getArmStateTimerSwitch, Sub_StartMultiDragTeach, Sub_StopDragTeach, Sub_SetForcePosition, Sub_StopForcePostion, Sub_StartForcePositionMove, Sub_StopForcePositionMove, Sub_ForcePositionMovePose, Sub_ForcePositionMoveJiont, Sub_ToGetSixForce, Sub_ClearForceData, Sub_SetForceSensor, Sub_ManualSetForcePose, Sub_StopSetForceSensor, Sub_GetArmJoint;
 ros::Subscriber sub_setGripperPickOn;
 /*************************获取一维力数据*23.9.1添加变量 Author kaola**********/
 ros::Subscriber Sub_ToGetOneForce;
@@ -1508,6 +1508,40 @@ int SetOrtTeachCmd(std::string teach_type, std::string direction, int16_t v)
     cJSON_AddStringToObject(root, "teach_type", teach_type.c_str());
     cJSON_AddStringToObject(root, "direction", direction.c_str());
     cJSON_AddNumberToObject(root, "v", v);
+
+    data = cJSON_Print(root);
+
+    sprintf(buffer, "%s\r\n", data);
+
+    //    mutex.lock();
+
+    // res = send(Arm_Socket, buffer, strlen(buffer), 0);
+    res = package_send(Arm_Socket, buffer, strlen(buffer), 0);
+
+    //    ros::Duration(0.1).sleep();
+    //    mutex.unlock();
+
+    cJSON_Delete(root);
+    free(data);
+
+    if (res < 0)
+    {
+        return 1;
+    }
+    return 0;
+}
+int SetCollisionStage(int16_t stage)
+{
+    cJSON *root;
+    char *data;
+    char buffer[200];
+    int res;
+    //创建根节点对象
+    root = cJSON_CreateObject();
+
+    //加入字符串对象
+    cJSON_AddStringToObject(root, "command", "set_collision_stage");
+    cJSON_AddNumberToObject(root, "collision_stage", stage);
 
     data = cJSON_Print(root);
 

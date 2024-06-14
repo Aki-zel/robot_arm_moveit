@@ -18,7 +18,6 @@ class Yolo(BaseDetection):
         super().__init__(config)
         self.result = None
         self.model = None
-        # self.cv_image = None
         self.setflag = 0
         self.setOption(self.config["device"])
         self.loadModel()
@@ -61,7 +60,7 @@ class Yolo(BaseDetection):
         return vis_im
 
     def Predicts(self, img):
-        self.result = self.model.predict(img)
+        self.result = self.model.predict(self.cv_image)
         return self.result
 
     def getFilteredObjects(self):
@@ -131,9 +130,9 @@ def getObjCoordinate(request):
                         # positions.extend(camera_xyz)
                         labels.append(label)
                         # 仅发布第一个位置的TF坐标系
-                        if len(positions) == 3 and not tf_published:  # 只发布置信度最高的目标TF
-                            model.tf_broad(world_pose)
-                            tf_published = True  # 将标志位设置为True，表示已发布TF坐标系
+                    if not tf_published:  # 只发布置信度最高的目标TF
+                        model.tf_broad(positions[0])
+                        tf_published = True  # 将标志位设置为True，表示已发布TF坐标系
             respond.labels = labels
             respond.positions = positions
             print(respond.labels, respond.positions)

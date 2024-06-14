@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     this->addStart();
     connect(this, SIGNAL(updateImageSignal(QImage)), this, SLOT(updateImageSlot(QImage)));
     object_client_ = nh.serviceClient<robot_msgs::Hand_Catch>("object_detect");
+    ui->stopButton->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
@@ -71,6 +72,7 @@ void MainWindow::setEnableButton(bool enbale)
     {
         button->setEnabled(enbale);
     }
+    ui->stopButton->setEnabled(!enbale);
 }
 
 // 启动
@@ -321,3 +323,10 @@ void MainWindow::on_backButton_clicked()
 {
     ui->stackedWidget->setCurrentIndex(0);
 }
+
+void MainWindow::on_stopButton_clicked()
+{
+    this->server->stop();
+    ui->stopButton->setEnabled(false);
+}
+

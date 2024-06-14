@@ -124,7 +124,7 @@ find_package(Qt5 REQUIRED COMPONENTS Core Widgets Gui )
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES robot_moveit_control
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+ CATKIN_DEPENDS roscpp rospy std_msgs rviz  sensor_msgs cv_bridge image_transport tf2_eigen tf2_geometry_msgs tf2_ros tf2 geometry_msgs rm_msgs moveit_ros_planning_interface robot_msgs
 #  DEPENDS system_lib
 )
 set(QT_LIBRARIES Qt5::Core Qt5::Widgets Qt5::Gui)
@@ -177,7 +177,9 @@ add_library(robotControl_h
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/robot_moveit_control_node.cpp)
 add_executable(ydrobot ${QRC_FILES} ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
-add_executable(MoveitServer src/test.cpp)
+add_executable(ydtest src/test.cpp)
+add_executable(controlcenter src/ArmControlCenter.cpp)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -187,7 +189,8 @@ add_executable(MoveitServer src/test.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(ydrobot ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(MoveitServer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(ydtest ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(controlcenter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
@@ -197,7 +200,11 @@ add_dependencies(MoveitServer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPOR
 target_link_libraries(MoveitServer_h ${catkin_LIBRARIES}   )
 target_link_libraries(robotControl_h ${catkin_LIBRARIES}  MoveitServer_h )
 target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES} robotControl_h)
-target_link_libraries(MoveitServer
+target_link_libraries(ydtest
+  MoveitServer_h
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(controlcenter
   MoveitServer_h
   ${catkin_LIBRARIES}
 )

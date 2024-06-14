@@ -9,11 +9,11 @@ import rospy
 from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge, CvBridgeError
 
-from utils.device import get_device
-from inference.post_process import post_process_output
-from utils.data.camera_data import CameraData
-from utils.dataset_processing.grasp import detect_grasps
-from utils.visualisation.plot import plot_grasp
+from graspanything.utils.device import get_device
+from graspanything.inference.post_process import post_process_output
+from graspanything.utils.data.camera_data import CameraData
+from graspanything.utils.dataset_processing.grasp import detect_grasps
+from graspanything.utils.visualisation.plot import plot_grasp
 current_work_dir = os.path.dirname(__file__)
 print(current_work_dir)
 

@@ -58,6 +58,8 @@ private slots:
     void on_startButton_clicked();
     void updateImageSlot(const QImage &img);
 
+    void on_stopButton_clicked();
+
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
