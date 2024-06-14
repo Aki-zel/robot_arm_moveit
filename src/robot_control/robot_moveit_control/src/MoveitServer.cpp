@@ -24,7 +24,21 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 }
 double MoveitServer::degreesToRadians(double degrees)
 {
-	return round((degrees * M_PI / 180.0),4);
+	return round((degrees * M_PI / 180.0), 4);
+}
+geometry_msgs::Pose MoveitServer::calculateTargetPose(const geometry_msgs::Pose &target_pose, const geometry_msgs::Pose &trans_pose)
+{
+	tf2::Transform target_tf;
+	tf2::fromMsg(target_pose, target_tf);
+
+	tf2::Transform relative_tf;
+	tf2::fromMsg(trans_pose, relative_tf);
+
+	tf2::Transform end_target_tf = target_tf * relative_tf.inverse();
+
+	geometry_msgs::Pose end_target_pose;
+	tf2::toMsg(end_target_tf, end_target_pose);
+	return end_target_pose;
 }
 geometry_msgs::Pose MoveitServer::calculateTargetTransform(const geometry_msgs::Pose &target_pose, const geometry_msgs::Transform &relative_transform)
 {
@@ -209,100 +223,143 @@ void MoveitServer::stop()
 	arm_.stop();
 	arm_.clearPoseTarget();
 }
-bool MoveitServer::move_j(const std::vector<double> &joint_group_positions) // 按目标关节位置移动
+bool MoveitServer::move_j(const std::vector<double> &joint_group_positions, bool succeed) // 按目标关节位置移动
 {
-	arm_.setJointValueTarget(joint_group_positions);
-	return Planer();
+	if (succeed)
+	{
+		arm_.setJointValueTarget(joint_group_positions);
+		return Planer();
+	}
+	return succeed;
 }
 
-bool MoveitServer::move_p(const std::vector<double> &pose) // 按目标空间位姿移动(x,y,z,roll,pitch,yaw)
+bool MoveitServer::move_p(const std::vector<double> &pose, bool succeed) // 按目标空间位姿移动(x,y,z,roll,pitch,yaw)
 {
-	geometry_msgs::Pose target_pose;
-	target_pose = this->setPoint(pose);
-
-	arm_.setPoseTarget(target_pose);
-	return Planer();
-}
-bool MoveitServer::move_p(const geometry_msgs::Pose &msg) // 按目标空间位姿移动(接收目标物体位姿)
-{
-	geometry_msgs::Pose target_pose;
-	target_pose = msg;
-	arm_.setPoseTarget(target_pose);
-	return Planer();
-}
-bool MoveitServer::move_p(const geometry_msgs::PoseStamped &msg) // 按目标空间位姿移动(接收目标物体位姿)
-{
-	geometry_msgs::Pose target_pose;
-	target_pose = msg.pose;
-	arm_.setPoseTarget(target_pose);
-	return Planer();
-}
-
-bool MoveitServer::move_l(const std::vector<double> &pose) // 按目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
-{
-	std::vector<geometry_msgs::Pose> waypoints;
-	geometry_msgs::Pose target_pose;
-	target_pose = this->setPoint(pose);
-	waypoints.push_back(target_pose);
-
-	return this->move_l(waypoints);
-}
-
-bool MoveitServer::move_l(const std::array<double, 3> &position) // 按目标空间位姿直线移动(接收x,y,z，保持末端位姿)
-{
-	std::vector<geometry_msgs::Pose> waypoints;
-	geometry_msgs::Pose target_pose;
-	target_pose.position.x = position[0];
-	target_pose.position.y = position[1];
-	target_pose.position.z = position[2];
-
-	target_pose.orientation = getCurrent_State().rotation;
-	waypoints.push_back(target_pose);
-
-	return this->move_l(waypoints);
-}
-
-bool MoveitServer::move_l(const std::vector<std::vector<double>> &posees) // 按多个目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
-{
-	std::vector<geometry_msgs::Pose> waypoints;
-	for (int i = 0; i < posees.size(); i++)
+	if (succeed)
 	{
 		geometry_msgs::Pose target_pose;
-		target_pose = setPoint(posees[i]);
-		waypoints.push_back(target_pose);
-	}
+		target_pose = this->setPoint(pose);
 
-	return this->move_l(waypoints);
+		arm_.setPoseTarget(target_pose);
+		return Planer();
+	}
+	return succeed;
+}
+bool MoveitServer::move_p(const geometry_msgs::Pose &msg, bool succeed) // 按目标空间位姿移动(接收目标物体位姿)
+{
+	if (succeed)
+	{
+		geometry_msgs::Pose target_pose;
+		target_pose = msg;
+		arm_.setPoseTarget(target_pose);
+		return Planer();
+	}
+	return succeed;
+}
+bool MoveitServer::move_p(const geometry_msgs::PoseStamped &msg, bool succeed) // 按目标空间位姿移动(接收目标物体位姿)
+{
+	if (succeed)
+	{
+		geometry_msgs::Pose target_pose;
+		target_pose = msg.pose;
+		arm_.setPoseTarget(target_pose);
+		return Planer();
+	}
+	return succeed;
 }
 
-bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points)
+bool MoveitServer::move_l(const std::vector<double> &pose, bool succeed) // 按目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
+{
+	std::vector<geometry_msgs::Pose> waypoints;
+	if (succeed)
+	{
+
+		geometry_msgs::Pose target_pose;
+		target_pose = this->setPoint(pose);
+		waypoints.push_back(target_pose);
+
+		return this->move_l(waypoints);
+	}
+	return succeed;
+}
+
+bool MoveitServer::move_l(const std::array<double, 3> &position, bool succeed) // 按目标空间位姿直线移动(接收x,y,z，保持末端位姿)
+{
+	std::vector<geometry_msgs::Pose> waypoints;
+	if (succeed)
+	{
+		geometry_msgs::Pose target_pose;
+		target_pose.position.x = position[0];
+		target_pose.position.y = position[1];
+		target_pose.position.z = position[2];
+
+		target_pose.orientation = getCurrent_State().rotation;
+		waypoints.push_back(target_pose);
+
+		return this->move_l(waypoints);
+	}
+	return succeed;
+}
+bool MoveitServer::move_l(const geometry_msgs::Pose &position, bool succeed) // 按目标空间位姿直线移动(接收x,y,z，保持末端位姿)
+{
+	std::vector<geometry_msgs::Pose> waypoints;
+	if (succeed)
+	{
+		waypoints.push_back(position);
+
+		return this->move_l(waypoints);
+	}
+	return succeed;
+}
+
+bool MoveitServer::move_l(const std::vector<std::vector<double>> &posees, bool succeed) // 按多个目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
+{
+	std::vector<geometry_msgs::Pose> waypoints;
+	if (succeed)
+	{
+		for (int i = 0; i < posees.size(); i++)
+		{
+			geometry_msgs::Pose target_pose;
+			target_pose = setPoint(posees[i]);
+			waypoints.push_back(target_pose);
+		}
+
+		return this->move_l(waypoints);
+	}
+	return succeed;
+}
+
+bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool succeed)
 {
 	moveit_msgs::RobotTrajectory trajectory;
-	const double jump_threshold = 0.0;
-	const double eef_step = 0.01;
-	double fraction = 0.0;
-	int maxtries = 100;
-	int attempts = 0;
+	if (succeed)
+	{
+		const double jump_threshold = 0.0;
+		const double eef_step = 0.01;
+		double fraction = 0.0;
+		int maxtries = 100;
+		int attempts = 0;
 
-	while (fraction < 1.0 && attempts < maxtries)
-	{
-		fraction = arm_.computeCartesianPath(Points, eef_step, jump_threshold, trajectory);
-		attempts++;
-	}
+		while (fraction < 1.0 && attempts < maxtries)
+		{
+			fraction = arm_.computeCartesianPath(Points, eef_step, jump_threshold, trajectory);
+			attempts++;
+		}
 
-	if (fraction == 1)
-	{
-		ROS_INFO("Path computed successfully. Moving the arm.");
-		moveit::planning_interface::MoveGroupInterface::Plan plan;
-		plan.trajectory_ = trajectory;
-		arm_.execute(plan);
-		return true;
+		if (fraction == 1)
+		{
+			ROS_INFO("Path computed successfully. Moving the arm.");
+			moveit::planning_interface::MoveGroupInterface::Plan plan;
+			plan.trajectory_ = trajectory;
+			arm_.execute(plan);
+			return true;
+		}
+		else
+		{
+			ROS_INFO("Path planning failed with only %0.6f success after %d attempts.", fraction, maxtries);
+		}
 	}
-	else
-	{
-		ROS_INFO("Path planning failed with only %0.6f success after %d attempts.", fraction, maxtries);
-	}
-	return false;
+	return succeed;
 }
 
 MoveitServer::~MoveitServer()

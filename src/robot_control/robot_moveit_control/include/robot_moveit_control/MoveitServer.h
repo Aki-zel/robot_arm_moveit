@@ -39,14 +39,15 @@ public:
 	MoveitServer(std::string &PLANNING_GROUP);
 	void go_home();
 	void go_pose(const std::string str);
-	bool move_j(const std::vector<double> &joint_group_positions);
-	bool move_p(const std::vector<double> &pose);
-	bool move_p(const geometry_msgs::Pose &msg);
-	bool move_p(const geometry_msgs::PoseStamped &msg);
-	bool move_l(const std::vector<double> &pose);
-	bool move_l(const std::array<double, 3> &position);
-	bool move_l(const std::vector<std::vector<double>> &posees);
-	bool move_l(const std::vector<geometry_msgs::Pose> Points);
+	bool move_j(const std::vector<double> &joint_group_positions, bool succeed = true);
+	bool move_p(const std::vector<double> &pose, bool succeed = true);
+	bool move_p(const geometry_msgs::Pose &msg, bool succeed = true);
+	bool move_p(const geometry_msgs::PoseStamped &msg, bool succeed = true);
+	bool move_l(const std::vector<double> &pose, bool succeed = true);
+	bool move_l(const std::array<double, 3> &position, bool succeed = true);
+	bool move_l(const std::vector<std::vector<double>> &posees, bool succeed = true);
+	bool move_l(const std::vector<geometry_msgs::Pose> Points, bool succeed = true);
+	bool move_l(const geometry_msgs::Pose &position, bool succeed = true);
 	void Set_Tool_DO(int num, bool state);
 	geometry_msgs::Transform getCurrent_State();
 	geometry_msgs::Pose getCurrent_Pose();
@@ -60,6 +61,7 @@ public:
 	geometry_msgs::Pose transformPose(const geometry_msgs::Pose &pose, const tf2::Transform &transform);
 	geometry_msgs::Pose moveFromPose(const geometry_msgs::Pose &pose, double distance);
 	geometry_msgs::Pose calculateTargetTransform(const geometry_msgs::Pose &target_pose, const geometry_msgs::Transform &relative_transform);
+	geometry_msgs::Pose calculateTargetPose(const geometry_msgs::Pose &target_pose, const geometry_msgs::Pose &trans_pose);
 	~MoveitServer();
 
 public:
