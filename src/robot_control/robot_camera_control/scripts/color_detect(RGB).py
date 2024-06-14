@@ -18,12 +18,6 @@ class ColorDetectServer(BaseDetection):
             "color_detect", Hand_Catch, self.handle_color_detection)
         rospy.loginfo("ColorDetectServer initialized")
 
-    def image_callback(self, msg):
-        try:
-            self.cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-        except CvBridgeError as e:
-            rospy.logerr(e)
-
     def color_thresholding(self, cv_image):
         # 将图像转换为HSV颜色空间
         hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
@@ -122,8 +116,8 @@ class ColorDetectServer(BaseDetection):
                     pose.pose.position.y = world_position.pose.position.y
                     pose.pose.position.z = world_position.pose.position.z
 
-                    # 初始四元数
-                    initial_quaternion = [0, 1, 0, 0]
+                    # 末端工具默认朝下时的姿态
+                    initial_quaternion = [0, 1, 0, 0] # 初始四元数
                     # 计算绕 Z 轴旋转的四元数
                     rotation_quaternion = quaternion_from_euler(
                         0, 0, np.deg2rad(angle))

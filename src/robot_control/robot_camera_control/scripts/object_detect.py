@@ -86,6 +86,7 @@ class Yolo(BaseDetection):
         )
         return sorted_objects
 
+
 def getObjCoordinate(request):
     global model
     labels = []
@@ -123,8 +124,7 @@ def getObjCoordinate(request):
                     print(camera_xyz)
                     if camera_xyz[2] < 100.0 and camera_xyz[2] != 0:
                         world_pose = model.tf_transform(
-                            camera_xyz, [0,0,0]
-                        )  # 将目标物体从相机坐标系转换到世界坐标系
+                            camera_xyz)  # 将目标物体从相机坐标系转换到世界坐标系
                         # model.tf_broad(camera_xyz)
                         positions.append(world_pose)
                         # positions.extend(camera_xyz)

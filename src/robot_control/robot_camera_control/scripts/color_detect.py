@@ -24,12 +24,6 @@ class ColorDetectServer(BaseDetection):
 
         rospy.loginfo("ColorDetectServer initialized")
 
-    def image_callback(self, msg):
-        try:
-            self.cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-        except CvBridgeError as e:
-            rospy.logerr(e)
-
     def color_thresholding(self, cv_image):
         hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
 
@@ -52,12 +46,14 @@ class ColorDetectServer(BaseDetection):
                 box = cv2.boxPoints(rect)
                 box = np.int0(box)
 
-                cv2.drawContours(cv_image, [box], 0, (0, 255, 0), 2)
-
+                # 计算物体中心点和角度
                 center_x, center_y = rect[0]
                 angle = rect[2]
 
-                color = "detected_color"  # 可以根据需要更改颜色标签
+                cv2.drawContours(cv_image, [box], 0, (0, 255, 0), 2)
+                cv2.circle(cv_image, (int(center_x), int(center_y)), 5, (0, 0, 255), -1)
+
+                color = "detected_color"  
 
                 objects_info.append({
                     'label': color,
@@ -65,15 +61,18 @@ class ColorDetectServer(BaseDetection):
                     'center_y': int(center_y),
                     'angle': angle
                 })
+        
+        cv2.imshow("Color Detection", cv_image)
+        cv2.waitKey(0) 
 
-        return objects_info, cv_image
+        return objects_info
 
     def handle_color_detection(self, request):
         response = Hand_CatchResponse()
 
         if request.run:
             if self.cv_image is not None:
-                objects_info, processed_image = self.color_thresholding(
+                objects_info = self.color_thresholding(
                     self.cv_image)
 
                 tf_published = False
@@ -89,38 +88,20 @@ class ColorDetectServer(BaseDetection):
 
                     world_position = self.tf_transform(camera_xyz)
 
-                    pose = PoseStamped()
-                    pose.header.stamp = rospy.Time.now()
-                    pose.header.frame_id = "camera_color_optical_frame"
-
-                    pose.pose.position.x = world_position.pose.position.x
-                    pose.pose.position.y = world_position.pose.position.y
-                    pose.pose.position.z = world_position.pose.position.z
-
-                    initial_quaternion = [0, 1, 0, 0]
-                    rotation_quaternion = quaternion_from_euler(
-                        0, 0, np.deg2rad(angle))
-                    final_quaternion = quaternion_multiply(
-                        initial_quaternion, rotation_quaternion)
-
-                    pose.pose.orientation.x = final_quaternion[0]
-                    pose.pose.orientation.y = final_quaternion[1]
-                    pose.pose.orientation.z = final_quaternion[2]
-                    pose.pose.orientation.w = final_quaternion[3]
-
                     response.labels.append(label)
-                    response.positions.append(pose)
+                    response.positions.append(world_position)
                     if len(camera_xyz) == 3 and not tf_published:
                         self.tf_broad(world_position)
                         tf_published = True
 
-                try:
-                    response.detect_image = self.bridge.cv2_to_imgmsg(
-                        processed_image, "bgr8")
-                except CvBridgeError as e:
-                    rospy.logerr("Error converting image to message: %s" % e)
-                else:
-                    rospy.loginfo("Image converted to message successfully")
+                # 发布处理后的图像
+                # try:
+                #     response.detect_image = self.bridge.cv2_to_imgmsg(
+                #         processed_image, "bgr8")
+                # except CvBridgeError as e:
+                #     rospy.logerr("Error converting image to message: %s" % e)
+                # else:
+                #     rospy.loginfo("Image converted to message successfully")
             else:
                 rospy.logwarn("No image received yet.")
         return response
