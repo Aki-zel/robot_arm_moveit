@@ -1,17 +1,34 @@
 # 标签名称
 class_name: ['apple']
-
-# # 阈值设置
+robot:
+  base_frame_id: base_link_rm
+  ee_frame_id: ee_link
+camera:
+  frame_id: camera_color_optical_frame
+  color_topic: /camera/color/image_raw
+  info_topic: /camera/aligned_depth_to_color/camera_info
+  depth_topic: /camera/aligned_depth_to_color/image_raw
+# 阈值设置
 threshold:
-  iou: 0.7
+  iou: 0.4
   confidence: 0.6
+  # 颜色与面积阈值
+  color_threshold:
+    lower: [0, 0, 0]
+    upper: [180, 255, 50]
+  area_threshold:
+    min_area: 1500
+    max_area: 5000
+
 # 计算设备
-# - cpu
-# - 0 <- 使用GPU
+# -cpu
+# -openvino
+# -ort
+# -trt
 device: 'openvino'
 model_type: 'yolov5'
 # 模型权重路径
 model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/apple.onnx
 params_file: ""
 config_file: ""
-gmodel_file: /home/ydf/Documents/rwm_moveit/src/robot_control/robot_camera_control/scripts/weights/epoch_44_iou_0.51
+gmodel_file: ""

@@ -11,10 +11,12 @@
 #include <vgn/PredictGrasps.h>
 #include <vgn/GraspConfig.h>
 #include <MoveitServer.h>
+
 ros::Subscriber a;
 ros::Publisher iswork, current_state;
 ros::ServiceClient object_client, color_client, resetmap, toggle, get_scene_cloud_client, get_map_cloud_client, predict_grasps_client;
 ros::ServiceServer CallTask;
+
 void resetMap()
 {
     std_srvs::Empty em;
@@ -57,17 +59,17 @@ bool openDoor(MoveitServer &arm)
         success = arm.move_j(std::vector<double>{0, arm.degreesToRadians(50.00), -arm.degreesToRadians(50.00),
                                                  0, -arm.degreesToRadians(90), arm.degreesToRadians(180)});
         geometry_msgs::Pose target;
-        target=arm.setPoint(std::vector<double>{0.257, 0, 0.6637, 0, arm.degreesToRadians(90), 0});
-        success = arm.move_l(target,success);
+        target = arm.setPoint(std::vector<double>{0.257, 0, 0.6637, 0, arm.degreesToRadians(90), 0});
+        success = arm.move_l(target, success);
         // success = arm.move_p(std::vector<double>{0.357, 0, 0.6237, 0, arm.degreesToRadians(90), arm.degreesToRadians(30)});
         geometry_msgs::Pose target1;
-        target1=arm.calculateTargetPose(target,arm.setPoint(std::vector<double>{-0.05, 0, 0, 0, 0, arm.degreesToRadians(30)}));
-        success = arm.move_l(target1,success);
+        target1 = arm.calculateTargetPose(target, arm.setPoint(std::vector<double>{-0.05, 0, 0, 0, 0, arm.degreesToRadians(30)}));
+        success = arm.move_l(target1, success);
         // success = arm.move_p(std::vector<double>{0.357, 0, 0.6237, 0, arm.degreesToRadians(90), arm.degreesToRadians(30)});
-        target1=arm.calculateTargetPose(target1,arm.setPoint(std::vector<double>{0, 0, -0.10, 0, 0, arm.degreesToRadians(-30)}));
-        success = arm.move_l(target1,success);
-        target1=arm.calculateTargetPose(target1,arm.setPoint(std::vector<double>{0, 0, 0.2, 0, 0, arm.degreesToRadians(0)}));
-        success = arm.move_l(target1,success);
+        target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, -0.10, 0, 0, arm.degreesToRadians(-30)}));
+        success = arm.move_l(target1, success);
+        target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0.2, 0, 0, arm.degreesToRadians(0)}));
+        success = arm.move_l(target1, success);
         ROS_INFO_NAMED("OPENDOOR", "回到识别点");
         success = arm.move_j(std::vector<double>{0, arm.degreesToRadians(50.00), -arm.degreesToRadians(50.00),
                                                  0, -arm.degreesToRadians(90), arm.degreesToRadians(180)},

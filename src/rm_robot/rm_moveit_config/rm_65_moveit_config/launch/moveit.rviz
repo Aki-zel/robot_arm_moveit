@@ -286,17 +286,7 @@ Visualization Manager:
           Value: false
         base_link_rm:
           Value: false
-        camera_aligned_depth_to_color_frame:
-          Value: false
         camera_bottom_screw_frame:
-          Value: false
-        camera_color_frame:
-          Value: false
-        camera_color_optical_frame:
-          Value: true
-        camera_depth_frame:
-          Value: false
-        camera_depth_optical_frame:
           Value: false
         camera_link:
           Value: false
@@ -308,8 +298,6 @@ Visualization Manager:
           Value: false
         gripper_link:
           Value: false
-        offset:
-          Value: true
         task:
           Value: true
         task1:
@@ -334,19 +322,11 @@ Visualization Manager:
                     Link5:
                       Link6:
                         ee_link:
-                          offset:
-                            {}
+                          {}
                         tool0:
                           camera_bottom_screw_frame:
                             camera_link:
-                              camera_aligned_depth_to_color_frame:
-                                camera_color_optical_frame:
-                                  {}
-                              camera_color_frame:
-                                {}
-                              camera_depth_frame:
-                                camera_depth_optical_frame:
-                                  {}
+                              {}
                           gripper_link:
                             finger1:
                               {}
@@ -553,7 +533,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 4.312191486358643
+      Distance: 2.1300268173217773
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -561,17 +541,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.39062023162841797
-        Y: 1.1254775524139404
+        X: -0.003180891275405884
+        Y: -0.000503838062286377
         Z: -4.772508077621751e-07
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.07960270345211029
+      Pitch: 0.5852036476135254
       Target Frame: dummy
-      Yaw: 4.513554096221924
+      Yaw: 0.22035524249076843
     Saved: ~
 Window Geometry:
   Displays:
@@ -590,4 +570,4 @@ Window Geometry:
     collapsed: false
   Width: 1206
   X: 218
-  Y: 72
+  Y: 27

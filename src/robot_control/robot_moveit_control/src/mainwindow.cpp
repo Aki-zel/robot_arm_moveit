@@ -238,19 +238,6 @@ bool MainWindow::callDetectService() // 调用检测服务
 
 void MainWindow::processDetectionResults(const robot_msgs::Hand_CatchResponse &response) // 处理检测结果
 {
-    try
-    {
-        // 显示检测结果图像
-        cv::Mat detect_image = cv_bridge::toCvCopy(response.detect_image, sensor_msgs::image_encodings::BGR8)->image;
-        cv::imshow("Detection Results", detect_image);
-        cv::waitKey(0); // 按下任意键继续
-        cv::destroyAllWindows();
-    }
-    catch (const cv_bridge::Exception &e)
-    {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
 
     if (response.labels.empty() || response.positions.size() < 1)
     {

@@ -81,14 +81,14 @@ class ColorDetectServer(BaseDetection):
                     'angle': angle
                 })
 
-        return objects_info, cv_image
+        return objects_info
 
     def handle_color_detection(self, request):
         response = Hand_CatchResponse()
 
         if request.run:
             if self.cv_image is not None:
-                objects_info, processed_image = self.color_thresholding(
+                objects_info = self.color_thresholding(
                     self.cv_image)
 
                 tf_published = False  # 布尔变量，用于跟踪是否已经发布了TF坐标系
@@ -137,13 +137,6 @@ class ColorDetectServer(BaseDetection):
                         self.tf_broad(world_position)
                         tf_published = True  # 将标志位设置为True，表示已发布TF坐标系
 
-                try:
-                    response.detect_image = self.bridge.cv2_to_imgmsg(
-                        processed_image, "bgr8")
-                except CvBridgeError as e:
-                    rospy.logerr("Error converting image to message: %s" % e)
-                else:
-                    rospy.loginfo("Image converted to message successfully")
             else:
                 rospy.logwarn("No image received yet.")
         return response
