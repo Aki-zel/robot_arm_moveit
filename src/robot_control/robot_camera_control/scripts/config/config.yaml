@@ -35,7 +35,7 @@ threshold:
 # -openvino
 # -ort
 # -trt
-device: 'openvino'
+device: 'trt'
 model_type: 'yolov5'
 # 模型权重路径
 model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/doorhandle.onnx

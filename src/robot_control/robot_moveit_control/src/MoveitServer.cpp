@@ -8,11 +8,11 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	arm_.setGoalPositionTolerance(0.01);
 	arm_.setGoalOrientationTolerance(0.01);
 	arm_.setGoalJointTolerance(0.01);
-	arm_.setMaxAccelerationScalingFactor(0.3);
-	arm_.setMaxVelocityScalingFactor(0.3);
+	arm_.setMaxAccelerationScalingFactor(0.5);
+	arm_.setMaxVelocityScalingFactor(0.5);
 	// arm_.setPoseReferenceFrame("base_link_rm");
 	arm_.allowReplanning(true);
-	arm_.setPlanningTime(3.0);
+	arm_.setPlanningTime(5.0);
 	arm_.setPlannerId("TRRT");
 	const moveit::core::JointModelGroup *joint_model_group =
 		arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
@@ -214,8 +214,9 @@ void MoveitServer::initializeClaw()
 	Set_Tool_DO(1, false);
 	ros::Duration(1.0).sleep();
 	std_msgs::Int16 msg;
-	msg.data = 6;
+	msg.data = 3;
 	this->collision_stage_pub.publish(msg);
+	ROS_INFO("Collision Stage 3 setup");
 	ROS_INFO("Claw initialization completed");
 }
 

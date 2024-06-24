@@ -25,7 +25,7 @@ class BaseDetection:
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
         # self.grasp_gen = GraspGenerator(config["gmodel_file"], True)
         # self.grasp_gen.load_model()
-        self.count = 0
+        self.count=0
         self.initTopic()
 
     def initTopic(self):
@@ -35,6 +35,7 @@ class BaseDetection:
                          Image, self.depth_image_cb)
         rospy.Subscriber(self.config['camera']['info_topic'],
                          CameraInfo, self.camera_info_cb)
+        # rospy.wait_for_service("/call_task")
 
     def image_callback(self, msg):
         try:
@@ -105,7 +106,7 @@ class BaseDetection:
         tfs.header.frame_id = self.config['robot']['base_frame_id']
         tfs.header.stamp = rospy.Time.now()
         tfs.child_frame_id = "object"+str(self.count)
-        self.count += 1
+        self.count=self.count+1
         tfs.transform.translation = position.pose.position
         tfs.transform.rotation = position.pose.orientation
         self.tf_broadcaster.sendTransform(tfs)

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import rospy
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
@@ -90,9 +92,9 @@ class ColorDetectServer(BaseDetection):
                     'center_y': int(center_y),
                     'angle': angle
                 })
-
-        cv2.imshow("Color Detection", cv_image)
-        cv2.waitKey(0)
+        
+        # cv2.imshow("Color Detection", cv_image)
+        # cv2.waitKey(0) 
 
         return objects_info
 

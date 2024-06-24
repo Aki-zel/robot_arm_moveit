@@ -31,3 +31,4 @@ camera_pose.txt
 **/__pycache__
 src/robot_control/robot_camera_control/model
 src/robot_control/robot_moveit_control/scripts/1.py
+src/robot_control/robot_camera_control/scripts/cache/model.trt

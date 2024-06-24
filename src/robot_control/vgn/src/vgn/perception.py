@@ -18,6 +18,7 @@ class UniformTSDFVolume:
         )
 
     def integrate(self, depth_img, intrinsic, extrinsic):
+        print("Integrate image into the volume.")
         rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
             o3d.geometry.Image(np.empty_like(depth_img)),
             o3d.geometry.Image(depth_img),
