@@ -22,21 +22,22 @@ threshold:
   confidence: 0.6
   # 颜色与面积阈值
   color_threshold:
-    lower: [0, 0, 0]
-    upper: [180, 255, 50]
+  color_threshold:
+    lower: [100, 30, 150]
+    upper: [255, 255, 255]
   area_threshold:
-    min_area: 1500
-    max_area: 50000
+    min_area: 1300
+    max_area: 6000
 
 # 计算设备
 # -cpu
 # -openvino
 # -ort
 # -trt
-device: 'openvino'
+device: 'trt'
 model_type: 'yolov5'
 # 模型权重路径
-model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/apple.onnx
+model_file: /home/ydf/Documents/rwm_moveit/src/robot_control/robot_camera_control/model/apple.onnx
 params_file: ""
 config_file: ""
 gmodel_file: ""

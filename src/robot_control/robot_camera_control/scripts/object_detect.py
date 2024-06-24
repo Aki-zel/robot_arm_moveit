@@ -13,7 +13,7 @@ from robot_msgs.srv import *
 from cv_bridge import CvBridge
 import rospy
 
-
+current_work_dir = os.path.dirname(__file__)
 class Yolo(BaseDetection):
     def __init__(self, config):
         super().__init__(config)
@@ -142,7 +142,7 @@ def getObjCoordinate(request):
 
 
 if __name__ == '__main__':
-    current_work_dir = os.path.dirname(__file__)
+  
     config_path = current_work_dir + "/config/config.yaml"
     with open(config_path, "r") as file:
         config = yaml.safe_load(file)

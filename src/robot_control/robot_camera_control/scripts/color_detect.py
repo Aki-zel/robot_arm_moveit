@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import rospy
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
@@ -62,8 +64,8 @@ class ColorDetectServer(BaseDetection):
                     'angle': angle
                 })
         
-        cv2.imshow("Color Detection", cv_image)
-        cv2.waitKey(0) 
+        # cv2.imshow("Color Detection", cv_image)
+        # cv2.waitKey(0) 
 
         return objects_info
 
@@ -90,9 +92,7 @@ class ColorDetectServer(BaseDetection):
 
                     response.labels.append(label)
                     response.positions.append(world_position)
-                    if len(camera_xyz) == 3 and not tf_published:
-                        self.tf_broad(world_position)
-                        tf_published = True
+                    self.tf_broad(world_position)
 
                 # 发布处理后的图像
                 # try:
