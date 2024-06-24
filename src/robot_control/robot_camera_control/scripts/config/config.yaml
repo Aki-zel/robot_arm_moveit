@@ -22,8 +22,9 @@ threshold:
   confidence: 0.6
   # 颜色与面积阈值
   color_threshold:
-  color_threshold:
-    lower: [100, 30, 150]
+    roi_min: [0, 0, 100]
+    roi_max: [60, 60, 180]
+    lower: [100, 50, 150]
     upper: [255, 255, 255]
   area_threshold:
     min_area: 1300
@@ -37,8 +38,7 @@ threshold:
 device: 'trt'
 model_type: 'yolov5'
 # 模型权重路径
-model_file: /home/ydf/Documents/rwm_moveit/src/robot_control/robot_camera_control/model/apple.onnx
+model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/doorhandle.onnx
 params_file: ""
 config_file: ""
 gmodel_file: ""
-

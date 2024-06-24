@@ -102,7 +102,8 @@ def getObjCoordinate(request):
             # t_end = time.time()  # 结束计时
             # print("预测时间" + str((t_end-t_start)*1000))  # 打印预测时间
             res = model.visual(color_image)  # 可视化检测结果
-            respond.detect_image = CvBridge().cv2_to_imgmsg(res, encoding="bgr8")
+            cv2.imshow("res", res)
+            cv2.waitKey(0)
             object_list = model.getFilteredObjects()  # 获取筛选后的目标信息列表
             # print("目标数量" + str(len(object_list)))
             tf_published = False  # 布尔变量，用于跟踪是否已经发布了TF坐标系
@@ -146,7 +147,7 @@ if __name__ == '__main__':
     config_path = current_work_dir + "/config/config.yaml"
     with open(config_path, "r") as file:
         config = yaml.safe_load(file)
-    rospy.init_node("camera_node")
+    rospy.init_node("object_detect_server")
     model = Yolo(config)
 
     service = rospy.Service("object_detect", Hand_Catch, getObjCoordinate)

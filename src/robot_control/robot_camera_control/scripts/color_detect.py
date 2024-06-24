@@ -4,9 +4,7 @@ import rospy
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
 import numpy as np
-from geometry_msgs.msg import PoseStamped
 from robot_msgs.srv import Hand_Catch, Hand_CatchResponse
-from tf.transformations import quaternion_from_euler, quaternion_multiply
 from base_detect import BaseDetection
 import os
 import yaml
@@ -19,12 +17,38 @@ class ColorDetectServer(BaseDetection):
         self.service = rospy.Service(
             "color_detect", Hand_Catch, self.handle_color_detection)
 
-        # 读取阈值配置
-        self.threshold = config["threshold"]
-        self.color_threshold = self.threshold["color_threshold"]
-        self.area_threshold = self.threshold["area_threshold"]
+        # 读取整个颜色配置
+        self.colors = config["colors"]
 
         rospy.loginfo("ColorDetectServer initialized")
+
+    def preprocess_image(self, cv_image):
+        hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+
+        # 检查是否存在roi_min和roi_max的配置
+        if "roi_min" not in self.color_threshold or "roi_max" not in self.color_threshold:
+            rospy.logwarn("no ROI.")
+            return cv_image
+        
+        # 定义ROI区域的HSV范围
+        lower_hsv = np.array(self.color_threshold["roi_min"])
+        upper_hsv = np.array(self.color_threshold["roi_max"])
+
+        mask = cv2.inRange(hsv_image, lower_hsv, upper_hsv)
+
+        # 查找roi轮廓
+        contours, _ = cv2.findContours(
+            mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # 绘制roi边界框
+        if contours:
+            # 找到面积最大的roi轮廓
+            largest_contour = max(contours, key=cv2.contourArea)
+            x, y, w, h = cv2.boundingRect(largest_contour)
+            cv2.rectangle(cv_image, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            roi = cv_image[y:y+h, x:x+w]  # 提取roi区域
+
+        return roi
 
     def color_thresholding(self, cv_image):
         hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
@@ -38,6 +62,10 @@ class ColorDetectServer(BaseDetection):
 
         contours, _ = cv2.findContours(
             mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # 按图像y坐标对轮廓进行排序(从上到下)
+        contours = sorted(
+            contours, key=lambda contour: cv2.boundingRect(contour)[1])
 
         objects_info = []
 
@@ -53,9 +81,10 @@ class ColorDetectServer(BaseDetection):
                 angle = rect[2]
 
                 cv2.drawContours(cv_image, [box], 0, (0, 255, 0), 2)
-                cv2.circle(cv_image, (int(center_x), int(center_y)), 5, (0, 0, 255), -1)
+                cv2.circle(cv_image, (int(center_x), int(center_y)),
+                           5, (0, 0, 255), -1)
 
-                color = "detected_color"  
+                color = "detected_color"
 
                 objects_info.append({
                     'label': color,
@@ -72,12 +101,21 @@ class ColorDetectServer(BaseDetection):
     def handle_color_detection(self, request):
         response = Hand_CatchResponse()
 
+        color_name = request.color_name
+        if color_name not in self.colors:
+            rospy.logerr(f"Color '{color_name}' not found in configuration")
+            return Hand_CatchResponse(labels=[], positions=[])
+        
+        self.threshold = self.colors[color_name]
+        self.color_threshold = self.threshold["color_threshold"]
+        self.area_threshold = self.threshold["area_threshold"]
+
         if request.run:
             if self.cv_image is not None:
+                self.cv_image = self.preprocess_image(self.cv_image)
                 objects_info = self.color_thresholding(
                     self.cv_image)
 
-                tf_published = False
                 for obj in objects_info:
                     label = obj['label']
                     center_x = obj['center_x']
@@ -87,21 +125,11 @@ class ColorDetectServer(BaseDetection):
                     camera_xyz = self.getObject3DPosition(
                         center_x, center_y)
                     camera_xyz = np.round(np.array(camera_xyz), 3).tolist()
-
                     world_position = self.tf_transform(camera_xyz)
-
                     response.labels.append(label)
                     response.positions.append(world_position)
                     self.tf_broad(world_position)
 
-                # 发布处理后的图像
-                # try:
-                #     response.detect_image = self.bridge.cv2_to_imgmsg(
-                #         processed_image, "bgr8")
-                # except CvBridgeError as e:
-                #     rospy.logerr("Error converting image to message: %s" % e)
-                # else:
-                #     rospy.loginfo("Image converted to message successfully")
             else:
                 rospy.logwarn("No image received yet.")
         return response
@@ -109,7 +137,7 @@ class ColorDetectServer(BaseDetection):
 
 if __name__ == '__main__':
     current_work_dir = os.path.dirname(__file__)
-    config_path = os.path.join(current_work_dir, "config", "config.yaml")
+    config_path = os.path.join(current_work_dir, "config", "color.yaml")
     with open(config_path, "r") as config_file:
         config = yaml.safe_load(config_file)
 

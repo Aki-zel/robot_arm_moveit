@@ -27,7 +27,6 @@ class BaseDetection:
         # self.grasp_gen.load_model()
         self.count=0
         self.initTopic()
-        print("111")
 
     def initTopic(self):
         rospy.Subscriber(self.config['camera']['color_topic'],

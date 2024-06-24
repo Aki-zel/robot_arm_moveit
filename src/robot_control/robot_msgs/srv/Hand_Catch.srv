@@ -1,8 +1,7 @@
 #request
 bool run
-
+string color_name
 ---
 #respond
 string[] labels
 geometry_msgs/PoseStamped[] positions
-sensor_msgs/Image detect_image

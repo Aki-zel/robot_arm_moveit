@@ -19,6 +19,7 @@ ros::Subscriber a;
 ros::Publisher iswork, current_state;
 ros::ServiceClient object_client, color_client, resetmap, toggle, get_scene_cloud_client, get_map_cloud_client, predict_grasps_client;
 ros::ServiceServer CallTask;
+
 void resetMap()
 {
     std_srvs::Empty em;
