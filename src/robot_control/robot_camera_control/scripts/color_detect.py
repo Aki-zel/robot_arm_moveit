@@ -15,24 +15,28 @@ class ColorDetectServer(BaseDetection):
         self.service = rospy.Service(
             "color_detect", Hand_Catch, self.handle_color_detection)
 
-        # 读取阈值配置
-        self.threshold = config["threshold"]
-        self.color_threshold = self.threshold["color_threshold"]
-        self.area_threshold = self.threshold["area_threshold"]
+        # 读取整个颜色配置
+        self.colors = config["colors"]
 
         rospy.loginfo("ColorDetectServer initialized")
 
     def preprocess_image(self, cv_image):
         hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+
+        # 检查是否存在roi_min和roi_max的配置
+        if "roi_min" not in self.color_threshold or "roi_max" not in self.color_threshold:
+            rospy.logwarn("no ROI.")
+            return cv_image
         
         # 定义ROI区域的HSV范围
         lower_hsv = np.array(self.color_threshold["roi_min"])
         upper_hsv = np.array(self.color_threshold["roi_max"])
-        
+
         mask = cv2.inRange(hsv_image, lower_hsv, upper_hsv)
 
         # 查找roi轮廓
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(
+            mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # 绘制roi边界框
         if contours:
@@ -56,9 +60,10 @@ class ColorDetectServer(BaseDetection):
 
         contours, _ = cv2.findContours(
             mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        # 按图像y坐标对轮廓进行排序（从上到下）
-        contours = sorted(contours, key=lambda contour: cv2.boundingRect(contour)[1])
+
+        # 按图像y坐标对轮廓进行排序(从上到下)
+        contours = sorted(
+            contours, key=lambda contour: cv2.boundingRect(contour)[1])
 
         objects_info = []
 
@@ -74,9 +79,10 @@ class ColorDetectServer(BaseDetection):
                 angle = rect[2]
 
                 cv2.drawContours(cv_image, [box], 0, (0, 255, 0), 2)
-                cv2.circle(cv_image, (int(center_x), int(center_y)), 5, (0, 0, 255), -1)
+                cv2.circle(cv_image, (int(center_x), int(center_y)),
+                           5, (0, 0, 255), -1)
 
-                color = "detected_color"  
+                color = "detected_color"
 
                 objects_info.append({
                     'label': color,
@@ -84,14 +90,23 @@ class ColorDetectServer(BaseDetection):
                     'center_y': int(center_y),
                     'angle': angle
                 })
-        
+
         cv2.imshow("Color Detection", cv_image)
-        cv2.waitKey(0) 
+        cv2.waitKey(0)
 
         return objects_info
 
     def handle_color_detection(self, request):
         response = Hand_CatchResponse()
+
+        color_name = request.color_name
+        if color_name not in self.colors:
+            rospy.logerr(f"Color '{color_name}' not found in configuration")
+            return Hand_CatchResponse(labels=[], positions=[])
+        
+        self.threshold = self.colors[color_name]
+        self.color_threshold = self.threshold["color_threshold"]
+        self.area_threshold = self.threshold["area_threshold"]
 
         if request.run:
             if self.cv_image is not None:
@@ -120,7 +135,7 @@ class ColorDetectServer(BaseDetection):
 
 if __name__ == '__main__':
     current_work_dir = os.path.dirname(__file__)
-    config_path = os.path.join(current_work_dir, "config", "config.yaml")
+    config_path = os.path.join(current_work_dir, "config", "color.yaml")
     with open(config_path, "r") as config_file:
         config = yaml.safe_load(config_file)
 

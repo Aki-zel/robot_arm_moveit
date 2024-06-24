@@ -1,0 +1,37 @@
+robot:
+  base_frame_id: base_link_rm
+  ee_frame_id: ee_link
+camera:
+  frame_id: camera_color_optical_frame
+  color_topic: /camera/color/image_raw
+  info_topic: /camera/aligned_depth_to_color/camera_info
+  depth_topic: /camera/aligned_depth_to_color/image_raw
+# 颜色阈值设置
+colors:
+  cabinet_handle:
+    color_threshold:
+      roi_min: [0, 0, 60]
+      roi_max: [60, 60, 180]
+      lower: [100, 30, 100]
+      upper: [255, 255, 255]
+    area_threshold:
+      min_area: 1000
+      max_area: 10000
+  drawer:
+    color_threshold:
+        lower: [0, 0, 150]
+        upper: [160, 30, 255]
+    area_threshold:
+        min_area: 15000
+        max_area: 150000
+  blue:
+    color_threshold:
+        lower: [100, 100, 100]
+        upper: [140, 255, 255]
+    area_threshold:
+        min_area: 500
+        max_area: 5000
+
+  
+
+

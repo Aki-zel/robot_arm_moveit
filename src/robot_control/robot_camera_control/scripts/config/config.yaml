@@ -42,4 +42,3 @@ model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/do
 params_file: ""
 config_file: ""
 gmodel_file: ""
-
