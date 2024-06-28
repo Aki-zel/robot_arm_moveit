@@ -452,14 +452,6 @@
       velocity="3.92" />
 	<dynamics damping="50" friction="1"/>
   </joint>
-
-  <!-- tool -->
-  <link name="tool0"/>
-  <joint name="joint_tool0" type="fixed">
-    <origin xyz="0 0 0.015" rpy="0 0 0" />
-    <parent link="Link6" />
-    <child link="tool0" />
-  </joint>
   
   <!-- tool_frame -->
   <link name="ee_link"/>
@@ -470,11 +462,11 @@
   </joint>
 
   <!-- camera -->
-  <xacro:include filename="$(find rm_description)/urdf/sensors/_d415.urdf.xacro"/>
+  <!-- <xacro:include filename="$(find rm_description)/urdf/sensors/_d415.urdf.xacro"/>
     <xacro:sensor_d415  parent="tool0">
         <origin xyz="-0.05 0 0"
                 rpy="0 -1.57 0" />
-  </xacro:sensor_d415>
+  </xacro:sensor_d415> -->
 
   <!-- gripper -->
   <link name="gripper_link">
@@ -499,8 +491,8 @@
     </collision>
   </link>
   <joint name="joint_gripper" type="fixed">
-    <origin xyz="0 0 0" rpy="0 0 0" />
-    <parent link="tool0" />
+    <origin xyz="0 0 0.015" rpy="0 0 0" />
+    <parent link="Link6" />
     <child link="gripper_link" />
   </joint>
   

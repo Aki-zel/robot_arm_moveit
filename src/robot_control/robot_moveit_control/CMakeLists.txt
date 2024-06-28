@@ -162,11 +162,11 @@ add_library(MoveitServer_h
   src/MoveitServer.cpp
 
 )
-add_library(robotControl_h
-  # include/MoveitServer.h
+# add_library(robotControl_h
+#   # include/MoveitServer.h
 
-  src/robotControl.cpp
-)
+#   src/robotControl.cpp
+# )
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -176,7 +176,7 @@ add_library(robotControl_h
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/robot_moveit_control_node.cpp)
-add_executable(ydrobot ${QRC_FILES} ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
+# add_executable(ydrobot ${QRC_FILES} ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
 add_executable(ydtest src/test.cpp)
 add_executable(controlcenter src/ArmControlCenter.cpp)
 
@@ -188,7 +188,7 @@ add_executable(controlcenter src/ArmControlCenter.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(ydrobot ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(ydrobot ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(ydtest ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(controlcenter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
@@ -198,8 +198,8 @@ add_dependencies(controlcenter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPO
 
 # target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES})
 target_link_libraries(MoveitServer_h ${catkin_LIBRARIES}   )
-target_link_libraries(robotControl_h ${catkin_LIBRARIES}  MoveitServer_h )
-target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES} robotControl_h)
+# target_link_libraries(robotControl_h ${catkin_LIBRARIES}  MoveitServer_h )
+# target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES} )
 target_link_libraries(ydtest
   MoveitServer_h
   ${catkin_LIBRARIES}

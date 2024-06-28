@@ -58,7 +58,7 @@ class ColorDetectServer(BaseDetection):
 
         return roi, (x, y)
 
-    def color_thresholding(self, cv_image,f, x=0, y=0):
+    def color_thresholding(self, cv_image, f, x=0, y=0):
         hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
         # 读取配置文件中的颜色阈值
         lower_color = np.array(self.color_threshold["lower"])
@@ -68,9 +68,18 @@ class ColorDetectServer(BaseDetection):
         mask = cv2.inRange(hsv_image, lower_color, upper_color)
         image_path = os.path.join(current_work_dir, "2.png")
         cv2.imwrite(image_path, mask)
-
+        # 进行形态学开运算去除噪点
+        kernel1 = np.ones((5, 5), np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel1)
+        image_path = os.path.join(current_work_dir, "3.png")
+        cv2.imwrite(image_path, mask)
         contours, _ = cv2.findContours(
             mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # print(x)
+        if f:
+            # 滤除h>4*w的干扰轮廓
+            contours = [cnt for cnt in contours if cv2.boundingRect(
+                cnt)[2] >= 4*cv2.boundingRect(cnt)[3]]
 
         if f==False:
         # 滤除h>w的干扰轮廓
@@ -85,6 +94,7 @@ class ColorDetectServer(BaseDetection):
 
         for contour in contours:
             area = cv2.contourArea(contour)
+            print(area)
             if self.area_threshold["min_area"] < area < self.area_threshold["max_area"]:
                 rect = cv2.minAreaRect(contour)
                 box = cv2.boxPoints(rect)
@@ -122,16 +132,16 @@ class ColorDetectServer(BaseDetection):
         self.threshold = self.colors[color_name]
         self.color_threshold = self.threshold["color_threshold"]
         self.area_threshold = self.threshold["area_threshold"]
-        f=False
+        f = False
         if request.run:
             if self.cv_image is not None:
                 self.cv_image, (x, y) = self.preprocess_image(self.cv_image)
-                if color_name != "cabinet_handle" :
-                    f=True
+                if color_name == "cabinet_handle":
+                    f = True
                 else:
-                    f=False
+                    f = False
                 objects_info = self.color_thresholding(
-                    self.cv_image,f, x, y)
+                    self.cv_image, f, x, y)
 
                 for obj in objects_info:
                     label = obj['label']

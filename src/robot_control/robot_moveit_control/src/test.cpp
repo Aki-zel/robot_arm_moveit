@@ -107,6 +107,8 @@ int main(int argc, char **argv)
 	// moveit::planning_interface::MoveGroupInterface arm(PLANNING_GROUP);
 	MoveitServer arm(PLANNING_GROUP);
 	// ros::ServiceClient client = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect"); // 创建目标检测服务客户端
+	arm.move_j(std::vector<double>{arm.degreesToRadians(28), arm.degreesToRadians(-52), arm.degreesToRadians(-99),
+											 arm.degreesToRadians(124), arm.degreesToRadians(95), arm.degreesToRadians(155)});
 	geometry_msgs::Pose pose;
 	geometry_msgs::Pose pose1;
 	tf2::Quaternion qua;
@@ -176,9 +178,9 @@ int main(int argc, char **argv)
 		// trans_pose = arm.transformPose(pose, transform);
 		// trans_pose = arm.moveFromPose(pose, -0.1);
 		// arm.move_p(trans_pose);
-		arm.move_p(pose);
+		// arm.move_p(pose);
 		// arm.move_l(waypoints);
-		arm.move_p(link6_target_pose);
+		// arm.move_p(link6_target_pose);
 	}
 	catch (tf2::TransformException &ex)
 	{

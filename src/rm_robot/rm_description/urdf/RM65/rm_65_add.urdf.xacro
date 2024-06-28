@@ -502,57 +502,8 @@
       <parent link="tool0" />
       <child link="gripper_link" />
     </joint>
-    <!-- finger1 -->
-    <link name="finger1">
-      <visual>
-        <origin xyz="0 0 0.0325" rpy="0 0 0"/>
-        <material
-          name="">
-          <color
-            rgba="1 1 1 1" />
-        </material>
-        <geometry>
-            <box size="0.046 0.003 0.065"/>
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0.0325" rpy="0 0 0"/>
-        <geometry>
-            <box size="0.046 0.003 0.065"/>
-        </geometry>
-      </collision>
-    </link>
-    <joint name="joint_finger1" type="fixed">
-      <origin xyz="0 0.0265 0.11" rpy="0 0 0" />
-      <parent link="gripper_link" />
-      <child link="finger1" />
-    </joint>
 
-    <!-- finger2 -->
-    <link name="finger2">
-      <visual>
-        <origin xyz="0 0 0.0325" rpy="0 0 0"/>
-        <material
-          name="">
-          <color
-            rgba="1 1 1 1" />
-        </material>
-        <geometry>
-            <box size="0.046 0.003 0.065"/>
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0.0325" rpy="0 0 0"/>
-        <geometry>
-            <box size="0.046 0.003 0.065"/>
-        </geometry>
-      </collision>
-    </link>
-    <joint name="joint_finger2" type="fixed">
-      <origin xyz="0 -0.0265 0.11" rpy="0 0 0" />
-      <parent link="gripper_link" />
-      <child link="finger2" />
-    </joint>
+
     <!-- Transmissions for ROS Control -->
     <xacro:macro name="transmission_block" params="joint_name">
       <transmission name="tran1">

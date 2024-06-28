@@ -18,6 +18,6 @@ vgn_server:
     frame_id: camera_color_optical_frame
     info_topic: /camera/aligned_depth_to_color/camera_info
     depth_topic: /camera/aligned_depth_to_color/image_raw
-  length: 0.20 # 体素格子大小
+  length: 0.08 # 体素格子大小
   resolution: 40
   depth_scaling: 0.001  # Set to 1.0 for Gazebo, 0.001 for a RealSense

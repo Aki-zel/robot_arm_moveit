@@ -103,8 +103,8 @@ class GraspServer:
 
     def predict_grasps(self, req):
         # Construct the input grid
-        voxel_size = req.voxel_size
-        points, distances = from_cloud_msg(req.map_cloud)
+        voxel_size = self.tsdf.voxel_size
+        # points, distances = from_cloud_msg(req.map_cloud)
         # tsdf_grid = map_cloud_to_grid(voxel_size, points, distances)
         tsdf_grid=self.tsdf.get_grid()
         # Compute grasps

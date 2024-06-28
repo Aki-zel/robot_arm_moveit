@@ -1,5 +1,4 @@
 #include <MoveitServer.h>
-
 MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), spinner(2)
 {
 	spinner.start();
@@ -8,9 +7,9 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	arm_.setGoalPositionTolerance(0.01);
 	arm_.setGoalOrientationTolerance(0.01);
 	arm_.setGoalJointTolerance(0.01);
-	arm_.setMaxAccelerationScalingFactor(0.5);
-	arm_.setMaxVelocityScalingFactor(0.5);
-	// arm_.setPoseReferenceFrame("base_link_rm");
+	arm_.setMaxAccelerationScalingFactor(0.1);
+	arm_.setMaxVelocityScalingFactor(0.1);
+	arm_.setPoseReferenceFrame("base_link_rm");
 	arm_.allowReplanning(true);
 	arm_.setPlanningTime(5.0);
 	arm_.setPlannerId("TRRT");
@@ -22,7 +21,10 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	ROS_INFO_NAMED("tutorial", "Start MOVEITSERVER");
 	initializeClaw();
 }
-
+void MoveitServer::setMaxVelocity(double speed){
+	arm_.setMaxAccelerationScalingFactor(speed);
+	arm_.setMaxVelocityScalingFactor(speed);
+}
 double MoveitServer::degreesToRadians(double degrees)
 {
 	return round((degrees * M_PI / 180.0), 4);
@@ -201,22 +203,20 @@ void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
 	tool_do_msg.state = state;
 	tool_do_pub.publish(tool_do_msg);
 	ROS_INFO("Published Tool Digital Output message with num = %d and state = %s", num, state ? "true" : "false");
+	ros::Duration(1).sleep();
 }
 
 void MoveitServer::initializeClaw()
 {
 	Set_Tool_DO(1, false);
-	ros::Duration(1.0).sleep();
 	Set_Tool_DO(2, false);
-	ros::Duration(1.0).sleep();
 	Set_Tool_DO(1, true);
-	ros::Duration(1.0).sleep();
 	Set_Tool_DO(1, false);
-	ros::Duration(1.0).sleep();
+	Set_Tool_DO(2, true);
 	std_msgs::Int16 msg;
-	msg.data = 3;
+	msg.data = 4;
 	this->collision_stage_pub.publish(msg);
-	ROS_INFO("Collision Stage 3 setup");
+	ROS_INFO("Collision Stage 4 setup");
 	ROS_INFO("Claw initialization completed");
 }
 
@@ -336,10 +336,10 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 	moveit_msgs::RobotTrajectory trajectory;
 	if (succeed)
 	{
-		const double jump_threshold = 0.0;
+		const double jump_threshold = 0.000;
 		const double eef_step = 0.01;
 		double fraction = 0.0;
-		int maxtries = 100;
+		int maxtries = 10;
 		int attempts = 0;
 
 		while (fraction < 1.0 && attempts < maxtries)
@@ -351,9 +351,9 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 		if (fraction == 1)
 		{
 			ROS_INFO("Path computed successfully. Moving the arm.");
-			moveit::planning_interface::MoveGroupInterface::Plan plan;
-			plan.trajectory_ = trajectory;
-			arm_.execute(plan);
+			// moveit::planning_interface::MoveGroupInterface::Plan plan;
+			// plan.trajectory_ = trajectory;
+			arm_.execute(trajectory);
 			return true;
 		}
 		else
