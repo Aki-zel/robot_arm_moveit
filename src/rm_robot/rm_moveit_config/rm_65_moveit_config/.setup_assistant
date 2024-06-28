@@ -1,11 +1,11 @@
 moveit_setup_assistant_config:
   URDF:
-    package: rm_description
-    relative_path: urdf/RM65/rm_65_plus.urdf.xacro
+    package: yd_description
+    relative_path: xacro/ydrobot_agv.xacro
     xacro_args: ""
   SRDF:
     relative_path: config/rm_65.srdf
   CONFIG:
     author_name: gubishan
     author_email: gbs965@outlook.com
-    generated_timestamp: 1717033554
+    generated_timestamp: 1719467222

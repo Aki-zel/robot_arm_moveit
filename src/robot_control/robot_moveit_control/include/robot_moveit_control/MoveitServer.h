@@ -62,6 +62,7 @@ public:
 	geometry_msgs::Pose moveFromPose(const geometry_msgs::Pose &pose, double distance);
 	geometry_msgs::Pose calculateTargetTransform(const geometry_msgs::Pose &target_pose, const geometry_msgs::Transform &relative_transform);
 	geometry_msgs::Pose calculateTargetPose(const geometry_msgs::Pose &target_pose, const geometry_msgs::Pose &trans_pose);
+	void setMaxVelocity(double speed);
 	~MoveitServer();
 
 public:

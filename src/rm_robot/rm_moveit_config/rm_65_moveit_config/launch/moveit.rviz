@@ -1,14 +1,19 @@
 Panels:
   - Class: rviz/Displays
-    Help Height: 0
+    Help Height: 84
     Name: Displays
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /MotionPlanning1
+        - /PoseWithCovariance1
+        - /Odometry1
+        - /Odometry1/Shape1
         - /TF1
         - /TF1/Frames1
-      Splitter Ratio: 0.7425600290298462
-    Tree Height: 160
+        - /DepthCloud1/Auto Size1
+      Splitter Ratio: 0.5
+    Tree Height: 472
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -41,7 +46,7 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
-    - Acceleration_Scaling_Factor: 1
+    - Acceleration_Scaling_Factor: 0.1
       Class: moveit_rviz_plugin/MotionPlanning
       Enabled: true
       Move Group Namespace: ""
@@ -102,16 +107,22 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          base_link_rm:
+          back_l:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          camera_bottom_screw_frame:
+          back_r:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_link:
+            Value: true
+          base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          base_link_rm:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -120,12 +131,12 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          finger1:
+          front_l:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          finger2:
+          front_r:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -135,11 +146,17 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          tool0:
+          left_wheel_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          world:
+            Value: true
+          right_wheel_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          tool0:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -177,7 +194,7 @@ Visualization Manager:
       Scene Geometry:
         Scene Alpha: 1
         Scene Color: 50; 230; 50
-        Scene Display Time: 0.20000000298023224
+        Scene Display Time: 0.009999999776482582
         Show Scene Geometry: true
         Voxel Coloring: Z-Axis
         Voxel Rendering: Occupied Voxels
@@ -219,16 +236,22 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          base_link_rm:
+          back_l:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          camera_bottom_screw_frame:
+          back_r:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          camera_link:
+            Value: true
+          base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          base_link_rm:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -237,12 +260,12 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          finger1:
+          front_l:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          finger2:
+          front_r:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -252,11 +275,17 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          tool0:
+          left_wheel_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          world:
+            Value: true
+          right_wheel_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          tool0:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -264,71 +293,72 @@ Visualization Manager:
         Show Robot Collision: false
         Show Robot Visual: true
       Value: true
-      Velocity_Scaling_Factor: 1
-    - Class: rviz/TF
-      Enabled: true
-      Filter (blacklist): ""
-      Filter (whitelist): ""
-      Frame Timeout: 15
-      Frames:
-        All Enabled: false
-        Link1:
-          Value: false
-        Link2:
-          Value: false
-        Link3:
-          Value: false
-        Link4:
-          Value: false
-        Link5:
-          Value: false
-        Link6:
-          Value: false
-        base_link_rm:
-          Value: false
-        camera_bottom_screw_frame:
-          Value: false
-        camera_link:
-          Value: false
-        ee_link:
+      Velocity_Scaling_Factor: 0.1
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz/PoseWithCovariance
+      Color: 252; 233; 79
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
           Value: true
-        finger1:
-          Value: false
-        finger2:
-          Value: false
-        gripper_link:
-          Value: false
-        tool0:
-          Value: false
-        world:
-          Value: false
-      Marker Alpha: 1
-      Marker Scale: 1
-      Name: TF
-      Show Arrows: true
-      Show Axes: true
-      Show Names: true
-      Tree:
-        world:
-          base_link_rm:
-            Link1:
-              Link2:
-                Link3:
-                  Link4:
-                    Link5:
-                      Link6:
-                        ee_link:
-                          {}
-                        tool0:
-                          camera_bottom_screw_frame:
-                            camera_link:
-                              {}
-                          gripper_link:
-                            finger1:
-                              {}
-                            finger2:
-                              {}
-      Update Interval: 0
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: false
+      Enabled: true
+      Head Length: 0.5
+      Head Radius: 0.10000000149011612
+      Name: PoseWithCovariance
+      Queue Size: 10
+      Shaft Length: 1
+      Shaft Radius: 0.05000000074505806
+      Shape: Arrow
+      Topic: /robot_pose_ekf/odom_combined
+      Unreliable: false
+      Value: true
+    - Angle Tolerance: 0.10000000149011612
+      Class: rviz/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: false
+      Enabled: true
+      Keep: 100
+      Name: Odometry
+      Position Tolerance: 0.10000000149011612
+      Queue Size: 10
+      Shape:
+        Alpha: 1
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 255; 25; 0
+        Head Length: 0.10000000149011612
+        Head Radius: 0.10000000149011612
+        Shaft Length: 1
+        Shaft Radius: 0.05000000074505806
+        Value: Arrow
+      Topic: /odom
+      Unreliable: false
       Value: true
     - Alpha: 1
       Class: rviz/RobotModel
@@ -370,16 +400,22 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        base_link_rm:
+        back_l:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        camera_bottom_screw_frame:
+        back_r:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        camera_link:
+          Value: true
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        base_link_rm:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -388,12 +424,12 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        finger1:
+        front_l:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        finger2:
+        front_r:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -403,11 +439,17 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        tool0:
+        left_wheel_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        world:
+          Value: true
+        right_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        tool0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -417,7 +459,148 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Class: rviz/TF
+      Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): ""
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        Link1:
+          Value: false
+        Link2:
+          Value: false
+        Link3:
+          Value: false
+        Link4:
+          Value: false
+        Link5:
+          Value: false
+        Link6:
+          Value: false
+        back_l:
+          Value: false
+        back_r:
+          Value: false
+        base_footprint:
+          Value: false
+        base_link:
+          Value: true
+        base_link_rm:
+          Value: true
+        camera_aligned_depth_to_color_frame:
+          Value: false
+        camera_color_frame:
+          Value: false
+        camera_color_optical_frame:
+          Value: true
+        camera_depth_frame:
+          Value: false
+        camera_depth_optical_frame:
+          Value: false
+        camera_link:
+          Value: false
+        ee_link:
+          Value: true
+        front_l:
+          Value: false
+        front_r:
+          Value: false
+        grasp_0:
+          Value: true
+        grasp_1:
+          Value: true
+        grasp_2:
+          Value: true
+        grasp_3:
+          Value: true
+        gripper_link:
+          Value: false
+        gyro_link:
+          Value: true
+        laser:
+          Value: true
+        left_wheel_link:
+          Value: false
+        object0:
+          Value: true
+        object1:
+          Value: true
+        odom_combined:
+          Value: true
+        right_wheel_link:
+          Value: false
+        task:
+          Value: true
+        tool0:
+          Value: false
+      Marker Alpha: 1
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        odom_combined:
+          base_footprint:
+            base_link:
+              back_l:
+                {}
+              back_r:
+                {}
+              base_link_rm:
+                Link1:
+                  Link2:
+                    Link3:
+                      Link4:
+                        Link5:
+                          Link6:
+                            camera_link:
+                              camera_aligned_depth_to_color_frame:
+                                camera_color_optical_frame:
+                                  {}
+                              camera_color_frame:
+                                {}
+                              camera_depth_frame:
+                                camera_depth_optical_frame:
+                                  {}
+                            ee_link:
+                              {}
+                            tool0:
+                              gripper_link:
+                                {}
+                grasp_0:
+                  {}
+                grasp_1:
+                  {}
+                grasp_2:
+                  {}
+                grasp_3:
+                  {}
+                object0:
+                  {}
+                object1:
+                  {}
+                task:
+                  {}
+              front_l:
+                {}
+              front_r:
+                {}
+              left_wheel_link:
+                {}
+              right_wheel_link:
+                {}
+            gyro_link:
+              {}
+            laser:
+              {}
+      Update Interval: 0
+      Value: true
     - Alpha: 1
+      Auto Size:
+        Auto Size Factor: 1
+        Value: true
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
         Max Value: 10
@@ -425,60 +608,50 @@ Visualization Manager:
         Value: true
       Axis: Z
       Channel Name: intensity
-      Class: rviz/PointCloud2
+      Class: rviz/DepthCloud
       Color: 255; 255; 255
+      Color Image Topic: ""
       Color Transformer: RGB8
+      Color Transport Hint: raw
       Decay Time: 0
-      Enabled: false
-      Invert Rainbow: false
-      Max Color: 255; 255; 255
-      Min Color: 0; 0; 0
-      Name: PointCloud2
-      Position Transformer: XYZ
-      Queue Size: 10
-      Selectable: true
-      Size (Pixels): 3
-      Size (m): 0.009999999776482582
-      Style: Flat Squares
-      Topic: /camera/depth/color/points
-      Unreliable: false
-      Use Fixed Frame: true
-      Use rainbow: true
-      Value: false
-    - Alpha: 1
-      Autocompute Intensity Bounds: true
-      Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
-        Value: true
-      Axis: Z
-      Channel Name: intensity
-      Class: rviz/PointCloud2
-      Color: 255; 255; 255
-      Color Transformer: ""
-      Decay Time: 0
+      Depth Map Topic: /camera/aligned_depth_to_color/image_raw
+      Depth Map Transport Hint: raw
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
-      Name: PointCloud2
-      Position Transformer: ""
-      Queue Size: 10
+      Name: DepthCloud
+      Occlusion Compensation:
+        Occlusion Time-Out: 30
+        Value: false
+      Position Transformer: XYZ
+      Queue Size: 5
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic: /scene_cloud
-      Unreliable: false
+      Topic Filter: true
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
+    - Class: rviz/Image
+      Enabled: false
+      Image Topic: /camera/color/image_raw
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Image
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /visualization_marker_array
       Name: MarkerArray
       Namespaces:
-        {}
+        grasps: true
+        roi: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -491,14 +664,14 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: ""
+      Color Transformer: Intensity
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
       Name: PointCloud2
-      Position Transformer: ""
+      Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
@@ -508,24 +681,12 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
-    - Class: rviz/Image
-      Enabled: true
-      Image Topic: /camera/color/image_raw
-      Max Value: 1
-      Median window: 5
-      Min Value: 0
-      Name: Image
-      Normalize Range: true
-      Queue Size: 2
-      Transport Hint: raw
-      Unreliable: false
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: world
+    Fixed Frame: odom_combined
     Frame Rate: 30
   Name: root
   Tools:
@@ -536,26 +697,26 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/XYOrbit
-      Distance: 2.1300268173217773
+      Class: rviz/Orbit
+      Distance: 1.6104886531829834
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Field of View: 0.7853981852531433
+      Field of View: 0.75
       Focal Point:
-        X: -0.003180891275405884
-        Y: -0.000503838062286377
-        Z: -4.772508077621751e-07
-      Focal Shape Fixed Size: false
+        X: -0.02229473926126957
+        Y: -0.1908814013004303
+        Z: 0.55340975522995
+      Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5852036476135254
-      Target Frame: dummy
-      Yaw: 0.22035524249076843
+      Pitch: 0.4852035641670227
+      Target Frame: base_link
+      Yaw: 6.00994873046875
     Saved: ~
 Window Geometry:
   Displays:
@@ -571,7 +732,7 @@ Window Geometry:
     collapsed: false
   MotionPlanning - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000200000000000002a200000286fc0200000007fb000000100044006900730070006c006100790073010000003d000000dd000000c900fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a400fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000001600000016fc00000120000001a30000019a0100001cfa000000000100000002fb0000000a0049006d0061006700650100000000ffffffff0000007600fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670100000000000002a2000001f300ffffff00000001000002000000039efc0200000001fb0000002a004d006f00740069006f006e00200050006c0061006e006e0069006e00670020005400610073006b0073000000003d0000039e0000000000000000000002100000028600000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000001f300000286fc0200000006fc0000003d000002860000019a0100001cfa000000020100000003fb0000000a0049006d0061006700650100000000ffffffff0000007600fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670100000000ffffffff000001f300fffffffb000000100044006900730070006c0061007900730100000000000001f30000015600fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a00560069006500770073000000010c000000a4000000a400fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000001600000016000002bf0000028600000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 1208
