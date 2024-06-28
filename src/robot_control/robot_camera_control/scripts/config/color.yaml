@@ -11,9 +11,9 @@ colors:
   cabinet_handle:
     color_threshold:
       roi_min: [0, 0, 60]
-      roi_max: [60, 60, 150]
+      roi_max: [60, 60, 170]
       lower: [100, 30, 100]
-      upper: [255, 255, 200]
+      upper: [255, 255, 210]
     area_threshold:
       min_area: 1000
       max_area: 8000
