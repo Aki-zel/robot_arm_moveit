@@ -1,7 +1,7 @@
 <launch>
 
   <!-- specify the planning pipeline -->
-  <arg name="pipeline" default="ompl" />
+  <arg name="pipeline" default="ompl-chomp" />
 
   <!-- By default, we do not start a database (it can be large) -->
   <arg name="db" default="false" />
@@ -26,7 +26,7 @@
   This corresponds to moving around the real robot without the use of MoveIt.
   -->
   <arg name="use_gui" default="false" />
-  <arg name="use_rviz" default="true" />
+  <arg name="use_rviz" default="false" />
 
   <!-- If needed, broadcast static tf for robot root -->
   <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
@@ -36,9 +36,9 @@
 
   <!-- We do not have a robot connected, so publish fake joint states -->
   <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" unless="$(arg use_gui)">
-    <rosparam param="source_list">[/joint_states]</rosparam>
-  </node> -->
-  <!-- <node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" if="$(arg use_gui)">
+    <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
+  </node>
+  <node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" if="$(arg use_gui)">
     <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
   </node> -->
 

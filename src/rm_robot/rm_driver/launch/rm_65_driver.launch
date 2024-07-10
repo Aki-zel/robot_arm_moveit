@@ -6,7 +6,7 @@
     <arg name="Arm_Dof"                  default="6"/>               <!-- 机械臂自由度设置 -->
     <arg name="Arm_Type"                 default="RM65"/>            <!-- 机械臂型号设置 -->
     <arg name="Follow"                   default="false"/>           <!-- 高低跟随设置 false：低跟随 true：高跟随 -->
-    <arg name="Udp_IP"                   default="192.168.1ping.10"/>    <!-- 设置udp主动上报IP -->
+    <arg name="Udp_IP"                   default="192.168.2.10"/>    <!-- 设置udp主动上报IP -->
     <arg name="Udp_Port"                 default="8089"/>            <!-- 设置udp主动上报端口 -->
     <arg name="Udp_cycle"                default="5"/>               <!-- 设置udp主动上报周期（ms） 最低为5(200Hz)，需要为5的倍数 -->
     <arg name="Udp_force_coordinate"     default="0"/>               <!-- 设置六维力参考坐标系 -->

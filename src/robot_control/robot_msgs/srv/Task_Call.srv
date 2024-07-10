@@ -1,4 +1,4 @@
-int32 taskId
+string taskId
 
 ---
 

@@ -1,8 +1,13 @@
 <launch>
+  <!-- define capabilites that are loaded on start (space seperated) -->
+  <arg name="capabilities" default=""/>
+
+  <!-- inhibit capabilites (space seperated) -->
+  <arg name="disable_capabilities" default=""/>
   <!-- load OMPL planning pipeline, but add the CHOMP planning adapter. -->
   <include file="$(find rm_65_moveit_config)/launch/ompl_planning_pipeline.launch.xml">
     <arg name="planning_adapters"
-         default="default_planner_request_adapters/LimitMaxCartesianLinkSpeed
+         value="default_planner_request_adapters/LimitMaxCartesianLinkSpeed
                   default_planner_request_adapters/AddTimeParameterization
                   default_planner_request_adapters/FixWorkspaceBounds
                   default_planner_request_adapters/FixStartStateBounds

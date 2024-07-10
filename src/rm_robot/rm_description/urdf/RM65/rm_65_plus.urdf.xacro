@@ -462,11 +462,11 @@
   </joint>
 
   <!-- camera -->
-  <!-- <xacro:include filename="$(find rm_description)/urdf/sensors/_d415.urdf.xacro"/>
+  <xacro:include filename="$(find rm_description)/urdf/sensors/_d415.urdf.xacro"/>
     <xacro:sensor_d415  parent="tool0">
         <origin xyz="-0.05 0 0"
                 rpy="0 -1.57 0" />
-  </xacro:sensor_d415> -->
+  </xacro:sensor_d415>
 
   <!-- gripper -->
   <link name="gripper_link">
