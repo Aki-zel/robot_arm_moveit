@@ -1,7 +1,7 @@
 <launch>
 
   <!-- specify the planning pipeline -->
-  <arg name="pipeline" default="ompl" />
+  <arg name="pipeline" default="ompl-chomp" />
 
   <!-- By default, we do not start a database (it can be large) -->
   <arg name="db" default="false" />
@@ -26,7 +26,7 @@
   This corresponds to moving around the real robot without the use of MoveIt.
   -->
   <arg name="use_gui" default="false" />
-  <arg name="use_rviz" default="true" />
+  <arg name="use_rviz" default="false" />
 
   <!-- If needed, broadcast static tf for robot root -->
 

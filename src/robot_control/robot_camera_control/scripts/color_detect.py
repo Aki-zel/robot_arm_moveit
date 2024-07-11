@@ -154,7 +154,6 @@ class ColorDetectServer(BaseDetection):
                         center_x, center_y)
                     camera_xyz = np.round(np.array(camera_xyz), 3).tolist()
                     world_position = self.tf_transform(camera_xyz)
-
                     # 创建PoseStamped消息
                     pose = PoseStamped()
                     pose.header.stamp = rospy.Time.now()
@@ -181,7 +180,6 @@ class ColorDetectServer(BaseDetection):
 
                     response.labels.append(label)
                     response.positions.append(pose)
-                    self.tf_broad(world_position)
 
             else:
                 rospy.logwarn("No image received yet.")

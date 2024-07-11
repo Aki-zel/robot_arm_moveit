@@ -15,10 +15,12 @@
 #include <cv_bridge/cv_bridge.h>
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
-
+#include <moveit_visual_tools/moveit_visual_tools.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <geometry_msgs/Pose.h>
+#include <moveit_visual_tools/moveit_visual_tools.h>
+#include <std_msgs/ColorRGBA.h>
 using namespace std;
 
 

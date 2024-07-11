@@ -27,6 +27,11 @@ find_package(catkin REQUIRED COMPONENTS
   rm_msgs
   moveit_ros_planning_interface
   robot_msgs
+  moveit_visual_tools
+  rviz_visual_tools
+  yd_msgs
+  actionlib
+  actionlib_msgs
 )
 
 
@@ -124,7 +129,9 @@ find_package(Qt5 REQUIRED COMPONENTS Core Widgets Gui )
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES robot_moveit_control
- CATKIN_DEPENDS roscpp rospy std_msgs rviz  sensor_msgs cv_bridge image_transport tf2_eigen tf2_geometry_msgs tf2_ros tf2 geometry_msgs rm_msgs moveit_ros_planning_interface robot_msgs
+ CATKIN_DEPENDS roscpp rospy std_msgs rviz  sensor_msgs cv_bridge image_transport tf2_eigen tf2_geometry_msgs tf2_ros tf2 
+ geometry_msgs rm_msgs moveit_ros_planning_interface robot_msgs moveit_visual_tools rviz_visual_tools yd_msgs  actionlib
+ actionlib_msgs
 #  DEPENDS system_lib
 )
 set(QT_LIBRARIES Qt5::Core Qt5::Widgets Qt5::Gui)

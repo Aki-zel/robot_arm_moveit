@@ -1,7 +1,7 @@
 <launch>
     <group>
     <include file="$(find rm_bringup)/launch/rm_65_robot.launch" />
-    <!-- <include file="$(find rm_65_moveit_config)/launch/demo_realrobot.launch"/> -->
+    <include file="$(find rm_65_moveit_config)/launch/demo_realrobot.launch"/>
     <!-- <include file="$(find rm_65_moveit_config)/launch/demo.launch" /> -->
     <include file="$(find realsense2_camera)/launch/rs_camera.launch"/>
     <include file="$(find robot_moveit_control)/launch/static_tf.launch"/>

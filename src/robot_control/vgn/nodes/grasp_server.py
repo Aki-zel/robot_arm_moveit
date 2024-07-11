@@ -102,6 +102,7 @@ class GraspServer:
         return res
 
     def predict_grasps(self, req):
+        rospy.loginfo("Call PredictGrasps")
         # Construct the input grid
         voxel_size = self.tsdf.voxel_size
         # points, distances = from_cloud_msg(req.map_cloud)
