@@ -14,7 +14,7 @@ while True:
 
     # 定义柜子的HSV范围
     lower_cabinet = np.array([0, 0, 60])
-    upper_cabinet = np.array([60, 60, 150])
+    upper_cabinet = np.array([60, 60, 180])
 
     # 创建一个遮罩，范围内的颜色为柜子，其余部分为黑色
     cabinet_mask = cv2.inRange(hsv_image, lower_cabinet, upper_cabinet)

@@ -65,6 +65,7 @@ add_service_files(
   # Service2.srv
   Hand_Catch.srv
   Task_Call.srv
+  Objection_Detect.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -73,6 +74,7 @@ add_action_files(
   # Action1.action
   # Action2.action
   Call_Task.action
+  # Objection_Detect.action
 )
 
 ## Generate added messages and services with any dependencies listed here

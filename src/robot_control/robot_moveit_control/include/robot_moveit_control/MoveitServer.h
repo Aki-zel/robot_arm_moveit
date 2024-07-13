@@ -31,8 +31,9 @@ class MoveitServer
 {
 public:
 	MoveitServer(std::string &PLANNING_GROUP);
-	void go_home();
-	void go_pose(const std::string str);
+	bool go_home();
+	bool go_pose(const std::string str);
+	void getCurrentJoint(std::vector<double> &joint_group_positions);
 	bool move_j(const std::vector<double> &joint_group_positions, bool succeed = true);
 	bool move_p(const std::vector<double> &pose, bool succeed = true);
 	bool move_p(const geometry_msgs::Pose &msg, bool succeed = true);
