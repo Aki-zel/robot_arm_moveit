@@ -24,8 +24,8 @@ threshold:
   color_threshold:
     roi_min: [0, 0, 100]
     roi_max: [60, 60, 180]
-    lower: [100, 50, 150]
-    upper: [255, 255, 255]
+    lower: [100, 25, 100]
+    upper: [255, 255, 210]
   area_threshold:
     min_area: 1300
     max_area: 6000

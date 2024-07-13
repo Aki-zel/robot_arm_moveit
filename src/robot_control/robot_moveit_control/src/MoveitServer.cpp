@@ -276,7 +276,7 @@ void MoveitServer::initializeClaw()
 	this->collision_stage_pub.publish(msg);
 	ROS_INFO("Collision Stage 4 setup");
 	ROS_INFO("Claw initialization completed");
-	arm_.go_home();
+	go_home();
 }
 
 void MoveitServer::stop()

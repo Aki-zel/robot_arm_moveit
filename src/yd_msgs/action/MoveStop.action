@@ -1,0 +1,13 @@
+#client
+float64   Speed
+geometry_msgs/Pose2D  PoseSend
+uint8	  Id
+---
+#server
+bool   pose_state
+geometry_msgs/Pose2D  PoseBack
+
+---
+#feedback
+
+bool  workstate
