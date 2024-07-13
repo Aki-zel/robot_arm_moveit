@@ -88,8 +88,45 @@ class BaseDetection:
             world_point = tf2_geometry_msgs.do_transform_pose(
                 camera_point, transform)
             if world_point is not None:
-                rospy.loginfo("World point: %s", world_point)
-                # self.tf_broad(world_point)
+                # rospy.loginfo("World point: %s", world_point.pose)
+                
+                self.tf_broad(world_point)
+                return world_point
+            else:
+                return None
+        except (
+            tf2_ros.LookupException,
+            tf2_ros.ConnectivityException,
+            tf2_ros.ExtrapolationException,
+        ) as e:
+            rospy.logwarn("Exception while transforming: %s", e)
+            return None
+        
+    def tf_transform_name(self, position, name="base_link"):
+        x, y, z = position
+        camera_point = PoseStamped()
+        camera_point.header.frame_id = self.config['camera']['frame_id']
+        camera_point.pose.position.x = x
+        camera_point.pose.position.y = y
+        camera_point.pose.position.z = z
+        quaternion = tf.quaternion_from_euler(0, 0, 0)
+        camera_point.pose.orientation.w = quaternion[3]
+        camera_point.pose.orientation.x = quaternion[0]
+        camera_point.pose.orientation.y = quaternion[1]
+        camera_point.pose.orientation.z = quaternion[2]
+        try:
+            transform = self.tf_buffer.lookup_transform(
+                name,
+                self.config['camera']['frame_id'],
+                rospy.Time(0),
+                rospy.Duration(1),
+            )
+            world_point = tf2_geometry_msgs.do_transform_pose(
+                camera_point, transform)
+            if world_point is not None:
+                # rospy.loginfo("World point: %s", world_point.pose)
+                
+                self.tf_broad_name(world_point,name)
                 return world_point
             else:
                 return None
@@ -107,6 +144,15 @@ class BaseDetection:
         tfs.header.stamp = rospy.Time.now()
         tfs.child_frame_id = "object"+str(self.count)
         self.count=self.count+1
+        tfs.transform.translation = position.pose.position
+        tfs.transform.rotation = position.pose.orientation
+        self.tf_broadcaster.sendTransform(tfs)
+    
+    def tf_broad_name(self, position,name):
+        tfs = TransformStamped()
+        tfs.header.frame_id = name
+        tfs.header.stamp = rospy.Time.now()
+        tfs.child_frame_id = "objet_name"
         tfs.transform.translation = position.pose.position
         tfs.transform.rotation = position.pose.orientation
         self.tf_broadcaster.sendTransform(tfs)

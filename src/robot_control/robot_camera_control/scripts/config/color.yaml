@@ -16,7 +16,7 @@ colors:
       upper: [255, 255, 210]
     area_threshold:
       min_area: 800
-      max_area: 5000
+      max_area: 4000
   drawer:
     color_threshold:
         lower: [0, 0, 150]

@@ -30,7 +30,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	tfListener = new tf2_ros::TransformListener(tfBuffer);
 	tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
 	collision_stage_pub = nh_.advertise<std_msgs::Int16>("/rm_driver/Set_Collision_Stage", 1);
-	moveL_cmd=nh_.advertise<rm_msgs::MoveL>("/rm_driver/MoveL_Cmd",10);
+	moveL_cmd = nh_.advertise<rm_msgs::MoveL>("/rm_driver/MoveL_Cmd", 10);
 	joint_model_group = arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 	ROS_INFO_NAMED("tutorial", "Start MOVEITSERVER");
 	// ROS_INFO("%s", arm_.getEndEffectorLink().c_str());
@@ -131,15 +131,15 @@ bool MoveitServer::Planer() // 规划求解
 
 	return success;
 }
-void MoveitServer::go_home() // 移动到预设位姿
+bool MoveitServer::go_home() // 移动到预设位姿
 {
 	arm_.setNamedTarget("zero");
-	Planer();
+	return Planer();
 }
-void MoveitServer::go_pose(const std::string str) // 移动到预设位姿
+bool MoveitServer::go_pose(const std::string str) // 移动到预设位姿
 {
 	arm_.setNamedTarget(str);
-	Planer();
+	return Planer();
 }
 
 geometry_msgs::Pose MoveitServer::setPoint(const double x, const double y, const double z)
@@ -265,6 +265,8 @@ void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
 
 void MoveitServer::initializeClaw()
 {
+	arm_.setNamedTarget("zero");
+	arm_.asyncMove();
 	Set_Tool_DO(1, false);
 	Set_Tool_DO(2, false);
 	Set_Tool_DO(1, true);
@@ -283,6 +285,11 @@ void MoveitServer::stop()
 {
 	arm_.stop();
 	arm_.clearPoseTarget();
+}
+void MoveitServer::getCurrentJoint(std::vector<double> &joint_group_positions)
+{
+	moveit::core::RobotStatePtr current_state = arm_.getCurrentState();
+	current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
 }
 bool MoveitServer::move_j(const std::vector<double> &joint_group_positions, bool succeed) // 按目标关节位置移动
 {
@@ -448,8 +455,8 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 			trajectory_processing::IterativeSplineParameterization ipp;
 			success = ipp.computeTimeStamps(rt, 1, 1); // 速度和加速度缩放因子
 			//   trajectory_processing::TimeOptimalTrajectoryGeneration totg;
-            // bool success = totg.computeTimeStamps(rt); // 使用 TOTG 方法
-			
+			// bool success = totg.computeTimeStamps(rt); // 使用 TOTG 方法
+
 			if (success)
 			{
 				// ROS_INFO("Time parametrization succeeded");
@@ -470,13 +477,14 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 	}
 	return succeed;
 }
-bool MoveitServer::move_l_cmd(const geometry_msgs::Pose &position, bool succeed ){
+bool MoveitServer::move_l_cmd(const geometry_msgs::Pose &position, bool succeed)
+{
 	rm_msgs::MoveL msg;
 	geometry_msgs::TransformStamped transformStamped = this->tfBuffer.lookupTransform("Link6", "ee_link", ros::Time(0));
 
-	msg.Pose=calculateTargetTransform(position,transformStamped.transform);
-	msg.speed=0.20;
-	msg.trajectory_connect=1;
+	msg.Pose = calculateTargetTransform(position, transformStamped.transform);
+	msg.speed = 0.20;
+	msg.trajectory_connect = 1;
 	moveL_cmd.publish(msg);
 	ros::Duration(5).sleep();
 	return true;

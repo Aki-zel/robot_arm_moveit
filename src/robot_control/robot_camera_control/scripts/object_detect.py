@@ -11,9 +11,15 @@ import fastdeploy.vision as vision
 import fastdeploy as fd
 from robot_msgs.srv import *
 from cv_bridge import CvBridge
+# from robot_msgs.srv._Objection_Detect import Objection_DetectResponse
 import rospy
+import actionlib
+from geometry_msgs.msg import PoseStamped, TransformStamped
 
 current_work_dir = os.path.dirname(__file__)
+server = None
+
+
 class Yolo(BaseDetection):
     def __init__(self, config):
         super().__init__(config)
@@ -49,6 +55,8 @@ class Yolo(BaseDetection):
         if type == "ort":
             self.option.use_cpu()
             self.option.use_ort_backend()
+        if type == "gpu":
+            self.option.use_gpu()
         if type == "trt":
             self.option.use_gpu()
             self.option.use_trt_backend()
@@ -102,38 +110,36 @@ def getObjCoordinate(request):
             # t_end = time.time()  # 结束计时
             # print("预测时间" + str((t_end-t_start)*1000))  # 打印预测时间
             res = model.visual(color_image)  # 可视化检测结果
-            cv2.imshow("res", res)
-            cv2.waitKey(0)
+            # cv2.imshow("res", res)
+            # cv2.waitKey(0)
             object_list = model.getFilteredObjects()  # 获取筛选后的目标信息列表
             # print("目标数量" + str(len(object_list)))
-            tf_published = False  # 布尔变量，用于跟踪是否已经发布了TF坐标系
             if object_list:
                 for obj in object_list:
                     label = obj["label"]
-                    box_coords = obj["box_coordinates"]
-                    # bottom_right = (box_coords[3] + 100, box_coords[2] + 100)
-                    # top_left = (box_coords[1] + 100, box_coords[0] + 100)
-                    ux = int((box_coords[0] + box_coords[2]) / 2)  # 计算物体中心点x坐标
-                    uy = int((box_coords[1] + box_coords[3]) / 2)  # 计算物体中心点y坐标
-                    # grasp = model.grasp_gen.Predict(
-                    #     color_image, depth_image, cam_info, top_left, bottom_right
-                    # )
-                    # 获取物体的三维坐标
-                    camera_xyz = model.getObject3DPosition(ux, uy)
-                    camera_xyz = np.round(
-                        np.array(camera_xyz), 3).tolist()  # 转成3位小数
-                    print(camera_xyz)
-                    if camera_xyz[2] < 100.0 and camera_xyz[2] != 0:
-                        world_pose = model.tf_transform(
-                            camera_xyz)  # 将目标物体从相机坐标系转换到世界坐标系
-                        # model.tf_broad(camera_xyz)
-                        positions.append(world_pose)
-                        # positions.extend(camera_xyz)
-                        labels.append(label)
-                        # 仅发布第一个位置的TF坐标系
-                        if not tf_published:  # 只发布置信度最高的目标TF
-                            model.tf_broad(world_pose)
-                            tf_published = True  # 将标志位设置为True，表示已发布TF坐标系
+                    if label == request.color_name:
+                        box_coords = obj["box_coordinates"]
+                        # bottom_right = (box_coords[3] + 100, box_coords[2] + 100)
+                        # top_left = (box_coords[1] + 100, box_coords[0] + 100)
+                        # 计算物体中心点x坐标
+                        ux = int((box_coords[0] + box_coords[2]) / 2)
+                        # 计算物体中心点y坐标
+                        uy = int((box_coords[1] + box_coords[3]) / 2)
+                        # grasp = model.grasp_gen.Predict(
+                        #     color_image, depth_image, cam_info, top_left, bottom_right
+                        # )
+                        # 获取物体的三维坐标
+                        camera_xyz = model.getObject3DPosition(ux, uy)
+                        camera_xyz = np.round(
+                            np.array(camera_xyz), 3).tolist()  # 转成3位小数
+                        # print(camera_xyz)
+                        if camera_xyz[2] < 100.0 and camera_xyz[2] != 0:
+                            world_pose = model.tf_transform(
+                                camera_xyz)  # 将目标物体从相机坐标系转换到世界坐标系
+                            # model.tf_broad(camera_xyz)
+                            positions.append(world_pose)
+                            # positions.extend(camera_xyz)
+                            labels.append(label)
             respond.labels = labels
             respond.positions = positions
             print(respond.labels, respond.positions)
@@ -142,8 +148,54 @@ def getObjCoordinate(request):
         rospy.loginfo("[ERROR] %s" % r)
 
 
+def realtime_detect_call_back(goal):
+    global model
+    run = goal.run
+    camera_xyz=[0,0,0]
+    if run:
+        rospy.loginfo("检索目标")
+        feedback = Objection_DetectResponse()
+        feedback.result = False
+        world_pose = PoseStamped()
+        feedback.position = world_pose
+        try:
+            color_image = model.cv_image
+            model.Predicts(color_image)
+            res = model.visual(color_image)  # 可视化检测结果
+            image_path = os.path.join(current_work_dir, "object.png")
+            cv2.imwrite(image_path, res)
+            object_list = model.getFilteredObjects()
+            if object_list:
+                for obj in object_list:
+                    label = obj["label"]
+                    if label == "drawerhandle":
+                        feedback.result = True
+                        box_coords = obj["box_coordinates"]
+                        # 计算物体中心点x坐标
+                        ux = int((box_coords[0] + box_coords[2]) / 2)
+                        # 计算物体中心点y坐标
+                        uy = int((box_coords[1] + box_coords[3]) / 2)
+                        # 获取物体的三维坐标
+                        camera_xyz = model.getObject3DPosition(ux, uy)
+                        camera_xyz = np.round(
+                            np.array(camera_xyz), 3).tolist()  # 转成3位小数
+                        # print(label,camera_xyz)
+                        if camera_xyz[2] != 0:
+                            world_pose = model.tf_transform_name(
+                                camera_xyz, "base_link")  # 将目标物体从相机坐标系转换到世界坐标系
+                            feedback.position = world_pose
+                            if 0.38<= camera_xyz[2] < 0.485 and  380<=ux<=440:
+                                feedback.success = True
+
+        except Exception as r:
+            rospy.loginfo("[ERROR] %s" % r)
+        print(feedback.result, feedback.position.pose.position.x,
+              feedback.position.pose.position.y, feedback.position.pose.position.z,camera_xyz[2])
+        return feedback
+
+
 if __name__ == '__main__':
-  
+
     config_path = current_work_dir + "/config/config.yaml"
     with open(config_path, "r") as file:
         config = yaml.safe_load(file)
@@ -151,4 +203,8 @@ if __name__ == '__main__':
     model = Yolo(config)
 
     service = rospy.Service("object_detect", Hand_Catch, getObjCoordinate)
+    server = rospy.Service(
+        "object_realtime_detect", Objection_Detect, realtime_detect_call_back)
+    rospy.loginfo("服务启动")
+
     rospy.spin()
