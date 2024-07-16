@@ -23,7 +23,8 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	arm_.allowReplanning(true);
 	arm_.setPlanningTime(5.0);
 	// arm_.setPlannerId("LBTRRT");
-	arm_.setPlannerId("TRRT");
+	// arm_.setPlannerId("TRRT");
+	arm_.setPlannerId("PTP");
 	// arm_.setPlannerId("RRTConnect");
 	// arm_.setPlannerId("RRTstar");
 	// arm_.setEndEffectorLink("ee_link");
@@ -44,64 +45,6 @@ void MoveitServer::setMaxVelocity(double speed)
 {
 	arm_.setMaxAccelerationScalingFactor(speed);
 	arm_.setMaxVelocityScalingFactor(speed);
-}
-double MoveitServer::degreesToRadians(double degrees)
-{
-	return round((degrees * M_PI / 180.0), 4);
-}
-geometry_msgs::Pose MoveitServer::calculateTargetPose(const geometry_msgs::Pose &target_pose, const geometry_msgs::Pose &trans_pose)
-{
-	tf2::Transform target_tf;
-	tf2::fromMsg(target_pose, target_tf);
-
-	tf2::Transform relative_tf;
-	tf2::fromMsg(trans_pose, relative_tf);
-
-	tf2::Transform end_target_tf = target_tf * relative_tf.inverse();
-
-	geometry_msgs::Pose end_target_pose;
-	tf2::toMsg(end_target_tf, end_target_pose);
-	return end_target_pose;
-}
-geometry_msgs::Pose MoveitServer::calculateTargetTransform(const geometry_msgs::Pose &target_pose, const geometry_msgs::Transform &relative_transform)
-{
-	tf2::Transform target_tf;
-	tf2::fromMsg(target_pose, target_tf);
-
-	tf2::Transform relative_tf;
-	tf2::fromMsg(relative_transform, relative_tf);
-
-	tf2::Transform end_target_tf = target_tf * relative_tf.inverse();
-
-	geometry_msgs::Pose end_target_pose;
-	tf2::toMsg(end_target_tf, end_target_pose);
-	return end_target_pose;
-}
-geometry_msgs::Pose MoveitServer::transformPose(const geometry_msgs::Pose &pose, const tf2::Transform &transform)
-{
-	tf2::Transform pose_transform;
-	tf2::fromMsg(pose, pose_transform);
-
-	tf2::Transform result_transform = transform * pose_transform;
-	geometry_msgs::Pose result_pose;
-	tf2::toMsg(result_transform, result_pose);
-	return result_pose;
-}
-
-geometry_msgs::Pose MoveitServer::moveFromPose(const geometry_msgs::Pose &pose, double distance)
-{
-	tf2::Transform pose_transform;
-	tf2::fromMsg(pose, pose_transform);
-	// 构造一个后退的变换矩阵
-	tf2::Vector3 backward_vector(0.0, 0.0, distance); // 假设后退方向沿Z轴
-	tf2::Vector3 transformed_vector = pose_transform.getBasis() * backward_vector;
-
-	tf2::Transform back_transform;
-	back_transform.setIdentity();
-	back_transform.setOrigin(transformed_vector);
-
-	// 将目标位置应用后退变换矩阵
-	return transformPose(pose, back_transform);
 }
 bool MoveitServer::Planer() // 规划求解
 {
@@ -189,12 +132,7 @@ geometry_msgs::Pose MoveitServer::setPoint(const std::vector<double> &pose)
 	return target_pose1;
 }
 
-double MoveitServer::round(double num, int exponent) // 四舍五入浮点数
-{
-	double multiplied = std::round(num * std::pow(10, exponent));
-	double result = multiplied / std::pow(10, exponent);
-	return result;
-}
+
 geometry_msgs::Pose MoveitServer::getCurrent_Pose()
 {
 	geometry_msgs::PoseStamped current_pose;
@@ -474,18 +412,6 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 		}
 	}
 	return succeed;
-}
-bool MoveitServer::move_l_cmd(const geometry_msgs::Pose &position, bool succeed)
-{
-	rm_msgs::MoveL msg;
-	geometry_msgs::TransformStamped transformStamped = this->tfBuffer.lookupTransform("Link6", "ee_link", ros::Time(0));
-
-	msg.Pose = calculateTargetTransform(position, transformStamped.transform);
-	msg.speed = 0.20;
-	msg.trajectory_connect = 1;
-	moveL_cmd.publish(msg);
-	ros::Duration(5).sleep();
-	return true;
 }
 
 MoveitServer::~MoveitServer()

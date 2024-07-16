@@ -8,10 +8,10 @@
  */
 
 #include <iostream>
+#include <bits/stdc++.h>
 #include <thread>
-#include "robot.h"
-#include "print_helper.hpp"
-#include "utility.h"
+#include "rokae/robot.h"
+#include "rokae/utility.h"
 
 using namespace rokae;
 std::ostream &os = std::cout;
@@ -33,7 +33,7 @@ namespace Workflow {
    void setPoint(unsigned point_index) {
      if(point_index >= point_list_.size()) {
        // 自行添加异常处理
-       print(std::cerr, "标定点下标超出范围");
+      //  // print(std::cerr, "标定点下标超出范围");
        return;
      }
      error_code ec;
@@ -79,7 +79,7 @@ namespace Workflow {
      }
    }
    if(!outofRange) {
-     print(std::cout, "当前轴角度处于软限位内，无需恢复");
+    //  // print(std::cout, "当前轴角度处于软限位内，无需恢复");
      return;
    }
 
@@ -99,7 +99,7 @@ namespace Workflow {
        while (running) {
          std::this_thread::sleep_for(std::chrono::milliseconds(100));
          auto st = robot->operationState(ec);
-         print(std::cout, st);
+        //  // print(std::cout, st);
          if(st == OperationState::jog){
            running = false;
          }
@@ -121,16 +121,16 @@ void example_calibrateFrame(Robot_T<Wt, DoF> *robot) {
   int point_count = 4;
   Workflow::CalibrateFrame calibrate_frame(*robot, FrameType::tool, point_count, true);
   for(int i = 0; i < point_count; i++) {
-    print(std::cout, "将机器人Jog到标定点，按回车确认");
+    // // print(std::cout, "将机器人Jog到标定点，按回车确认");
     while(getchar() != '\n');
     calibrate_frame.setPoint(i);
   }
   error_code ec;
   FrameCalibrationResult calibrate_result = calibrate_frame.confirm(ec);
   if(ec) {
-    print(std::cerr, "标定失败:", ec);
+    // // print(std::cerr, "标定失败:", ec);
   } else {
-    print(std::cout, "标定成功，结果 -", calibrate_result.frame, "\n偏差:", calibrate_result.errors);
+    // // print(std::cout, "标定成功，结果 -", calibrate_result.frame, "\n偏差:", calibrate_result.errors);
   }
 }
 
@@ -142,8 +142,8 @@ void example_basicOperation(Robot_T<wt, dof> *robot){
   error_code ec;
   // *** 查询信息 ***
   auto robotinfo = robot->robotInfo(ec);
-  print(os, "控制器版本号:", robotinfo.version, "机型:", robotinfo.type);
-  print(os, "xCore-SDK版本:", robot->sdkVersion());
+  // print(os, "控制器版本号:", robotinfo.version, "机型:", robotinfo.type);
+  // print(os, "xCore-SDK版本:", robot->sdkVersion());
 
   // *** 获取机器人当前位姿，轴角度，基坐标系等信息 ***
   auto joint_pos = robot->jointPos(ec); // 轴角度 [rad]
@@ -152,8 +152,8 @@ void example_basicOperation(Robot_T<wt, dof> *robot){
   auto tcp_xyzabc = robot->posture(CoordinateType::endInRef, ec);
   auto flan_cart = robot->cartPosture(CoordinateType::flangeInBase, ec);
   robot->baseFrame(ec); // 基坐标系
-  print(os, "末端相对外部参考坐标系位姿", tcp_xyzabc);
-  print(os, "法兰相对基坐标系 -", flan_cart);
+  // print(os, "末端相对外部参考坐标系位姿", tcp_xyzabc);
+  // print(os, "法兰相对基坐标系 -", flan_cart);
 
   // *** 计算逆解 & 正解 ***
   auto model = robot->model();
@@ -170,7 +170,7 @@ void example_drag(BaseCobot *robot) {
   robot->setPowerState(false, ec); // 打开拖动之前，需要机械臂处于手动模式下电状态
   // 笛卡尔空间，自由拖动
   robot->enableDrag(DragParameter::cartesianSpace, DragParameter::freely, ec);
-  print(os, "打开拖动", ec, "按回车继续");
+  // print(os, "打开拖动", ec, "按回车继续");
   std::this_thread::sleep_for(std::chrono::seconds(2)); //等待切换控制模式
   while(getchar() != '\n');
   robot->disableDrag(ec);
@@ -182,10 +182,10 @@ void example_drag(BaseCobot *robot) {
  */
 void example_io_register(BaseRobot *robot) {
   error_code ec;
-  print(os, "DO1_0当前信号值为:", robot->getDO(1,0,ec));
+  // // print(os, "DO1_0当前信号值为:", robot->getDO(1,0,ec));
   robot->setSimulationMode(true, ec); // 只有在打开输入仿真模式下才可以设置DI
   robot->setDI(0, 2, true, ec);
-  print(os, "DI0_2当前信号值:", robot->getDI(0, 2, ec));
+  // // print(os, "DI0_2当前信号值:", robot->getDI(0, 2, ec));
   robot->setSimulationMode(false, ec); // 关闭仿真模式
 
   // 读取单个寄存器，类型为float
@@ -214,14 +214,14 @@ void example_jog(BaseRobot *robot) {
   error_code ec;
   robot->setMotionControlMode(rokae::MotionControlMode::NrtCommand, ec);
   robot->setOperateMode(rokae::OperateMode::manual, ec); // 手动模式下jog
-  print(os, "准备Jog机器人, 需手动模式上电, 请确认已上电后按回车键");
+  // // print(os, "准备Jog机器人, 需手动模式上电, 请确认已上电后按回车键");
   // 对于有外接使能开关的情况，需要按住开关手动上电
   robot->setPowerState(true, ec);
 
-  print(os, "-- 开始Jog机器人-- \n世界坐标系下, 沿Z+方向运动50mm, 速率50%，等待机器人停止运动后按回车继续");
+  // // print(os, "-- 开始Jog机器人-- \n世界坐标系下, 沿Z+方向运动50mm, 速率50%，等待机器人停止运动后按回车继续");
   robot->startJog(JogOpt::world, 0.5, 50, 2, true, ec);
   while(getchar() != '\n');
-  print(os, "轴空间，6轴负向连续转动，速率5%，按回车停止Jog");
+  // // print(os, "轴空间，6轴负向连续转动，速率5%，按回车停止Jog");
   robot->startJog(JogOpt::jointSpace, 0.05, 5000, 5, false, ec);
   while(getchar() != '\n'); // 按回车停止
   robot->stop(ec); // jog结束必须调用stop()停止
@@ -233,12 +233,12 @@ void example_jog(BaseRobot *robot) {
 void example_avoidSingularityJog(xMateRobot &robot) {
   error_code ec;
   robot.setOperateMode(rokae::OperateMode::manual, ec); // 手动模式下jog
-  print(os, "准备Jog机器人, 需手动模式上电, 请确认已上电后按回车键");
+  // // print(os, "准备Jog机器人, 需手动模式上电, 请确认已上电后按回车键");
   // 对于有外接使能开关的情况，需要按住开关手动上电
   robot.setPowerState(true, ec);
   while(getchar() != '\n');
 
-  print(os, "-- 开始Jog机器人-- \n奇异规避模式, 沿Y+方向运动50mm, 速率20%，等待机器人停止运动后按回车继续");
+  // // print(os, "-- 开始Jog机器人-- \n奇异规避模式, 沿Y+方向运动50mm, 速率20%，等待机器人停止运动后按回车继续");
   robot.startJog(JogOpt::singularityAvoidMode, 0.2, 50, 1, true, ec);
   while(getchar() != '\n'); // 按回车停止
   robot.stop(ec); // jog结束必须调用stop()停止

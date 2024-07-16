@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.0.2)
 project(rokae_robot)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
-
+add_compile_options(-std=c++17)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -12,12 +14,28 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
 )
-set(XCORE_SDK_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
-set(XCORE_SDK_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
-## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
-find_library(XCORE_SDK_LIB NAMES xCoreSDK PATHS ${XCORE_SDK_LIB_DIR} NO_DEFAULT_PATH)
 
+add_library(xmatemodel_lib STATIC IMPORTED)
+add_library(xCoreSDK_lib SHARED IMPORTED GLOBAL)
+add_library(xCoreSDK_static STATIC IMPORTED GLOBAL)
+set_target_properties(xCoreSDK_lib PROPERTIES
+INTERFACE_LINK_LIBRARIES xmatemodel_lib)
+set(XCORE_SDK_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
+set(XCORE_SDK_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/rokae)
+set_target_properties(xmatemodel_lib PROPERTIES
+IMPORTED_LOCATION ${XCORE_SDK_LIB_DIR}/libxMateModel.a)
+set_target_properties(xCoreSDK_lib PROPERTIES
+IMPORTED_LOCATION ${XCORE_SDK_LIB_DIR}/libxCoreSDK.so.0.3.4
+)
+set_target_properties(xCoreSDK_static PROPERTIES
+IMPORTED_LOCATION ${XCORE_SDK_LIB_DIR}/libxCoreSDK.a
+INTERFACE_LINK_LIBRARIES xmatemodel_lib
+)
+# add_library(Rokae::Rokae ALIAS xCoreSDK_lib)
+add_library(Rokae::Rokae ALIAS xCoreSDK_static)
+## System dependencies are found with CMake's conventions
+find_package(Boost REQUIRED )
+find_package(Eigen3 REQUIRED )
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -120,6 +138,8 @@ include_directories(
 include
   ${catkin_INCLUDE_DIRS}
   ${XCORE_SDK_INCLUDE_DIR}
+  ${Boost_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
 
 ## Declare a C++ library
@@ -150,9 +170,9 @@ add_dependencies(example ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_T
 ## Specify libraries to link a library or executable target against
 target_link_libraries(example
   ${catkin_LIBRARIES}
-  XCORE_SDK_LIB
+  Rokae::Rokae
 )
-
+target_compile_definitions(example PUBLIC XMATEMODEL_LIB_SUPPORTED)
 #############
 ## Install ##
 #############

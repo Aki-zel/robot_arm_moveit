@@ -26,6 +26,7 @@
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
 #include <moveit/trajectory_processing/iterative_spline_parameterization.h>
+#include <robotTool.h>
 typedef actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction> MoveGroupClient;
 class MoveitServer
 {
@@ -44,21 +45,14 @@ public:
 	bool move_l(const std::vector<std::vector<double>> &posees, bool succeed = true);
 	bool move_l(const std::vector<geometry_msgs::Pose> Points, bool succeed = true);
 	bool move_l(const geometry_msgs::Pose &position, bool succeed = true);
-	bool move_l_cmd(const geometry_msgs::Pose &position, bool succeed = true);
 	void Set_Tool_DO(int num, bool state);
 	geometry_msgs::Transform getCurrent_State();
 	geometry_msgs::Pose getCurrent_Pose();
 	bool Planer();
-	double round(double num, int exponent);
 	geometry_msgs::Pose setPoint(const double x, const double y, const double z);
 	geometry_msgs::Pose setPoint(const std::vector<double> &pose);
 	void stop();
 	void initializeClaw();
-	double degreesToRadians(double degrees);
-	geometry_msgs::Pose transformPose(const geometry_msgs::Pose &pose, const tf2::Transform &transform);
-	geometry_msgs::Pose moveFromPose(const geometry_msgs::Pose &pose, double distance);
-	geometry_msgs::Pose calculateTargetTransform(const geometry_msgs::Pose &target_pose, const geometry_msgs::Transform &relative_transform);
-	geometry_msgs::Pose calculateTargetPose(const geometry_msgs::Pose &target_pose, const geometry_msgs::Pose &trans_pose);
 	void setMaxVelocity(double speed);
 	void setCollisionMatrix();
 	~MoveitServer();
