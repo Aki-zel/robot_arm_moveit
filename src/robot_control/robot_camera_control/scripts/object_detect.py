@@ -90,8 +90,9 @@ class Yolo(BaseDetection):
             }
             filtered_objects.append(object_info)
         sorted_objects = sorted(
-            filtered_objects, key=lambda x: x["score"], reverse=True
+            filtered_objects, key=lambda obj: obj["box_coordinates"][1]
         )
+        # filtered_objects.sort(key=lambda obj: obj["box_coordinates"][1])
         return sorted_objects
 
 
@@ -99,7 +100,7 @@ def getObjCoordinate(request):
     global model
     labels = []
     positions = []
-
+    print(getObjCoordinate)
     run = request.run  # 获取请求中的标志位，判断是否执行检测
     respond = Hand_CatchResponse()  # 创建一个服务响应对象
     try:
@@ -117,6 +118,7 @@ def getObjCoordinate(request):
             if object_list:
                 for obj in object_list:
                     label = obj["label"]
+                    # print(label, request.color_name)
                     if label == request.color_name:
                         box_coords = obj["box_coordinates"]
                         # bottom_right = (box_coords[3] + 100, box_coords[2] + 100)
@@ -132,7 +134,7 @@ def getObjCoordinate(request):
                         camera_xyz = model.getObject3DPosition(ux, uy)
                         camera_xyz = np.round(
                             np.array(camera_xyz), 3).tolist()  # 转成3位小数
-                        # print(camera_xyz)
+                        print(camera_xyz)
                         if camera_xyz[2] < 100.0 and camera_xyz[2] != 0:
                             world_pose = model.tf_transform(
                                 camera_xyz)  # 将目标物体从相机坐标系转换到世界坐标系
@@ -183,8 +185,9 @@ def realtime_detect_call_back(goal):
                         if camera_xyz[2] != 0:
                             world_pose = model.tf_transform_name(
                                 camera_xyz, "base_link")  # 将目标物体从相机坐标系转换到世界坐标系
+                            print(ux)
                             feedback.position = world_pose
-                            if 0.38<= camera_xyz[2] < 0.485 and  380<=ux<=440:
+                            if 0.38<= camera_xyz[2] < 0.485 and  290<=ux<=420:
                                 feedback.success = True
 
         except Exception as r:

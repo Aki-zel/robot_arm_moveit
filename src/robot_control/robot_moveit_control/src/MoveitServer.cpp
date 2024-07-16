@@ -231,7 +231,6 @@ geometry_msgs::Transform MoveitServer::getCurrent_State()
 		ROS_WARN("%s", ex.what());
 	}
 
-	// If the lookupTransform fails, return an identity transform
 	geometry_msgs::Transform identity;
 	identity.translation.x = 0.0;
 	identity.translation.y = 0.0;

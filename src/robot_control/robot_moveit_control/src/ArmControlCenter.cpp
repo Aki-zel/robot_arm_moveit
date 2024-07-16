@@ -47,7 +47,7 @@ public:
     void initialize_service_client(ros::NodeHandle nh)
     {
 
-        object_client = nh.serviceClient<robot_msgs::Hand_Catch>("objection_detect");
+        object_client = nh.serviceClient<robot_msgs::Hand_Catch>("object_detect");
         color_client = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect");
         resetmap = nh.serviceClient<std_srvs::Empty>("reset_map");
         toggle = nh.serviceClient<std_srvs::SetBool>("toggle_integration");
@@ -305,31 +305,31 @@ public:
                     // for (auto pose : ps)
                     // {
 
-                        geometry_msgs::Pose pose1;
-                        // publishStaticTFwithRot(pose);
-                        // success = arm.movself.e_p(pose);
-                        pose1 = arm.calculateTargetPose(p.pose, arm.setPoint(std::vector<double>{0, 0, 0.02, 0, 0, 0}));
-                        success = arm.move_p(pose1, success);
-                        pose1 = arm.calculateTargetPose(p.pose, arm.setPoint(std::vector<double>{0, 0, -0.01, 0, 0, 0}));
-                        success = arm.move_l(pose1, success);
-                        arm.Set_Tool_DO(2, true);
-                        pose1 = arm.calculateTargetPose(p.pose, arm.setPoint(std::vector<double>{0, 0, 0.05, 0, 0, 0}));
-                        success = arm.move_l(pose1, success);
-                        // success = arm.move_l(pose, success);
-                        if (success)
-                        {
-                            success = arm.move_p(start_pose);
-                            // 放置物品到车上
+                    geometry_msgs::Pose pose1;
+                    // publishStaticTFwithRot(pose);
+                    // success = arm.movself.e_p(pose);
+                    pose1 = arm.calculateTargetPose(p.pose, arm.setPoint(std::vector<double>{0, 0, 0.02, 0, 0, 0}));
+                    success = arm.move_p(pose1, success);
+                    pose1 = arm.calculateTargetPose(p.pose, arm.setPoint(std::vector<double>{0, 0, -0.01, 0, 0, 0}));
+                    success = arm.move_l(pose1, success);
+                    arm.Set_Tool_DO(2, true);
+                    pose1 = arm.calculateTargetPose(p.pose, arm.setPoint(std::vector<double>{0, 0, 0.05, 0, 0, 0}));
+                    success = arm.move_l(pose1, success);
+                    // success = arm.move_l(pose, success);
+                    if (success)
+                    {
+                        success = arm.move_p(start_pose);
+                        // 放置物品到车上
 
-                            success = arm.move_l(arm.setPoint(std::vector<double>{-0.145, -0.137, 0.2, -3.1415, 0, 0}), success);
-                            success = arm.move_l(arm.setPoint(std::vector<double>{-0.145, -0.137, 0.02, -3.1415, 0, 0}), success);
-                            arm.Set_Tool_DO(2, false);
-                            success = arm.move_l(arm.setPoint(std::vector<double>{-0.145, -0.137, 0.2, -3.1415, 0, 0}), success);
-                        }
+                        success = arm.move_l(arm.setPoint(std::vector<double>{-0.145, -0.137, 0.2, -3.1415, 0, 0}), success);
+                        success = arm.move_l(arm.setPoint(std::vector<double>{-0.145, -0.137, 0.02, -3.1415, 0, 0}), success);
+                        arm.Set_Tool_DO(2, false);
+                        success = arm.move_l(arm.setPoint(std::vector<double>{-0.145, -0.137, 0.2, -3.1415, 0, 0}), success);
+                    }
 
-                        // success = arm.move_p(start_pose);
-                        if (success)
-                            break;
+                    // success = arm.move_p(start_pose);
+                    if (success)
+                        break;
                     // }
                     ps.clear();
                 }
@@ -362,9 +362,9 @@ public:
             geometry_msgs::Pose target, target1, target2, target3, target4;
             robot_msgs::Hand_Catch run;
             run.request.run = true;
-            run.request.color_name = "cabinet_handle";
+            run.request.color_name = "drawerhandle";
             // object_client.call(run);
-            if (color_client.call(run) && !run.response.positions.empty())
+            if (object_client.call(run) && !run.response.positions.empty())
             {
                 target = run.response.positions[1].pose;
                 target = arm.setPoint(std::vector<double>{target.position.x, target.position.y, target.position.z, arm.degreesToRadians(90), arm.degreesToRadians(90), 0});
@@ -372,6 +372,7 @@ public:
 
                 ROS_INFO_NAMED("openCabinet", "1");
                 target1 = arm.calculateTargetPose(target, arm.setPoint(std::vector<double>{0, 0, 0.1, 0, 0, arm.degreesToRadians(90)}));
+                // target1 = arm.calculateTargetPose(target, arm.setPoint(std::vector<double>{0, 0, 0.1, 0, 0, arm.degreesToRadians(90)}));
                 success = arm.move_p(target1, success);
 
                 ROS_INFO_NAMED("openCabinet", "2");
@@ -451,19 +452,25 @@ public:
                 success = arm.move_p(target4);
                 success = arm.move_l(target3, success);
                 success = arm.move_l(target1, success);
-                target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0.015, 0, -0.28, 0, 0, 0}));
+                // publishStaticTFwithRot(target1);
+                arm.Set_Tool_DO(2, true);
+                target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0.02, 0, -0.295, 0, 0, 0}));
                 success = arm.move_l(target1, success);
 
-                target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0.28, 0, 0, 0}));
+                target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0.295, 0, 0, 0}));
                 success = arm.move_l(target1, success);
                 target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0, 0, 0, arm.degreesToRadians(-90)}));
                 success = arm.move_l(target1, success);
-                success= arm.go_home();
+                if (success)
+                {
+                    success = arm.go_home();
+                }
             }
             if (success == false)
             {
                 arm.move_j(std::vector<double>{arm.degreesToRadians(46), arm.degreesToRadians(-86), arm.degreesToRadians(-62),
                                                arm.degreesToRadians(132), arm.degreesToRadians(112), arm.degreesToRadians(155)});
+                arm.go_home();
                 return success;
             }
         }
@@ -520,13 +527,13 @@ public:
             {
                 geometry_msgs::Pose pose = goal.response.position.pose;
                 // 目的地距离目标物品为（0.38，0.386），考虑车的误差，比实际要大，通过相减获得偏移量
-                goal_x = pose.position.x - 0.42;
+                goal_x = pose.position.x - 0.435;
                 goal_y = pose.position.y + 0.40;
                 pose.position.x = goal_x;
                 pose.position.y = goal_y;
                 publishStaticTFwithRot(pose);
-                call(0.2, arm.degreesToRadians(-1), goal_x, goal_y);
-                ros::Duration(15).sleep();
+                call(0.2, 0, goal_x, goal_y);
+                ros::Duration(20).sleep();
                 arm.move_j(std::vector<double>{arm.degreesToRadians(46), arm.degreesToRadians(-86), arm.degreesToRadians(-62),
                                                arm.degreesToRadians(132), arm.degreesToRadians(112), arm.degreesToRadians(155)});
                 object_client_realtime.call(goal);
@@ -629,7 +636,7 @@ private:
     ros::NodeHandle nh_;
     MoveitServer arm;
     ros::Timer timer;
-    ros::Subscriber a;
+    // ros::Subscriber a;
     Server *server;
     // Client *object_client_realtime;
     ros::Publisher iswork, current_state;

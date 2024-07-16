@@ -81,7 +81,7 @@ class ColorDetectServer(BaseDetection):
         if f:
             # 滤除h>4*w的干扰轮廓
             contours = [cnt for cnt in contours if cv2.boundingRect(
-                cnt)[2] >= 4*cv2.boundingRect(cnt)[3]]
+                cnt)[2] >= 6*cv2.boundingRect(cnt)[3]]
 
         # 按图像y坐标对轮廓进行排序(从上到下)
         contours = sorted(
