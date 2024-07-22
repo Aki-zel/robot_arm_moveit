@@ -34,3 +34,5 @@ src/robot_control/robot_moveit_control/scripts/1.py
 src/robot_control/robot_camera_control/scripts/cache/model.trt
 src/robot_control/robot_camera_control/scripts/*.png
 .DS_Store
+src/yd_description
+src/yd_msgs

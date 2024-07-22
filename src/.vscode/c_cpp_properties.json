@@ -1,0 +1,28 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/ydt/rwm_moveit/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/ydt/rwm_moveit/src/realsense-ros/realsense2_camera/include/**",
+        "/home/ydt/rwm_moveit/src/rm_robot/rm_65_arm_ikfast_plugin/include/**",
+        "/home/ydt/rwm_moveit/src/rm_robot/rm_msgs/include/**",
+        "/home/ydt/rwm_moveit/src/robot_control/robot_camera_control/include/**",
+        "/home/ydt/rwm_moveit/src/robot_control/robot_moveit_control/include/**",
+        "/home/ydt/rwm_moveit/src/robot_control/robot_msgs/include/**",
+        "/home/ydt/rwm_moveit/src/rokae_ros_interface/rokae_hardware/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

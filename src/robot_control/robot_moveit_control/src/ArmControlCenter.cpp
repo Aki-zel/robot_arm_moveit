@@ -358,7 +358,7 @@ public:
                 target4 = tool.calculateTargetPose(target4, arm.setPoint(std::vector<double>{0, 0, 0, 0, tool.degreesToRadians(-90), 0}));
                 //  tool.publishStaticTFwithRot(target4);
                 // 移动到合上抽屉的位置
-                success = arm.move_p(target4);
+                success = arm.move_p(target4,success);
                 success = arm.move_l(target3, success);
                 success = arm.move_l(target1, success);
                 //  tool.publishStaticTFwithRot(target1);
@@ -370,9 +370,9 @@ public:
                 success = arm.move_l(target1, success);
                 target1 = tool.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0, 0, 0, tool.degreesToRadians(-90)}));
                 success = arm.move_l(target1, success);
-                if (success)
+                if (!success)
                 {
-                    success = arm.go_home();
+                    arm.go_home();
                 }
             }
             if (success == false)
