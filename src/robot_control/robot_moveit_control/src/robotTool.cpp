@@ -78,6 +78,7 @@ void robotTool::publishStaticTFwithRot(const geometry_msgs::Pose &p, std::string
     ts.transform.rotation = p.orientation;
     // 广播器发布坐标系信息
     stbroadcaster.sendTransform(ts);
+    ros::Duration(1).sleep();
 }
 /// @brief 发布抓取姿态的坐标
 /// @param grasps std::vector<vgn::GraspConfig>

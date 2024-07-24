@@ -132,7 +132,6 @@ geometry_msgs::Pose MoveitServer::setPoint(const std::vector<double> &pose)
 	return target_pose1;
 }
 
-
 geometry_msgs::Pose MoveitServer::getCurrent_Pose()
 {
 	geometry_msgs::PoseStamped current_pose;
@@ -259,6 +258,20 @@ bool MoveitServer::move_p(const geometry_msgs::Pose &msg, bool succeed) // 按�
 		return Planer();
 	}
 	return succeed;
+}
+bool MoveitServer::move_p_l(const geometry_msgs::Pose &msg, bool succeed)
+{
+	bool s;
+	arm_.setPlannerId("LIN");
+	if (succeed)
+	{
+		geometry_msgs::Pose target_pose;
+		target_pose = msg;
+		arm_.setPoseTarget(target_pose);
+		s= Planer();
+	}
+	arm_.setPlannerId("PTP");
+	return s;
 }
 bool MoveitServer::move_p(const geometry_msgs::PoseStamped &msg, bool succeed) // 按目标空间位姿移动(接收目标物体位姿)
 {

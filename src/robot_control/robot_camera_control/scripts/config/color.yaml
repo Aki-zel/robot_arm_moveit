@@ -30,7 +30,7 @@ colors:
         upper: [140, 255, 255]
     area_threshold:
         min_area: 200
-        max_area: 1000
+        max_area: 1200
 
   
 

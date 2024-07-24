@@ -187,7 +187,7 @@ def realtime_detect_call_back(goal):
                                 camera_xyz, "base_link")  # 将目标物体从相机坐标系转换到世界坐标系
                             print(ux)
                             feedback.position = world_pose
-                            if 0.38<= camera_xyz[2] < 0.485 and  290<=ux<=420:
+                            if 0.36<= camera_xyz[2] < 0.52 and  220<=ux<=420:
                                 feedback.success = True
 
         except Exception as r:

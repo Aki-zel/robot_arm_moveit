@@ -38,6 +38,7 @@ public:
 	bool move_j(const std::vector<double> &joint_group_positions, bool succeed = true);
 	bool move_p(const std::vector<double> &pose, bool succeed = true);
 	bool move_p(const geometry_msgs::Pose &msg, bool succeed = true);
+	bool move_p_l(const geometry_msgs::Pose &msg, bool succeed = true);
 	bool move_p(const geometry_msgs::PoseStamped &msg, bool succeed = true);
 	bool move_p_with_constrains(geometry_msgs::Pose &target_pose, bool succeed=true);
 	bool move_l(const std::vector<double> &pose, bool succeed = true);
