@@ -74,10 +74,34 @@
       ]
     },
     {
+      "name": "rokae_control",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/devel/lib/rokae_hardware/rokae_control",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "为 gdb 启用整齐打印",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "将反汇编风格设置为 Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
       "name": "ROS: Launch",
       "type": "ros",
       "request": "launch",
-      "target": "/home/ydt/rwm_moveit/src/robot_control/robot_moveit_control/launch/robot_node_start.launch"
+      "target": "/home/ydt/rwm_moveit/src/rokae_ros_interface/rokae_bringup/launch/xMateER3_control.launch"
     }
   ]
 }

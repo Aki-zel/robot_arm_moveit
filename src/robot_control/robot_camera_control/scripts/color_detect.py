@@ -121,7 +121,7 @@ class ColorDetectServer(BaseDetection):
     def handle_color_detection(self, request):
         response = Hand_CatchResponse()
 
-        color_name = request.color_name
+        color_name = request.name
         if color_name not in self.colors:
             rospy.logerr(f"Color '{color_name}' not found in configuration")
             return Hand_CatchResponse(labels=[], positions=[])

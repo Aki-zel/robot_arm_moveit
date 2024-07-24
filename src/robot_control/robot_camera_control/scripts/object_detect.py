@@ -119,7 +119,7 @@ def getObjCoordinate(request):
                 for obj in object_list:
                     label = obj["label"]
                     # print(label, request.color_name)
-                    if label == request.color_name:
+                    if label == request.name:
                         box_coords = obj["box_coordinates"]
                         # bottom_right = (box_coords[3] + 100, box_coords[2] + 100)
                         # top_left = (box_coords[1] + 100, box_coords[0] + 100)

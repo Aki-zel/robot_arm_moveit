@@ -42,7 +42,6 @@ public:
 	bool move_p(const geometry_msgs::PoseStamped &msg, bool succeed = true);
 	bool move_p_with_constrains(geometry_msgs::Pose &target_pose, bool succeed=true);
 	bool move_l(const std::vector<double> &pose, bool succeed = true);
-	bool move_l(const std::array<double, 3> &position, bool succeed = true);
 	bool move_l(const std::vector<std::vector<double>> &posees, bool succeed = true);
 	bool move_l(const std::vector<geometry_msgs::Pose> Points, bool succeed = true);
 	bool move_l(const geometry_msgs::Pose &position, bool succeed = true);
