@@ -1,6 +1,6 @@
 #request
 bool run
-string color_name
+string name
 ---
 #respond
 string[] labels

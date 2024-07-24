@@ -192,7 +192,7 @@ public:
             robot_msgs::Hand_Catch run;
             std::vector<geometry_msgs::Pose> ps;
             run.request.run = true;
-            run.request.color_name = "blue";
+            run.request.name = "blue";
             arm.setMaxVelocity(0.2);
             // object_client.call(run);
             start_pose = arm.getCurrent_Pose();
@@ -271,7 +271,7 @@ public:
             geometry_msgs::Pose target, target1, target2, target3, target4;
             robot_msgs::Hand_Catch run;
             run.request.run = true;
-            run.request.color_name = "drawerhandle";
+            run.request.name = "drawerhandle";
             // object_client.call(run);
             if (object_client.call(run) && !run.response.positions.empty())
             {
