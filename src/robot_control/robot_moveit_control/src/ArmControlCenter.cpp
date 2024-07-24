@@ -20,6 +20,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <robot_msgs/Call_TaskAction.h>
 #include <robot_msgs/Objection_Detect.h>
+#include <robotTool.h>
 
 typedef actionlib::SimpleActionServer<robot_msgs::Call_TaskAction> Server;
 
@@ -44,10 +45,10 @@ public:
         // object_client_realtime.waitForServer();
         // arm.setCollisionMatrix();
     }
+
     void initialize_service_client(ros::NodeHandle nh)
     {
-
-        object_client = nh.serviceClient<robot_msgs::Hand_Catch>("objection_detect");
+        object_client = nh.serviceClient<robot_msgs::Hand_Catch>("object_detect");
         color_client = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect");
         resetmap = nh.serviceClient<std_srvs::Empty>("reset_map");
         toggle = nh.serviceClient<std_srvs::SetBool>("toggle_integration");
@@ -64,12 +65,14 @@ public:
         std_srvs::Empty em;
         resetmap.call(em);
     }
+
     void setToggle(bool value)
     {
         std_srvs::SetBool toggle_integration_srv;
         toggle_integration_srv.request.data = value;
         toggle.call(toggle_integration_srv);
     }
+
     vgn::GetMapCloud getSense()
     {
         vgn::GetSceneCloud get_scene_cloud_srv;
@@ -78,52 +81,7 @@ public:
         get_map_cloud_client.call(get_map_cloud_srv);
         return get_map_cloud_srv;
     }
-    geometry_msgs::Pose transP(geometry_msgs::Pose p)
-    {
-        static tf2_ros::Buffer tfBuffer;
-        static tf2_ros::TransformListener tfListener(tfBuffer);
-        geometry_msgs::PoseStamped pose_stamped_in;
-        pose_stamped_in.pose = p;
-        pose_stamped_in.header.frame_id = "task";
-        pose_stamped_in.header.stamp = ros::Time(0); // 使用最新的变换
 
-        geometry_msgs::PoseStamped pose_stamped_out;
-        try
-        {
-            // 等待变换可用
-            tfBuffer.canTransform("base_link_rm", "task", ros::Time(0), ros::Duration(3.0));
-            // 获取变换，并将pose从task变换到base_link_rm
-            tfBuffer.transform(pose_stamped_in, pose_stamped_out, "base_link_rm");
-        }
-        catch (tf2::TransformException &ex)
-        {
-            ROS_WARN("Transform warning: %s", ex.what());
-        }
-        return pose_stamped_out.pose;
-    }
-    void publishGraspPoses(const std::vector<vgn::GraspConfig> &grasps)
-    {
-        static tf2_ros::TransformBroadcaster broadcaster;
-        for (size_t i = 0; i < grasps.size(); ++i)
-        {
-            geometry_msgs::Pose transformed_pose = transP(grasps[i].pose);
-            geometry_msgs::TransformStamped transform_stamped;
-            transform_stamped.header.stamp = ros::Time::now();
-            transform_stamped.header.frame_id = "base_link_rm";
-            transform_stamped.child_frame_id = "grasp_" + std::to_string(i);
-            ROS_INFO("%s", transform_stamped.child_frame_id.c_str());
-            transform_stamped.transform.translation.x = transformed_pose.position.x;
-            transform_stamped.transform.translation.y = transformed_pose.position.y;
-            transform_stamped.transform.translation.z = transformed_pose.position.z;
-
-            transform_stamped.transform.rotation.x = transformed_pose.orientation.x;
-            transform_stamped.transform.rotation.y = transformed_pose.orientation.y;
-            transform_stamped.transform.rotation.z = transformed_pose.orientation.z;
-            transform_stamped.transform.rotation.w = transformed_pose.orientation.w;
-
-            broadcaster.sendTransform(transform_stamped);
-        }
-    }
     void preditGrasp(vgn::GetMapCloud sensemap, std::vector<geometry_msgs::Pose> &ret)
     {
         vgn::PredictGrasps predict_grasps_srv;
@@ -156,13 +114,13 @@ public:
                         double angle_deg = angle * 180.0 / M_PI;
                         if (angle_deg <= 50.0)
                         {
-                            geometry_msgs::Pose transformed_pose = transP(grasp.pose);
+                            geometry_msgs::Pose transformed_pose = tool.transPose(grasp.pose);
                             ret.push_back(transformed_pose);
                             valid_grasps.push_back(grasp); // 如果夹角在-45到45度之间，将该姿态加入有效姿态列表
                         }
                     }
                 }
-                publishGraspPoses(valid_grasps);
+                tool.publishGraspPoses(valid_grasps);
             }
             else
             {
@@ -170,63 +128,18 @@ public:
             }
         }
     }
+
     void publishWorkStatus(const ros::TimerEvent &, ros::Publisher &iswork_pub)
     {
         statemsg.data = "on work";
         iswork_pub.publish(statemsg);
     }
-    // 发布静态TF的函数
-    void publishStaticTF(const geometry_msgs::Pose &p)
-    {
-        ROS_INFO("Publish TF task");
-        static tf2_ros::StaticTransformBroadcaster broadcaster;
-        // 创建坐标系信息
-        geometry_msgs::TransformStamped ts;
-        // 设置头信息
-        ts.header.seq = 100;
-        ts.header.stamp = ros::Time::now();
-        ts.header.frame_id = "base_link_rm";
-        // 设置子级坐标系
-        ts.child_frame_id = "task";
-        // 设置子级相对于父级的偏移量
-        ts.transform.translation.x = p.position.x;
-        ts.transform.translation.y = p.position.y;
-        ts.transform.translation.z = p.position.z;
-        // 设置四元数: 将欧拉角数据转换成四元数
-        tf2::Quaternion qtn;
-        qtn.setRPY(0, 0, 0);
-        ts.transform.rotation.x = qtn.getX();
-        ts.transform.rotation.y = qtn.getY();
-        ts.transform.rotation.z = qtn.getZ();
-        ts.transform.rotation.w = qtn.getW();
-        // 广播器发布坐标系信息
-        broadcaster.sendTransform(ts);
-    }
-    void publishStaticTFwithRot(const geometry_msgs::Pose &p)
-    {
-        ROS_INFO("Publish TF Pose");
-        static tf2_ros::StaticTransformBroadcaster broadcaster;
-        // 创建坐标系信息
-        geometry_msgs::TransformStamped ts;
-        // 设置头信息
-        ts.header.seq = 100;
-        ts.header.stamp = ros::Time::now();
-        ts.header.frame_id = "base_link_rm";
-        // 设置子级坐标系
-        ts.child_frame_id = "Pose";
-        // 设置子级相对于父级的偏移量
-        ts.transform.translation.x = p.position.x;
-        ts.transform.translation.y = p.position.y;
-        ts.transform.translation.z = p.position.z;
-        ts.transform.rotation = p.orientation;
-        // 广播器发布坐标系信息
-        broadcaster.sendTransform(ts);
-        ros::Duration(1).sleep();
-    }
+
     void timerCallback(const ros::TimerEvent &, const geometry_msgs::Pose &p)
     {
-        publishStaticTF(p);
+        tool.publishStaticTF(p);
     }
+
     bool openDoor()
     {
         bool success;
@@ -234,32 +147,32 @@ public:
         try
         {
             ROS_INFO_NAMED("openDoor", "移动到识别点");
-            success = arm.move_j(std::vector<double>{0, arm.degreesToRadians(50.00), -arm.degreesToRadians(50.00),
-                                                     0, -arm.degreesToRadians(90), arm.degreesToRadians(180)});
+            success = arm.move_j(std::vector<double>{0, tool.degreesToRadians(50.00), -tool.degreesToRadians(50.00),
+                                                     0, -tool.degreesToRadians(90), tool.degreesToRadians(180)});
             geometry_msgs::Pose target;
             robot_msgs::Hand_Catch run;
             run.request.run = true;
             if (object_client.call(run) && !run.response.positions.empty())
             {
                 target = run.response.positions.front().pose;
-                // target = arm.setPoint(std::vector<double>{0.257, 0, 0.6637, 0, arm.degreesToRadians(90), 0});
+                // target = arm.setPoint(std::vector<double>{0.257, 0, 0.6637, 0, tool.degreesToRadians(90), 0});
                 success = arm.move_p(target, success);
                 geometry_msgs::Pose target1;
-                target1 = arm.calculateTargetPose(target, arm.setPoint(std::vector<double>{-0.05, 0, 0, 0, 0, arm.degreesToRadians(30)}));
+                target1 = tool.calculateTargetPose(target, arm.setPoint(std::vector<double>{0.05, 0, 0, 0, 0, tool.degreesToRadians(-30)}));
                 success = arm.move_l(target1, success);
-                target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, -0.10, 0, 0, arm.degreesToRadians(0)}));
+                target1 = tool.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0.10, 0, 0, tool.degreesToRadians(0)}));
                 success = arm.move_l(target1, success);
-                target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0.2, 0, 0, arm.degreesToRadians(-30)}));
+                target1 = tool.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, -0.2, 0, 0, tool.degreesToRadians(30)}));
                 success = arm.move_l(target1, success);
                 ROS_INFO_NAMED("openDoor", "回到识别点");
-                success = arm.move_j(std::vector<double>{0, arm.degreesToRadians(50.00), -arm.degreesToRadians(50.00),
-                                                         0, -arm.degreesToRadians(90), arm.degreesToRadians(180)},
+                success = arm.move_j(std::vector<double>{0, tool.degreesToRadians(50.00), -tool.degreesToRadians(50.00),
+                                                         0, -tool.degreesToRadians(90), tool.degreesToRadians(180)},
                                      success);
             }
             if (success == false)
             {
-                arm.move_j(std::vector<double>{0, arm.degreesToRadians(50.00), -arm.degreesToRadians(50.00),
-                                               0, -arm.degreesToRadians(90), arm.degreesToRadians(180)});
+                arm.move_j(std::vector<double>{0, tool.degreesToRadians(50.00), -tool.degreesToRadians(50.00),
+                                               0, -tool.degreesToRadians(90), tool.degreesToRadians(180)});
                 return success;
             }
         }
@@ -270,6 +183,7 @@ public:
 
         return success;
     };
+
     bool colorCapture()
     {
         bool success = true;
@@ -277,8 +191,8 @@ public:
         try
         {
             // ROS_INFO_NAMED("targetCapture", "移动到识别点");
-            // arm.move_j(std::vector<double>{0, arm.degreesToRadians(50.00), arm.degreesToRadians(-50.00),
-            //                                0, arm.degreesToRadians(-90), arm.degreesToRadians(180)});
+            // arm.move_j(std::vector<double>{0, tool.degreesToRadians(50.00), tool.degreesToRadians(-50.00),
+            //                                0, tool.degreesToRadians(-90), tool.degreesToRadians(180)});
             geometry_msgs::Pose target, target3, start_pose;
             robot_msgs::Hand_Catch run;
             std::vector<geometry_msgs::Pose> ps;
@@ -293,9 +207,11 @@ public:
                 {
                     // target = run.response.positions[0].pose;
                     // success = arm.move_p(run.response.positions[0].pose);
-                    target = arm.setPoint(std::vector<double>{p.pose.position.x, p.pose.position.y, p.pose.position.z, 0, 0, 0});
-                    target3 = arm.setPoint(std::vector<double>{target.position.x - 0.04, target.position.y - 0.04, target.position.z - 0.03, 0, 0, 0});
-                    publishStaticTF(target3);
+                    // 目标表面位置
+                    // target = arm.setPoint(std::vector<double>{p.pose.position.x, p.pose.position.y, p.pose.position.z, 0, 0, 0});
+                    // // 夹取目标位置
+                    // target3 = arm.setPoint(std::vector<double>{target.position.x , target.position.y , target.position.z - 0.03, 0, 0, 0});
+                    // tool.publishStaticTF(target3);
                     arm.Set_Tool_DO(2, false);
                     // resetMap();
                     // setToggle(true);
@@ -305,39 +221,38 @@ public:
                     // for (auto pose : ps)
                     // {
 
-                        geometry_msgs::Pose pose1;
-                        // publishStaticTFwithRot(pose);
-                        // success = arm.movself.e_p(pose);
-                        pose1 = arm.calculateTargetPose(p.pose, arm.setPoint(std::vector<double>{0, 0, 0.02, 0, 0, 0}));
-                        success = arm.move_p(pose1, success);
-                        pose1 = arm.calculateTargetPose(p.pose, arm.setPoint(std::vector<double>{0, 0, -0.01, 0, 0, 0}));
-                        success = arm.move_l(pose1, success);
-                        arm.Set_Tool_DO(2, true);
-                        pose1 = arm.calculateTargetPose(p.pose, arm.setPoint(std::vector<double>{0, 0, 0.05, 0, 0, 0}));
-                        success = arm.move_l(pose1, success);
-                        // success = arm.move_l(pose, success);
-                        if (success)
-                        {
-                            success = arm.move_p(start_pose);
-                            // 放置物品到车上
+                    geometry_msgs::Pose pose1;
+                    //  tool.publishStaticTFwithRot(pose);
+                    // success = arm.movself.e_p(pose);
+                    pose1 = tool.calculateTargetPose(p.pose, arm.setPoint(std::vector<double>{0, 0, -0.02, 0, 0, 0}));
+                    success = arm.move_p(pose1, success); // 目标上方
+                    pose1 = tool.calculateTargetPose(p.pose, arm.setPoint(std::vector<double>{0, 0, 0.01, 0, 0, 0}));
+                    success = arm.move_l(pose1, success); // 夹取位置
+                    arm.Set_Tool_DO(2, true);
+                    pose1 = tool.calculateTargetPose(p.pose, arm.setPoint(std::vector<double>{0, 0, -0.05, 0, 0, 0}));
+                    success = arm.move_l(pose1, success); // 抬起物体
+                    // success = arm.move_l(pose, success);
+                    if (success)
+                    {
+                        success = arm.move_p(start_pose);
+                        // 放置物品到车上
+                        success = arm.move_l(arm.setPoint(std::vector<double>{-0.145, -0.137, 0.2, -3.1415, 0, 0}), success);
+                        success = arm.move_l(arm.setPoint(std::vector<double>{-0.145, -0.137, 0.02, -3.1415, 0, 0}), success);
+                        arm.Set_Tool_DO(2, false);
+                        success = arm.move_l(arm.setPoint(std::vector<double>{-0.145, -0.137, 0.2, -3.1415, 0, 0}), success);
+                    }
 
-                            success = arm.move_l(arm.setPoint(std::vector<double>{-0.145, -0.137, 0.2, -3.1415, 0, 0}), success);
-                            success = arm.move_l(arm.setPoint(std::vector<double>{-0.145, -0.137, 0.02, -3.1415, 0, 0}), success);
-                            arm.Set_Tool_DO(2, false);
-                            success = arm.move_l(arm.setPoint(std::vector<double>{-0.145, -0.137, 0.2, -3.1415, 0, 0}), success);
-                        }
-
-                        // success = arm.move_p(start_pose);
-                        if (success)
-                            break;
+                    // success = arm.move_p(start_pose);
+                    if (success)
+                        break;
                     // }
                     ps.clear();
                 }
             }
             if (success == false)
             {
-                // arm.move_j(std::vector<double>{0, arm.degreesToRadians(50.00), arm.degreesToRadians(-50.00),
-                //                                0, arm.degreesToRadians(-90), arm.degreesToRadians(180)});
+                // arm.move_j(std::vector<double>{0, tool.degreesToRadians(50.00), tool.degreesToRadians(-50.00),
+                //                                0, tool.degreesToRadians(-90), tool.degreesToRadians(180)});
                 return success;
             }
         }
@@ -348,6 +263,7 @@ public:
 
         return success;
     }
+
     bool openCabinet()
     {
         bool success;
@@ -357,124 +273,166 @@ public:
         {
             // 此段代码的相对位置为 x->z ,y->x,z->y
             ROS_INFO_NAMED("openCabinet", "移动到识别点");
-            success = arm.move_j(std::vector<double>{arm.degreesToRadians(46), arm.degreesToRadians(-86), arm.degreesToRadians(-62),
-                                                     arm.degreesToRadians(132), arm.degreesToRadians(112), arm.degreesToRadians(155)});
-            geometry_msgs::Pose target, target1, target2, target3, target4;
-            robot_msgs::Hand_Catch run;
-            run.request.run = true;
-            run.request.color_name = "cabinet_handle";
-            // object_client.call(run);
-            if (color_client.call(run) && !run.response.positions.empty())
+            success = arm.move_j(std::vector<double>{tool.degreesToRadians(46), tool.degreesToRadians(-77), tool.degreesToRadians(-68),
+                                                     tool.degreesToRadians(132), tool.degreesToRadians(112), tool.degreesToRadians(155)});
+            
+            
+            // 检测判断能否抓到柜子
+            robot_msgs::Objection_Detect goal;
+            goal.request.run = true;
+            object_client_realtime.call(goal);
+
+            //如果检测成功，继续执行后续动作
+            if (goal.response.success)
             {
-                target = run.response.positions[1].pose;
-                target = arm.setPoint(std::vector<double>{target.position.x, target.position.y, target.position.z, arm.degreesToRadians(90), arm.degreesToRadians(90), 0});
-                arm.Set_Tool_DO(2, false);
+                geometry_msgs::Pose target, target1, target2, target3, target4;
+                robot_msgs::Hand_Catch run;
+                run.request.run = true;
+                run.request.color_name = "drawerhandle";
+                // object_client.call(run);
+                if (object_client.call(run) && !run.response.positions.empty())
+                {
+                    target = run.response.positions[1].pose;
+                    target = arm.setPoint(std::vector<double>{target.position.x, target.position.y, target.position.z, tool.degreesToRadians(90), tool.degreesToRadians(90), 0});
+                    arm.Set_Tool_DO(2, false); 
+                    // 移动到抽屉把手预抓取位置
+                    ROS_INFO_NAMED("openCabinet", "1");
+                    target1 = tool.calculateTargetPose(target, arm.setPoint(std::vector<double>{0, 0, -0.1, 0, 0, tool.degreesToRadians(-90)}));
+                    // target1 = tool.calculateTargetPose(target, arm.setPoint(std::vector<double>{0, 0, 0.1, 0, 0, tool.degreesToRadians(90)}));
+                    success = arm.move_p(target1, success);
 
-                ROS_INFO_NAMED("openCabinet", "1");
-                target1 = arm.calculateTargetPose(target, arm.setPoint(std::vector<double>{0, 0, 0.1, 0, 0, arm.degreesToRadians(90)}));
-                success = arm.move_p(target1, success);
+                    // 移动到把手抓取位置
+                    ROS_INFO_NAMED("openCabinet", "2");
+                    target1 = tool.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0.11, 0, 0, 0}));
+                    success = arm.move_l(target1, success);
+                    arm.Set_Tool_DO(2, true); //关闭夹爪
 
-                ROS_INFO_NAMED("openCabinet", "2");
-                target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, -0.11, 0, 0, 0}));
-                success = arm.move_l(target1, success);
-                arm.Set_Tool_DO(2, true);
+                    // 向外拉抽屉
+                    ROS_INFO_NAMED("openCabinet", "3");
+                    target1 = tool.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, -0.22, 0, 0, 0}));
+                    success = arm.move_l(target1, success);
+                    arm.Set_Tool_DO(2, false);
+                    // 夹爪退出把手位置
+                    // target1 = tool.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, -0.05, 0, 0, 0}));
+                    // tool.publishStaticTFwithRot(target1);
+                    // success = arm.move_l(target1, success);
+                    std::vector<double> joint_group_positions;
+                    arm.getCurrentJoint(joint_group_positions);
+                    joint_group_positions[0] += tool.degreesToRadians(10); // 调整角度使其退出位置
+                    arm.move_j(joint_group_positions);
+                    // 移动到过渡姿态
 
-                ROS_INFO_NAMED("openCabinet", "3");
-                target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0.23, 0, 0, 0}));
-                success = arm.move_l(target1, success);
-                arm.Set_Tool_DO(2, false);
+                    // success = arm.move_j(std::vector<double>{tool.degreesToRadians(46), tool.degreesToRadians(-77), tool.degreesToRadians(-68),
+                    //                                  tool.degreesToRadians(132), tool.degreesToRadians(112), tool.degreesToRadians(155)});
 
-                target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0.05, 0, 0, 0}));
-                // publishStaticTFwithRot(target1);
-                success = arm.move_l(target1, success);
-                // 移动到柜子上方
-                target3 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0.17, 0, 0, 0, 0, arm.degreesToRadians(-90)}));
-                // publishStaticTFwithRot(target3);
-                success = arm.move_l(target3, success);
+                    target3 = tool.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, -0.15, -0.05, 0, 0, tool.degreesToRadians(90)}));
+                    // tool.publishStaticTFwithRot(target3,"pose1");
+                    success = arm.move_l(target3, success);
 
-                // 开第二层抽屉
-                // ROS_INFO_NAMED("openCabinet", "4");
-                // target = run.response.positions[0].pose;s
-                // target = arm.setPoint(std::vector<double>{target.position.x, target.position.y, target.position.z, arm.degreesToRadians(90), arm.degreesToRadians(90), 0});
-                // target2 = arm.calculateTargetPose(target, arm.setPoint(std::vector<double>{0, 0, 0.1, 0, 0, arm.degreesToRadians(90)}));
-                // success = arm.move_l(target2, success);
-                // target2 = arm.calculateTargetPose(target2, arm.setPoint(std::vector<double>{0, 0, -0.11, 0, 0, 0}));
-                // success = arm.move_l(target2, success);
-                // arm.Set_Tool_DO(2, true);
-                // target2 = arm.calculateTargetPose(target2, arm.setPoint(std::vector<double>{0, 0, 0.23, 0, 0, 0}));
-                // success = arm.move_l(target2, success);
-                // arm.Set_Tool_DO(2, false);
-                // target2 = arm.calculateTargetPose(target2, arm.setPoint(std::vector<double>{0, 0, 0.05, 0, 0, 0}));
-                // success = arm.move_l(target2, success);
-                // target3 = arm.calculateTargetPose(target2, arm.setPoint(std::vector<double>{0.15, 0, 0, 0, 0, arm.degreesToRadians(-90)}));
-                // success = arm.move_l(target3, success);
-                // target3 = arm.setPoint(std::vector<double>{target.position.x - 0.10, target.position.y - 0.02, target.position.z - 0.04, 0, 0, 0});
-                // publishStaticTF(target1);
-                // ROS_INFO("Publish TF");
-                // ros::Timer timer = nh.createTimer(ros::Duration(0.5), boost::bind(timerCallback, _1, target3));
-                // 移动到观察点1（查看柜子桌面）
-                // target4 = arm.calculateTargetPose(target3, arm.setPoint(std::vector<double>{0.25, 0.13, -0.05, 0, 0, 0}));
-                // // publishStaticTFwithRot(target4);
-                // target4 = arm.calculateTargetPose(target4, arm.setPoint(std::vector<double>{0, 0, 0, 0, arm.degreesToRadians(-30), 0}));
-                // // publishStaticTFwithRot(target4);
-                // // success = arm.move_p(target4, success);
-                // target4 = arm.calculateTargetPose(target4, arm.setPoint(std::vector<double>{0, 0, 0, arm.degreesToRadians(10), 0, 0}));
-                // // publishStaticTFwithRot(target4);
-                // success = arm.move_p(target4, success);
-                // // 移动到观察点2 查看柜子内部
-                target4 = arm.calculateTargetPose(target3, arm.setPoint(std::vector<double>{0, 0, 0, 0, arm.degreesToRadians(-90), arm.degreesToRadians(90)}));
-                // publishStaticTFwithRot(target3);
-                // success = arm.move_p(target3, success);
-                target4 = arm.calculateTargetPose(target4, arm.setPoint(std::vector<double>{0, 0, 0, 0, 0, arm.degreesToRadians(-90)}));
-                // publishStaticTFwithRot(target3);
-                success = arm.move_p(target4, success);
-                ROS_INFO_NAMED("openCabinet", "抓取");
-                target4 = arm.calculateTargetPose(target4, arm.setPoint(std::vector<double>{0.08, 0, 0.03, 0, 0, 0}));
-                // target3 = arm.calculateTargetPose(target3, arm.setPoint(std::vector<double>{0.18, 0, -0.05, 0, 0, 0}));
-                // publishStaticTFwithRot(target3);
-                success = arm.move_l(target4, success);
-                // arm.Set_Tool_DO(2, false);
+                    // 开第二层抽屉
+                    // ROS_INFO_NAMED("openCabinet", "4");
+                    // target = run.response.positions[0].pose;s
+                    // target = arm.setPoint(std::vector<double>{target.position.x, target.position.y, target.position.z, tool.degreesToRadians(90), tool.degreesToRadians(90), 0});
+                    // target2 = tool.calculateTargetPose(target, arm.setPoint(std::vector<double>{0, 0, 0.1, 0, 0, tool.degreesToRadians(90)}));
+                    // success = arm.move_l(target2, success);
+                    // target2 = tool.calculateTargetPose(target2, arm.setPoint(std::vector<double>{0, 0, -0.11, 0, 0, 0}));
+                    // success = arm.move_l(target2, success);
+                    // arm.Set_Tool_DO(2, true);
+                    // target2 = tool.calculateTargetPose(target2, arm.setPoint(std::vector<double>{0, 0, 0.23, 0, 0, 0}));
+                    // success = arm.move_l(target2, success);
+                    // arm.Set_Tool_DO(2, false);
+                    // target2 = tool.calculateTargetPose(target2, arm.setPoint(std::vector<double>{0, 0, 0.05, 0, 0, 0}));
+                    // success = arm.move_l(target2, success);
+                    // target3 = tool.calculateTargetPose(target2, arm.setPoint(std::vector<double>{0.15, 0, 0, 0, 0, tool.degreesToRadians(-90)}));
+                    // success = arm.move_l(target3, success);
+                    // target3 = arm.setPoint(std::vector<double>{target.position.x - 0.10, target.position.y - 0.02, target.position.z - 0.04, 0, 0, 0});
+                    //  tool.publishStaticTF(target1);
+                    // ROS_INFO("Publish TF");
+                    // ros::Timer timer = nh.createTimer(ros::Duration(0.5), boost::bind(timerCallback, _1, target3));
+                    // 移动到观察点1（查看柜子桌面）
+                    // target4 = tool.calculateTargetPose(target3, arm.setPoint(std::vector<double>{0.25, 0.13, -0.05, 0, 0, 0}));
+                    // //  tool.publishStaticTFwithRot(target4);
+                    // target4 = tool.calculateTargetPose(target4, arm.setPoint(std::vector<double>{0, 0, 0, 0, tool.degreesToRadians(-30), 0}));
+                    // //  tool.publishStaticTFwithRot(target4);
+                    // // success = arm.move_p(target4, success);
+                    // target4 = tool.calculateTargetPose(target4, arm.setPoint(std::vector<double>{0, 0, 0, tool.degreesToRadians(10), 0, 0}));
+                    // //  tool.publishStaticTFwithRot(target4);
+                    // success = arm.move_p(target4, success);
 
-                // target3 = arm.calculateTargetPose(target3, arm.setPoint(std::vector<double>{-0.2, 0, 0.05, 0, 0, 0}));
-                // publishStaticTFwithRot(target3);
-                // success = arm.move_l(target3, success);
-                if (success)
-                    success = colorCapture();
-                // target3 = arm.calculateTargetPose(target3, arm.setPoint(std::vector<double>{0, 0, 0, 0, arm.degreesToRadians(90), 0}));
-                // publishStaticTFwithRot(target3);
-                ROS_INFO_NAMED("openCabinet", "结束抓取");
-                target4 = arm.calculateTargetPose(target4, arm.setPoint(std::vector<double>{-0.08, 0, -0.05, 0, 0, 0}));
-                success = arm.move_l(target4, success);
-                target4 = arm.calculateTargetPose(target4, arm.setPoint(std::vector<double>{0, 0, 0, 0, arm.degreesToRadians(90), 0}));
-                // publishStaticTFwithRot(target4);
-                // 移动到合上抽屉的位置
-                success = arm.move_p(target4);
-                success = arm.move_l(target3, success);
-                success = arm.move_l(target1, success);
-                target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0.015, 0, -0.28, 0, 0, 0}));
-                success = arm.move_l(target1, success);
+                    // 移动到过渡姿态
+                    success = arm.move_j(std::vector<double>{tool.degreesToRadians(11), tool.degreesToRadians(-17), tool.degreesToRadians(-70),
+                                                    tool.degreesToRadians(0), tool.degreesToRadians(-94), tool.degreesToRadians(259)}, success);
 
-                target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0.28, 0, 0, 0}));
-                success = arm.move_l(target1, success);
-                target1 = arm.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0, 0, 0, arm.degreesToRadians(-90)}));
-                success = arm.move_l(target1, success);
-                success= arm.go_home();
-            }
-            if (success == false)
-            {
-                arm.move_j(std::vector<double>{arm.degreesToRadians(46), arm.degreesToRadians(-86), arm.degreesToRadians(-62),
-                                               arm.degreesToRadians(132), arm.degreesToRadians(112), arm.degreesToRadians(155)});
-                return success;
+                    // 移动到抽屉上方
+                    target4 = tool.calculateTargetPose(target3, arm.setPoint(std::vector<double>{0, -0.05, 0, 0, tool.degreesToRadians(90), 0}));
+                    success = arm.move_p(target4, success); 
+                    ROS_INFO_NAMED("openCabinet", "抓取");
+                    // 移动到夹取观察点2，查看抽屉内部
+                    target4 = tool.calculateTargetPose(target4, arm.setPoint(std::vector<double>{-0.08, 0, 0, 0, 0, 0}));
+                    // target3 = tool.calculateTargetPose(target3, arm.setPoint(std::vector<double>{0.18, 0, -0.05, 0, 0, 0}));
+                    // tool.publishStaticTFwithRot(target4,"pose3");
+                    success = arm.move_l(target4, success);
+                    // arm.Set_Tool_DO(2, false);
+
+                    // target3 = tool.calculateTargetPose(target3, arm.setPoint(std::vector<double>{-0.2, 0, 0.05, 0, 0, 0}));
+                    //  tool.publishStaticTFwithRot(target3);
+                    // success = arm.move_l(target3, success);
+                    // 抓取抽屉里的目标物体
+                    if (success)
+                        success = colorCapture();
+                    // target3 = tool.calculateTargetPose(target3, arm.setPoint(std::vector<double>{0, 0, 0, 0, tool.degreesToRadians(90), 0}));
+                    //  tool.publishStaticTFwithRot(target3);
+                    ROS_INFO_NAMED("openCabinet", "结束抓取");
+
+                    // 移动回抽屉上方
+                    target4 = tool.calculateTargetPose(target4, arm.setPoint(std::vector<double>{0.08, 0, 0, 0, 0, 0}));
+                    success = arm.move_l(target4, success);
+
+                    // 移动到合上抽屉的位置
+                    // target3 = tool.calculateTargetPose(target4, arm.setPoint(std::vector<double>{0, 0, 0, 0, 0, 0}));
+                    // tool.publishStaticTFwithRot(target4,"pose4");
+                    // success = arm.move_p(target3, success); // 过渡姿态
+                    target4 = tool.calculateTargetPose(target4, arm.setPoint(std::vector<double>{0, 0, 0, 0, tool.degreesToRadians(-90), 0}));
+                    // tool.publishStaticTFwithRot(target4,"pose4");
+                    success = arm.move_p(target4, success); // 水平姿态
+                    // success = arm.move_j(std::vector<double>{tool.degreesToRadians(23), tool.degreesToRadians(-81), tool.degreesToRadians(-94),
+                    //                                 tool.degreesToRadians(-77), tool.degreesToRadians(-88), tool.degreesToRadians(263)}); // 过渡姿态
+                    target1 = tool.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, -0.03, 0, 0, 0}));
+                    success = arm.move_p(target1, success); // 预推姿态
+                    // tool.publishStaticTFwithRot(target1);
+                    arm.Set_Tool_DO(2, true);
+                    // 关闭抽屉
+                    target1 = tool.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0.245, 0, 0, 0}));
+                    success = arm.move_l(target1, success);
+
+                    // 完成动作，回到原位
+                    target1 = tool.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, -0.20, 0, 0, 0}));
+                    success = arm.move_l(target1, success);
+                    // target1 = tool.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0, 0, 0, tool.degreesToRadians(90)}));
+                    // success = arm.move_l(target1, success);
+                    if (success)
+                    {
+                        success = arm.go_home();
+                    }
+                }
+                if (success == false)
+                {
+                    arm.move_j(std::vector<double>{tool.degreesToRadians(46), tool.degreesToRadians(-86), tool.degreesToRadians(-62),
+                                                tool.degreesToRadians(132), tool.degreesToRadians(112), tool.degreesToRadians(155)});
+                    arm.go_home();
+                    return success;
+                }
             }
         }
         catch (const std::exception &e)
         {
-            std::cerr << e.what() << '\n';
+            ROS_ERROR_NAMED("openCabinet", "Exception: %s", e.what());
             return false;
         }
 
         return success;
     }
+    
     bool searchDestination()
     {
         double angle;
@@ -494,10 +452,10 @@ public:
             arm.go_home();
             carControl.call(ptr);
         };
-        // arm.move_j(std::vector<double>{arm.degreesToRadians(0), arm.degreesToRadians(28), arm.degreesToRadians(-78),
-        //                                arm.degreesToRadians(0), arm.degreesToRadians(-71), arm.degreesToRadians(180)});
-        arm.move_j(std::vector<double>{arm.degreesToRadians(46), arm.degreesToRadians(-86), arm.degreesToRadians(-62),
-                                       arm.degreesToRadians(132), arm.degreesToRadians(112), arm.degreesToRadians(155)});
+        // arm.move_j(std::vector<double>{tool.degreesToRadians(0), tool.degreesToRadians(28), tool.degreesToRadians(-78),
+        //                                tool.degreesToRadians(0), tool.degreesToRadians(-71), tool.degreesToRadians(180)});
+        arm.move_j(std::vector<double>{tool.degreesToRadians(46), tool.degreesToRadians(-86), tool.degreesToRadians(-62),
+                                       tool.degreesToRadians(132), tool.degreesToRadians(112), tool.degreesToRadians(155)});
 
         state = true;
 
@@ -520,15 +478,15 @@ public:
             {
                 geometry_msgs::Pose pose = goal.response.position.pose;
                 // 目的地距离目标物品为（0.38，0.386），考虑车的误差，比实际要大，通过相减获得偏移量
-                goal_x = pose.position.x - 0.42;
+                goal_x = pose.position.x - 0.435;
                 goal_y = pose.position.y + 0.40;
                 pose.position.x = goal_x;
                 pose.position.y = goal_y;
-                publishStaticTFwithRot(pose);
-                call(0.2, arm.degreesToRadians(-1), goal_x, goal_y);
-                ros::Duration(15).sleep();
-                arm.move_j(std::vector<double>{arm.degreesToRadians(46), arm.degreesToRadians(-86), arm.degreesToRadians(-62),
-                                               arm.degreesToRadians(132), arm.degreesToRadians(112), arm.degreesToRadians(155)});
+                tool.publishStaticTFwithRot(pose);
+                call(0.2, 0, goal_x, goal_y);
+                ros::Duration(20).sleep();
+                arm.move_j(std::vector<double>{tool.degreesToRadians(46), tool.degreesToRadians(-86), tool.degreesToRadians(-62),
+                                               tool.degreesToRadians(132), tool.degreesToRadians(112), tool.degreesToRadians(155)});
                 object_client_realtime.call(goal);
                 if (goal.response.success)
                 {
@@ -539,13 +497,13 @@ public:
             {
                 if (state)
                 {
-                    arm.move_j(std::vector<double>{arm.degreesToRadians(0), arm.degreesToRadians(28), arm.degreesToRadians(-78),
-                                                   arm.degreesToRadians(0), arm.degreesToRadians(-71), arm.degreesToRadians(180)});
+                    arm.move_j(std::vector<double>{tool.degreesToRadians(0), tool.degreesToRadians(28), tool.degreesToRadians(-78),
+                                                   tool.degreesToRadians(0), tool.degreesToRadians(-71), tool.degreesToRadians(180)});
                     state = false;
                     arm.getCurrentJoint(joint_group_positions);
                     angle = joint_group_positions[0];
                 }
-                angle += arm.degreesToRadians(5);
+                angle += tool.degreesToRadians(5);
                 joint_group_positions[0] = angle;
                 arm.move_j(joint_group_positions);
             }
@@ -629,7 +587,7 @@ private:
     ros::NodeHandle nh_;
     MoveitServer arm;
     ros::Timer timer;
-    ros::Subscriber a;
+    // ros::Subscriber a;
     Server *server;
     // Client *object_client_realtime;
     ros::Publisher iswork, current_state;
@@ -637,6 +595,7 @@ private:
         resetmap, toggle, get_scene_cloud_client, get_map_cloud_client, predict_grasps_client, object_client_realtime;
     ros::ServiceServer CallTask;
     std_msgs::String statemsg;
+    robotTool tool;
     bool state;
 };
 

@@ -55,11 +55,12 @@ class TemplateDetect(BaseDetection):
             self.template_image = cv2.cvtColor(
                 self.template_image, cv2.COLOR_BGR2RGB)
             original_height, original_width, _ = self.template_image.shape
-            # 计算新的宽度和高度
-            new_width = int(original_width /451*1280)
-            new_height = int(original_height /419*720)
+            # 为了与界面图像的比例一致，需要将原始图像的宽度和高度按比例缩放
+            new_width = int(original_width / 451*1280)
+            new_height = int(original_height / 419*720)
             # 缩放图像
-            self.template_image = cv2.resize(self.template_image, (new_width, new_height))
+            self.template_image = cv2.resize(
+                self.template_image, (new_width, new_height))
         except CvBridgeError as e:
             print(e)
 

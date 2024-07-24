@@ -169,11 +169,10 @@ add_library(MoveitServer_h
   src/MoveitServer.cpp
 
 )
-# add_library(robotControl_h
-#   # include/MoveitServer.h
-
-#   src/robotControl.cpp
-# )
+add_library(robotTool_h
+  # include/MoveitServer.h
+  src/robotTool.cpp
+)
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -205,14 +204,17 @@ add_dependencies(controlcenter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPO
 
 # target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES})
 target_link_libraries(MoveitServer_h ${catkin_LIBRARIES}   )
+target_link_libraries(robotTool_h ${catkin_LIBRARIES}   )
 # target_link_libraries(robotControl_h ${catkin_LIBRARIES}  MoveitServer_h )
 # target_link_libraries(ydrobot ${QT_LIBRARIES} ${catkin_LIBRARIES} )
 target_link_libraries(ydtest
   MoveitServer_h
+  robotTool_h
   ${catkin_LIBRARIES}
 )
 target_link_libraries(controlcenter
   MoveitServer_h
+  robotTool_h
   ${catkin_LIBRARIES}
 )
 #############

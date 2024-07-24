@@ -39,7 +39,7 @@ threshold:
 device: 'gpu'
 model_type: 'yolov5'
 # 模型权重路径
-model_file: /home/ydf/Documents/rwm_moveit/src/robot_control/robot_camera_control/model/handle.onnx
+model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/handle.onnx
 params_file: ""
 config_file: ""
 gmodel_file: ""
