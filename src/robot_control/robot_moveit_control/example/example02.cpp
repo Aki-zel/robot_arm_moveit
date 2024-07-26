@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
     setlocale(LC_ALL, "");
     ROS_INFO("中文输出！！！");
     // ros初始化
-    ros::init(argc, argv, "exemple02");
+    ros::init(argc, argv, "example02");
     ros::NodeHandle nh;
     ROS_INFO("ros 创建成功！！！");
     // 创建ros 多线程

@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     // 支持终端输出中文
     setlocale(LC_ALL, "");
     // ros初始化
-    ros::init(argc, argv, "exemple03");
+    ros::init(argc, argv, "example03");
     ros::NodeHandle nh;
     // 创建ros 多线程
     ros::AsyncSpinner spinner(2);
@@ -30,7 +30,8 @@ int main(int argc, char *argv[])
     ROS_INFO("移动到识别预选位置");
     robot_msgs::Hand_Catch run;
     run.request.run = true;
-    run.request.color_name = "drawerhandle";
+    // 需要抓取物品的名称
+    run.request.name = "apple";
     ROS_INFO("调用视觉识别服务");
     auto current_pose = arm.getCurrent_Pose();
     if (object_client.call(run))
@@ -41,7 +42,7 @@ int main(int argc, char *argv[])
         for (auto p : run.response.positions)
         {
             auto pose = p.pose;
-            ROS_INFO("物品名称：%s", run.response.labels[i++]);
+            ROS_INFO("物品名称：%s", run.response.labels[i++].c_str());
             ROS_INFO("位置信息: x: %f, y: %f, z: %f", pose.position.x, pose.position.y, pose.position.z);
             ROS_INFO("方向信息: qx: %f, qy: %f, qz: %f, qw: %f", pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
             success = arm.move_p(rt.moveFromPose(pose, -0.03), success);

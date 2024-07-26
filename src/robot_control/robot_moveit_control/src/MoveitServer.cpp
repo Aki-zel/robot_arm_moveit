@@ -6,7 +6,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Point.h>
 /// @brief 构造函数
-/// @param PLANNING_GROUP 
+/// @param PLANNING_GROUP
 MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), spinner(3)
 {
 	spinner.start();
@@ -44,7 +44,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	initializeClaw();
 }
 /// @brief 设置最大速度和加速度
-/// @param speed 
+/// @param speed
 void MoveitServer::setMaxVelocity(double speed)
 {
 	arm_.setMaxAccelerationScalingFactor(speed);
@@ -52,7 +52,7 @@ void MoveitServer::setMaxVelocity(double speed)
 }
 /// @brief 规划求解并执行运动
 /// @return True表示成功规划并执行，False表示规划失败
-bool MoveitServer::Planer() 
+bool MoveitServer::Planer()
 {
 	bool success = false;
 	// visual_tools->deleteAllMarkers();
@@ -88,7 +88,7 @@ bool MoveitServer::go_home() // 移动到预设位姿
 	return Planer();
 }
 /// @brief 回到预设点
-/// @param str 
+/// @param str
 /// @return True表示成功规划并执行，False表示规划失败
 bool MoveitServer::go_pose(const std::string str) // 移动到预设位姿
 {
@@ -97,9 +97,9 @@ bool MoveitServer::go_pose(const std::string str) // 移动到预设位姿
 }
 
 /// @brief 将XYZ转化为pose,并使用机械臂当前姿态
-/// @param x 
-/// @param y 
-/// @param z 
+/// @param x
+/// @param y
+/// @param z
 /// @return pose类型的数据点
 geometry_msgs::Pose MoveitServer::setPoint(const double x, const double y, const double z)
 {
@@ -150,7 +150,6 @@ geometry_msgs::Pose MoveitServer::setPoint(const std::vector<double> &pose)
 
 	return target_pose1;
 }
-
 
 /// @brief 获取机械臂当前末端pose数据
 /// @return 当前机械臂末端pose
@@ -304,6 +303,10 @@ bool MoveitServer::move_p(const geometry_msgs::Pose &msg, bool succeed) // 按�
 	}
 	return succeed;
 }
+/// @brief 基于规划的笛卡尔空间直线运动
+/// @param msg pose
+/// @param succeed 是否执行该语句
+/// @return True表示成功规划并执行，False表示规划失败
 bool MoveitServer::move_p_l(const geometry_msgs::Pose &msg, bool succeed)
 {
 	bool s;
@@ -313,7 +316,7 @@ bool MoveitServer::move_p_l(const geometry_msgs::Pose &msg, bool succeed)
 		geometry_msgs::Pose target_pose;
 		target_pose = msg;
 		arm_.setPoseTarget(target_pose);
-		s= Planer();
+		s = Planer();
 	}
 	arm_.setPlannerId("PTP");
 	return s;

@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
     setlocale(LC_ALL, "");
     ROS_INFO("中文输出！！！");
     // ros初始化
-    ros::init(argc, argv, "exemple01");
+    ros::init(argc, argv, "example01");
     ros::NodeHandle nh;
     ROS_INFO("ros 创建成功！！！");
     // 创建ros 多线程
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         ROS_INFO("Joint %d :%f", i, joint);
     }
     arm.setMaxVelocity(0.4);
-    ROS_INFO("设置最大速度为40%");
+    ROS_INFO("设置最大速度为40%%");
     // 使用go_home回到起点
     arm.go_home();
     ROS_INFO("回到起点");
