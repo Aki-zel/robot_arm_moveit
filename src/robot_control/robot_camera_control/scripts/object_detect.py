@@ -135,7 +135,7 @@ def getObjCoordinate(request):
                         camera_xyz = np.round(
                             np.array(camera_xyz), 3).tolist()  # 转成3位小数
                         print(camera_xyz)
-                        if camera_xyz[2] < 100.0 and camera_xyz[2] != 0:
+                        if camera_xyz[2] < 100.0:
                             world_pose = model.tf_transform(
                                 camera_xyz)  # 将目标物体从相机坐标系转换到世界坐标系
                             # model.tf_broad(camera_xyz)
