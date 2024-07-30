@@ -3,5 +3,5 @@
   <!-- <node name="template_detect" pkg="robot_camera_control" type="template_detect.py" output="screen" />  -->
   <node name="objection_detect" pkg="robot_camera_control" type="object_detect.py" output="screen" /> 
   <node name="color_detect" pkg="robot_camera_control" type="color_detect.py" output="screen" /> 
-  <include file="$(find vgn)/launch/grasp.launch"/>
+  <!-- <include file="$(find vgn)/launch/grasp.launch"/> -->
 </launch>

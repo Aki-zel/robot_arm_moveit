@@ -76,7 +76,8 @@ class ColorDetectServer(BaseDetection):
         if f:
             # 滤除h>4*w的干扰轮廓
             contours = [cnt for cnt in contours if cv2.boundingRect(
-                cnt)[2] >= 4*cv2.boundingRect(cnt)[3]]
+                cnt)[2] >= 6*cv2.boundingRect(cnt)[3]]
+
         # 按图像y坐标对轮廓进行排序(从上到下)
         contours = sorted(
             contours, key=lambda contour: cv2.boundingRect(contour)[1])
@@ -113,7 +114,8 @@ class ColorDetectServer(BaseDetection):
     # 颜色检测回调函数
     def handle_color_detection(self, request):
         response = Hand_CatchResponse()
-        color_name = request.color_name
+
+        color_name = request.name
         if color_name not in self.colors:
             rospy.logerr(f"Color '{color_name}' not found in configuration")
             return Hand_CatchResponse(labels=[], positions=[])

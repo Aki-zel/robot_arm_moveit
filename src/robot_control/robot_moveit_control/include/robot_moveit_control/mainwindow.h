@@ -27,7 +27,6 @@
 #include <opencv2/highgui.hpp>
 #include <QLabel>
 #include <thread>
-#include <robotControl.h>
 #include <robot_msgs/Hand_Catch.h>
 
 namespace Ui

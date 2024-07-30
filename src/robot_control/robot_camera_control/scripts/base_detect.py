@@ -4,7 +4,7 @@
 
 import rospy
 import cv2
-from cv_bridge import CvBridge,CvBridgeError
+from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image, CameraInfo
 import tf2_ros
 import tf2_geometry_msgs
@@ -19,13 +19,13 @@ class BaseDetection:
         self.bridge = CvBridge()
         self.depth_img = None
         self.camera_info = None
-        self.cv_image=None
+        self.cv_image = None
         self.tf_buffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.tf_buffer)
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
         # self.grasp_gen = GraspGenerator(config["gmodel_file"], True)
         # self.grasp_gen.load_model()
-        self.count=0
+        self.count = 0
         self.initTopic()
 
     def initTopic(self):
@@ -44,7 +44,7 @@ class BaseDetection:
             print(e)
 
     def depth_image_cb(self, msg):
-        self.depth_img = self.bridge.imgmsg_to_cv2(msg)
+        self.depth_img = self.bridge.imgmsg_to_cv2(msg, "32FC1")
 
     def camera_info_cb(self, msg):
         self.camera_info = msg
@@ -60,13 +60,14 @@ class BaseDetection:
         depth_value = self.depth_img[y, x]
         if depth_value == 0:
             rospy.logerr("未检测到深度信息!!!!!")
-        X = (x - cx) * depth_value / fx / 1000
-        Y = (y - cy) * depth_value / fy / 1000
-        Z = depth_value / 1000
+        else:
+            Z = depth_value / 1000
+            X = (x - cx) * Z / fx 
+            Y = (y - cy) * Z / fy 
 
         return [X, Y, Z]
 
-    def tf_transform(self, position, grasp = [0,0,0]):
+    def tf_transform(self, position, grasp=[0, 0, 0]):
         x, y, z = position
         camera_point = PoseStamped()
         camera_point.header.frame_id = self.config['camera']['frame_id']
@@ -89,7 +90,7 @@ class BaseDetection:
                 camera_point, transform)
             if world_point is not None:
                 # rospy.loginfo("World point: %s", world_point.pose)
-                
+
                 self.tf_broad(world_point)
                 return world_point
             else:
@@ -101,7 +102,7 @@ class BaseDetection:
         ) as e:
             rospy.logwarn("Exception while transforming: %s", e)
             return None
-        
+
     def tf_transform_name(self, position, name="base_link"):
         x, y, z = position
         camera_point = PoseStamped()
@@ -125,8 +126,7 @@ class BaseDetection:
                 camera_point, transform)
             if world_point is not None:
                 # rospy.loginfo("World point: %s", world_point.pose)
-                
-                self.tf_broad_name(world_point,name)
+                self.tf_broad_name(world_point, name)
                 return world_point
             else:
                 return None
@@ -143,12 +143,12 @@ class BaseDetection:
         tfs.header.frame_id = self.config['robot']['base_frame_id']
         tfs.header.stamp = rospy.Time.now()
         tfs.child_frame_id = "object"+str(self.count)
-        self.count=self.count+1
+        self.count = self.count+1
         tfs.transform.translation = position.pose.position
         tfs.transform.rotation = position.pose.orientation
         self.tf_broadcaster.sendTransform(tfs)
-    
-    def tf_broad_name(self, position,name):
+
+    def tf_broad_name(self, position, name):
         tfs = TransformStamped()
         tfs.header.frame_id = name
         tfs.header.stamp = rospy.Time.now()

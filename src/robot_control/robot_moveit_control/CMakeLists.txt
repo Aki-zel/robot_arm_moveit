@@ -4,10 +4,10 @@ project(robot_moveit_control)
 # set(CMAKE_AUTOMOC ON)
 # set(CMAKE_AUTORCC ON)
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 #添加c++11的支持
-set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+# set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -170,9 +170,14 @@ add_library(MoveitServer_h
 
 )
 add_library(robotTool_h
-  # include/MoveitServer.h
+  # include/robot_moveit_control/robotTool.h
   src/robotTool.cpp
 )
+# add_library(robotControl_h
+#   # include/MoveitServer.h
+
+#   src/robotControl.cpp
+# )
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -186,6 +191,10 @@ add_library(robotTool_h
 add_executable(ydtest src/test.cpp)
 add_executable(controlcenter src/ArmControlCenter.cpp)
 
+add_executable(example01 example/example01.cpp)
+add_executable(example02 example/example02.cpp)
+add_executable(example03 example/example03.cpp)
+add_executable(example04 example/example04.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -213,6 +222,26 @@ target_link_libraries(ydtest
   ${catkin_LIBRARIES}
 )
 target_link_libraries(controlcenter
+  MoveitServer_h
+  robotTool_h
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(example01
+  MoveitServer_h
+  robotTool_h
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(example02
+  MoveitServer_h
+  robotTool_h
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(example03
+  MoveitServer_h
+  robotTool_h
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(example04
   MoveitServer_h
   robotTool_h
   ${catkin_LIBRARIES}

@@ -16,6 +16,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <yd_msgs/Pose_Task.h>
+#include <yd_msgs/MoveGlobalTargetAction.h>
 #include <actionlib/server/simple_action_server.h>
 #include <actionlib/client/simple_action_client.h>
 #include <robot_msgs/Call_TaskAction.h>
@@ -56,7 +57,10 @@ public:
         get_map_cloud_client = nh.serviceClient<vgn::GetMapCloud>("get_map_cloud");
         predict_grasps_client = nh.serviceClient<vgn::PredictGrasps>("predict_grasps");
         carControl = nh.serviceClient<yd_msgs::Pose_Task>("/Rm_TargetPose");
+        carCon=new actionlib::SimpleActionClient<yd_msgs::MoveGlobalTargetAction>(nh,"ydrobot_controls",true);
+        // carCon->waitForServer();
         object_client_realtime = nh.serviceClient<robot_msgs::Objection_Detect>("object_realtime_detect");
+        
         ROS_INFO_NAMED("TASK", "initialize_service_client. ");
     }
 
@@ -197,7 +201,7 @@ public:
             robot_msgs::Hand_Catch run;
             std::vector<geometry_msgs::Pose> ps;
             run.request.run = true;
-            run.request.color_name = "blue";
+            run.request.name = "blue";
             arm.setMaxVelocity(0.2);
             // object_client.call(run);
             start_pose = arm.getCurrent_Pose();
@@ -288,7 +292,7 @@ public:
                 geometry_msgs::Pose target, target1, target2, target3, target4;
                 robot_msgs::Hand_Catch run;
                 run.request.run = true;
-                run.request.color_name = "drawerhandle";
+                run.request.name = "drawerhandle";
                 // object_client.call(run);
                 if (object_client.call(run) && !run.response.positions.empty())
                 {
@@ -443,14 +447,17 @@ public:
         auto call = [this](double s, double theta, double x, double y)
         {
             ROS_INFO_STREAM("active car");
-            yd_msgs::Pose_Task ptr;
-            ptr.request.Speed = s;
-            ptr.request.PoseSend.theta = theta;
-            ptr.request.PoseSend.x = x;
-            ptr.request.PoseSend.y = y;
-            ptr.request.Id = 0;
+            yd_msgs::MoveGlobalTargetGoal ptr;
+            ptr.Speed = s;
+            ptr.PoseSend.theta = theta;
+            ptr.PoseSend.x = x;
+            ptr.PoseSend.y = y;
+            ptr.Id = 0;
             arm.go_home();
-            carControl.call(ptr);
+            carCon->sendGoalAndWait(ptr,ros::Duration(60));
+            // carControl.call(ptr);
+
+            // carCon->waitForResult(ros::Duration(60));
         };
         // arm.move_j(std::vector<double>{tool.degreesToRadians(0), tool.degreesToRadians(28), tool.degreesToRadians(-78),
         //                                tool.degreesToRadians(0), tool.degreesToRadians(-71), tool.degreesToRadians(180)});
@@ -484,7 +491,7 @@ public:
                 pose.position.y = goal_y;
                 tool.publishStaticTFwithRot(pose);
                 call(0.2, 0, goal_x, goal_y);
-                ros::Duration(20).sleep();
+                // ros::Duration(20).sleep();
                 arm.move_j(std::vector<double>{tool.degreesToRadians(46), tool.degreesToRadians(-86), tool.degreesToRadians(-62),
                                                tool.degreesToRadians(132), tool.degreesToRadians(112), tool.degreesToRadians(155)});
                 object_client_realtime.call(goal);
@@ -590,6 +597,7 @@ private:
     // ros::Subscriber a;
     Server *server;
     // Client *object_client_realtime;
+    actionlib::SimpleActionClient<yd_msgs::MoveGlobalTargetAction> *carCon;
     ros::Publisher iswork, current_state;
     ros::ServiceClient object_client, color_client, carControl,
         resetmap, toggle, get_scene_cloud_client, get_map_cloud_client, predict_grasps_client, object_client_realtime;

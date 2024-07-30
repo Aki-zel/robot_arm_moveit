@@ -90,8 +90,9 @@ class Yolo(BaseDetection):
             }
             filtered_objects.append(object_info)
         sorted_objects = sorted(
-            filtered_objects, key=lambda x: x["score"], reverse=True
+            filtered_objects, key=lambda obj: obj["box_coordinates"][1]
         )
+        # filtered_objects.sort(key=lambda obj: obj["box_coordinates"][1])
         return sorted_objects
 
 
@@ -123,10 +124,9 @@ def getObjCoordinate(request):
     global model
     labels = []
     positions = []
-
-    run = request.run  # 确定是否执行检测
-    respond = Hand_CatchResponse()  # 创建服务响应对象
-
+    print(getObjCoordinate)
+    run = request.run  # 获取请求中的标志位，判断是否执行检测
+    respond = Hand_CatchResponse()  # 创建一个服务响应对象
     try:
         if run:
             color_image = model.cv_image
@@ -138,19 +138,34 @@ def getObjCoordinate(request):
             # cv2.imshow("res", res) # 显示检测结果
             # cv2.waitKey(0)
             object_list = model.getFilteredObjects()  # 获取筛选后的目标信息列表
-
-            # 处理抽屉把手对象
-            drawerhandle_objects = [
-                obj for obj in object_list if obj["label"] == "drawerhandle"]
-            if drawerhandle_objects:
-                # 按检测框中心点y坐标排序
-                drawerhandle_objects.sort(key=lambda x: (
-                    x["box_coordinates"][1] + x["box_coordinates"][3]) / 2)
-                labels, positions = process_objects(drawerhandle_objects)
-            else:
-                labels, positions = process_objects(
-                    object_list, request.color_name)
-
+            # print("目标数量" + str(len(object_list)))
+            if object_list:
+                for obj in object_list:
+                    label = obj["label"]
+                    # print(label, request.color_name)
+                    if label == request.name:
+                        box_coords = obj["box_coordinates"]
+                        # bottom_right = (box_coords[3] + 100, box_coords[2] + 100)
+                        # top_left = (box_coords[1] + 100, box_coords[0] + 100)
+                        # 计算物体中心点x坐标
+                        ux = int((box_coords[0] + box_coords[2]) / 2)
+                        # 计算物体中心点y坐标
+                        uy = int((box_coords[1] + box_coords[3]) / 2)
+                        # grasp = model.grasp_gen.Predict(
+                        #     color_image, depth_image, cam_info, top_left, bottom_right
+                        # )
+                        # 获取物体的三维坐标
+                        camera_xyz = model.getObject3DPosition(ux, uy)
+                        camera_xyz = np.round(
+                            np.array(camera_xyz), 3).tolist()  # 转成3位小数
+                        print(camera_xyz)
+                        if camera_xyz[2] < 100.0:
+                            world_pose = model.tf_transform(
+                                camera_xyz)  # 将目标物体从相机坐标系转换到世界坐标系
+                            # model.tf_broad(camera_xyz)
+                            positions.append(world_pose)
+                            # positions.extend(camera_xyz)
+                            labels.append(label)
             respond.labels = labels
             respond.positions = positions
             print(respond.labels, respond.positions)
@@ -195,8 +210,9 @@ def realtime_detect_call_back(goal):
                         if camera_xyz[2] != 0:
                             world_pose = model.tf_transform_name(
                                 camera_xyz, "base_link")  # 将目标物体从相机坐标系转换到世界坐标系
+                            print(ux)
                             feedback.position = world_pose
-                            if 0.38 <= camera_xyz[2] < 0.485 and 380 <= ux <= 440:
+                            if 0.36<= camera_xyz[2] < 0.52 and  220<=ux<=420:
                                 feedback.success = True
 
         except Exception as r:
