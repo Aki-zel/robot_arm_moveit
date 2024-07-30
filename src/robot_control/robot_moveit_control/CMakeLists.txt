@@ -4,10 +4,10 @@ project(robot_moveit_control)
 # set(CMAKE_AUTOMOC ON)
 # set(CMAKE_AUTORCC ON)
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 #添加c++11的支持
-set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+# set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages

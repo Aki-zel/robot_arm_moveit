@@ -63,7 +63,7 @@ private:
 	// std::string reference_frame;
 	ros::NodeHandle nh_;
 	tf2_ros::Buffer tfBuffer;
-	tf2_ros::TransformListener *tfListener;
+	std::unique_ptr<tf2_ros::TransformListener> tfListener;
 	// ros::Subscriber tf_sub;
 	geometry_msgs::Transform current_state;
 	ros::Publisher tool_do_pub, collision_stage_pub;

@@ -36,3 +36,5 @@ src/robot_control/robot_camera_control/scripts/*.png
 .DS_Store
 src/yd_description
 src/yd_msgs
+src/percipio*
+src/robot_control/robot_camera_control/scripts/1.py

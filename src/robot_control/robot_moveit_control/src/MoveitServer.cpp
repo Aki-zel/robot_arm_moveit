@@ -4,6 +4,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Transform.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <memory>
 #include <geometry_msgs/Point.h>
 /// @brief 构造函数
 /// @param PLANNING_GROUP
@@ -30,7 +31,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	// arm_.setPlannerId("RRTConnect");
 	// arm_.setPlannerId("RRTstar");
 	// arm_.setEndEffectorLink("ee_link");
-	tfListener = new tf2_ros::TransformListener(tfBuffer);
+	tfListener = std::make_unique<tf2_ros::TransformListener>(tfBuffer);
 	tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
 	collision_stage_pub = nh_.advertise<std_msgs::Int16>("/rm_driver/Set_Collision_Stage", 1);
 	moveL_cmd = nh_.advertise<rm_msgs::MoveL>("/rm_driver/MoveL_Cmd", 10);
@@ -483,5 +484,5 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 
 MoveitServer::~MoveitServer()
 {
-	delete tfListener;
+	// delete tfListener;
 }
