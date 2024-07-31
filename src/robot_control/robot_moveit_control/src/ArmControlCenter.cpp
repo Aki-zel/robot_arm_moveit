@@ -51,86 +51,12 @@ public:
     {
         object_client = nh.serviceClient<robot_msgs::Hand_Catch>("object_detect");
         color_client = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect");
-        resetmap = nh.serviceClient<std_srvs::Empty>("reset_map");
-        toggle = nh.serviceClient<std_srvs::SetBool>("toggle_integration");
-        get_scene_cloud_client = nh.serviceClient<vgn::GetSceneCloud>("get_scene_cloud");
-        get_map_cloud_client = nh.serviceClient<vgn::GetMapCloud>("get_map_cloud");
-        predict_grasps_client = nh.serviceClient<vgn::PredictGrasps>("predict_grasps");
         carControl = nh.serviceClient<yd_msgs::Pose_Task>("/Rm_TargetPose");
-        carCon=new actionlib::SimpleActionClient<yd_msgs::MoveGlobalTargetAction>(nh,"ydrobot_controls",true);
+        carCon = new actionlib::SimpleActionClient<yd_msgs::MoveGlobalTargetAction>(nh, "ydrobot_controls", true);
         // carCon->waitForServer();
         object_client_realtime = nh.serviceClient<robot_msgs::Objection_Detect>("object_realtime_detect");
-        
+
         ROS_INFO_NAMED("TASK", "initialize_service_client. ");
-    }
-
-    void resetMap()
-    {
-        std_srvs::Empty em;
-        resetmap.call(em);
-    }
-
-    void setToggle(bool value)
-    {
-        std_srvs::SetBool toggle_integration_srv;
-        toggle_integration_srv.request.data = value;
-        toggle.call(toggle_integration_srv);
-    }
-
-    vgn::GetMapCloud getSense()
-    {
-        vgn::GetSceneCloud get_scene_cloud_srv;
-        vgn::GetMapCloud get_map_cloud_srv;
-        get_scene_cloud_client.call(get_scene_cloud_srv);
-        get_map_cloud_client.call(get_map_cloud_srv);
-        return get_map_cloud_srv;
-    }
-
-    void preditGrasp(vgn::GetMapCloud sensemap, std::vector<geometry_msgs::Pose> &ret)
-    {
-        vgn::PredictGrasps predict_grasps_srv;
-        predict_grasps_srv.request.map_cloud = sensemap.response.map_cloud;
-        predict_grasps_srv.request.voxel_size = sensemap.response.voxel_size;
-        if (predict_grasps_client.call(predict_grasps_srv))
-        {
-            const std::vector<vgn::GraspConfig> &grasps = predict_grasps_srv.response.grasps;
-            if (!grasps.empty())
-            {
-                const std::vector<vgn::GraspConfig> &grasps = predict_grasps_srv.response.grasps;
-                std::vector<vgn::GraspConfig> valid_grasps; // 用于存放符合条件的姿态
-
-                for (const auto &grasp : grasps)
-                {
-                    tf2::Quaternion quat;
-                    tf2::fromMsg(grasp.pose.orientation, quat);
-
-                    // 定义Z轴单位向量
-                    tf2::Vector3 z_axis(0, 0, 1);
-
-                    // 将四元数应用于Z轴向量，以获得在基础坐标系中的方向向量
-                    tf2::Vector3 transformed_z_axis = tf2::quatRotate(quat, z_axis);
-
-                    // 现在可以检查transformed_z_axis的z分量来确定Z轴方向
-                    if (transformed_z_axis.z() <= 0.0)
-                    {
-                        double angle = acos(transformed_z_axis.dot(tf2::Vector3(0, 0, -1)));
-                        // 将夹角转换为度数
-                        double angle_deg = angle * 180.0 / M_PI;
-                        if (angle_deg <= 50.0)
-                        {
-                            geometry_msgs::Pose transformed_pose = tool.transPose(grasp.pose);
-                            ret.push_back(transformed_pose);
-                            valid_grasps.push_back(grasp); // 如果夹角在-45到45度之间，将该姿态加入有效姿态列表
-                        }
-                    }
-                }
-                tool.publishGraspPoses(valid_grasps);
-            }
-            else
-            {
-                ROS_ERROR("Failed to call service PredictGrasps");
-            }
-        }
     }
 
     void publishWorkStatus(const ros::TimerEvent &, ros::Publisher &iswork_pub)
@@ -279,14 +205,13 @@ public:
             ROS_INFO_NAMED("openCabinet", "移动到识别点");
             success = arm.move_j(std::vector<double>{tool.degreesToRadians(46), tool.degreesToRadians(-77), tool.degreesToRadians(-68),
                                                      tool.degreesToRadians(132), tool.degreesToRadians(112), tool.degreesToRadians(155)});
-            
-            
+
             // 检测判断能否抓到柜子
             robot_msgs::Objection_Detect goal;
             goal.request.run = true;
             object_client_realtime.call(goal);
 
-            //如果检测成功，继续执行后续动作
+            // 如果检测成功，继续执行后续动作
             if (goal.response.success)
             {
                 geometry_msgs::Pose target, target1, target2, target3, target4;
@@ -298,7 +223,7 @@ public:
                 {
                     target = run.response.positions[1].pose;
                     target = arm.setPoint(std::vector<double>{target.position.x, target.position.y, target.position.z, tool.degreesToRadians(90), tool.degreesToRadians(90), 0});
-                    arm.Set_Tool_DO(2, false); 
+                    arm.Set_Tool_DO(2, false);
                     // 移动到抽屉把手预抓取位置
                     ROS_INFO_NAMED("openCabinet", "1");
                     target1 = tool.calculateTargetPose(target, arm.setPoint(std::vector<double>{0, 0, -0.1, 0, 0, tool.degreesToRadians(-90)}));
@@ -309,7 +234,7 @@ public:
                     ROS_INFO_NAMED("openCabinet", "2");
                     target1 = tool.calculateTargetPose(target1, arm.setPoint(std::vector<double>{0, 0, 0.11, 0, 0, 0}));
                     success = arm.move_l(target1, success);
-                    arm.Set_Tool_DO(2, true); //关闭夹爪
+                    arm.Set_Tool_DO(2, true); // 关闭夹爪
 
                     // 向外拉抽屉
                     ROS_INFO_NAMED("openCabinet", "3");
@@ -365,11 +290,12 @@ public:
 
                     // 移动到过渡姿态
                     success = arm.move_j(std::vector<double>{tool.degreesToRadians(11), tool.degreesToRadians(-17), tool.degreesToRadians(-70),
-                                                    tool.degreesToRadians(0), tool.degreesToRadians(-94), tool.degreesToRadians(259)}, success);
+                                                             tool.degreesToRadians(0), tool.degreesToRadians(-94), tool.degreesToRadians(259)},
+                                         success);
 
                     // 移动到抽屉上方
                     target4 = tool.calculateTargetPose(target3, arm.setPoint(std::vector<double>{0, -0.05, 0, 0, tool.degreesToRadians(90), 0}));
-                    success = arm.move_p(target4, success); 
+                    success = arm.move_p(target4, success);
                     ROS_INFO_NAMED("openCabinet", "抓取");
                     // 移动到夹取观察点2，查看抽屉内部
                     target4 = tool.calculateTargetPose(target4, arm.setPoint(std::vector<double>{-0.08, 0, 0, 0, 0, 0}));
@@ -422,7 +348,7 @@ public:
                 if (success == false)
                 {
                     arm.move_j(std::vector<double>{tool.degreesToRadians(46), tool.degreesToRadians(-86), tool.degreesToRadians(-62),
-                                                tool.degreesToRadians(132), tool.degreesToRadians(112), tool.degreesToRadians(155)});
+                                                   tool.degreesToRadians(132), tool.degreesToRadians(112), tool.degreesToRadians(155)});
                     arm.go_home();
                     return success;
                 }
@@ -436,7 +362,7 @@ public:
 
         return success;
     }
-    
+
     bool searchDestination()
     {
         double angle;
@@ -454,7 +380,7 @@ public:
             ptr.PoseSend.y = y;
             ptr.Id = 0;
             arm.go_home();
-            carCon->sendGoalAndWait(ptr,ros::Duration(60));
+            carCon->sendGoalAndWait(ptr, ros::Duration(60));
             // carControl.call(ptr);
 
             // carCon->waitForResult(ros::Duration(60));
@@ -599,8 +525,7 @@ private:
     // Client *object_client_realtime;
     actionlib::SimpleActionClient<yd_msgs::MoveGlobalTargetAction> *carCon;
     ros::Publisher iswork, current_state;
-    ros::ServiceClient object_client, color_client, carControl,
-        resetmap, toggle, get_scene_cloud_client, get_map_cloud_client, predict_grasps_client, object_client_realtime;
+    ros::ServiceClient object_client, color_client, carControl, object_client_realtime;
     ros::ServiceServer CallTask;
     std_msgs::String statemsg;
     robotTool tool;

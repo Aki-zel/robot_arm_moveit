@@ -1,5 +1,26 @@
 #include <robotTool.h>
-
+#include <ros/ros.h>
+#include <sensor_msgs/JointState.h>
+#include <tf2/buffer_core.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_msgs/TFMessage.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Transform.h>
+#include <std_msgs/Int16.h>
+#include <tf2_ros/static_transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <vgn/GraspConfig.h>
+#include <vgn/GetMapCloud.h>
+#include <vgn/GetSceneCloud.h>
+#include <vgn/PredictGrasps.h>
+#include <vgn/GraspConfig.h>
+#include <std_msgs/String.h>
+#include <std_srvs/Empty.h>
+#include <std_srvs/SetBool.h>
 /// @brief 发布相对于机械臂基座标的TF坐标不包含位姿
 /// @param p 类型geometry_msgs::Pose 含义：需要被发布的坐标点
 /// @param name 类型std::string 含义：需要发布的坐标点名称

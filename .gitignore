@@ -38,3 +38,4 @@ src/yd_description
 src/yd_msgs
 src/percipio*
 src/robot_control/robot_camera_control/scripts/1.py
+install

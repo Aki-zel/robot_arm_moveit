@@ -6,6 +6,32 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <memory>
 #include <geometry_msgs/Point.h>
+#include <bits/stdc++.h>
+#include <ros/ros.h>
+#include <moveit/move_group_interface/move_group_interface.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit_msgs/AttachedCollisionObject.h>
+#include <moveit_msgs/CollisionObject.h>
+#include <moveit/robot_trajectory/robot_trajectory.h>
+#include <moveit_msgs/AttachedCollisionObject.h>
+#include <moveit_msgs/CollisionObject.h>
+#include <rm_msgs/Tool_Digital_Output.h>
+#include <rm_msgs/Tool_IO_State.h>
+#include <sensor_msgs/JointState.h>
+#include <tf2/buffer_core.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_msgs/TFMessage.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Transform.h>
+#include <std_msgs/Int16.h>
+#include <moveit_visual_tools/moveit_visual_tools.h>
+#include <moveit/robot_model/robot_model.h>
+#include <moveit/trajectory_processing/iterative_time_parameterization.h>
+#include <moveit/trajectory_processing/iterative_spline_parameterization.h>
+#include <robotTool.h>
 /// @brief 构造函数
 /// @param PLANNING_GROUP
 MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), spinner(3)
