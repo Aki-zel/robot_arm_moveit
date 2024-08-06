@@ -63,6 +63,7 @@ add_service_files(
   FILES
   # Service1.srv
   # Service2.srv
+  Get_Board_State.srv
   Hand_Catch.srv
   Task_Call.srv
   Objection_Detect.srv

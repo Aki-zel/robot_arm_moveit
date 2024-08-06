@@ -44,7 +44,7 @@ class BaseDetection:
             print(e)
 
     def depth_image_cb(self, msg):
-        self.depth_img = self.bridge.imgmsg_to_cv2(msg, "32FC1")
+        self.depth_img = self.bridge.imgmsg_to_cv2(msg)
 
     def camera_info_cb(self, msg):
         self.camera_info = msg
@@ -57,9 +57,12 @@ class BaseDetection:
         fy = self.camera_info.K[4]
         cx = self.camera_info.K[2]
         cy = self.camera_info.K[5]
+        x = int(round(x))
+        y = int(round(y))
         depth_value = self.depth_img[y, x]
         if depth_value == 0:
             rospy.logerr("未检测到深度信息!!!!!")
+            raise ValueError("Depth value is zero")
         else:
             Z = depth_value / 1000
             X = (x - cx) * Z / fx 

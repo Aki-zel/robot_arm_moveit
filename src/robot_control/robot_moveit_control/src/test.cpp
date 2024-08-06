@@ -16,14 +16,15 @@ int main(int argc, char **argv)
 	MoveitServer arm(PLANNING_GROUP); // 创建MoveitServer对象
 	ros::ServiceClient client = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect"); // 创建颜色检测服务客户端
 
+
 	// 移动机械臂到初始位置
-	arm.move_j(std::vector<double>{arm.degreesToRadians(0), arm.degreesToRadians(-30), arm.degreesToRadians(-90),
-											 arm.degreesToRadians(0), arm.degreesToRadians(-60), arm.degreesToRadians(-180)});
+	// arm.move_j(std::vector<double>{tool.degreesToRadians(0), tool.degreesToRadians(-30), tool.degreesToRadians(-90),
+	// 										 tool.degreesToRadians(0), tool.degreesToRadians(-60), tool.degreesToRadians(-180)});
 	
 	// 调用目标检测服务
 	robot_msgs::Hand_Catch srv;
 	srv.request.run = true; // 设置请求标志位
-	srv.request.color_name = "blue"; // 设置目标颜色
+	srv.request.name = "blue"; // 设置目标颜色
 	if (client.call(srv)) // 调用服务
 	{
 		ROS_INFO("Service call succeeded");
@@ -71,8 +72,8 @@ int main(int argc, char **argv)
 
 				stack_height += 0.07; // 更新堆叠高度,根据方块的高度调整
 
-				vector<double> joints = {0, 0, arm.degreesToRadians(-90), 0, arm.degreesToRadians(-90), arm.degreesToRadians(180)};
-				arm.move_j(joints);
+				// vector<double> joints = {0, 0, arm.degreesToRadians(-90), 0, arm.degreesToRadians(-90), arm.degreesToRadians(180)};
+				// arm.move_j(joints);
 				ROS_INFO("移动到检测位置");
 			}
 		}

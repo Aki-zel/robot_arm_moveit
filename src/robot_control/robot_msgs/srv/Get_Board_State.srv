@@ -1,0 +1,5 @@
+bool run
+---
+int32[] board
+geometry_msgs/PoseStamped[] positions
+int32 round
