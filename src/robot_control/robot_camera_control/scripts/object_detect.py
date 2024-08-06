@@ -184,7 +184,7 @@ def realtime_detect_call_back(goal):
                         # print(label,camera_xyz)
                         if camera_xyz[2] != 0:
                             world_pose = model.tf_transform_name(
-                                camera_xyz, "base_link")  # 将目标物体从相机坐标系转换到世界坐标系
+                                camera_xyz, model.config['robot']['base_frame_id'])  # 将目标物体从相机坐标系转换到世界坐标系
                             print(ux)
                             feedback.position = world_pose
                             if 0.36<= camera_xyz[2] < 0.52 and  220<=ux<=420:

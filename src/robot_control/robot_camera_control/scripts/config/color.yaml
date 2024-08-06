@@ -1,11 +1,11 @@
 robot:
-  base_frame_id: base_link_rm
-  ee_frame_id: ee_link
+  base_frame_id: xMate3_base
+  ee_frame_id: tool
 camera:
-  frame_id: camera_color_optical_frame
-  color_topic: /camera/color/image_raw
-  info_topic: /camera/aligned_depth_to_color/camera_info
-  depth_topic: /camera/aligned_depth_to_color/image_raw
+  frame_id: camera_rgb_optical_frame
+  color_topic: /camera/rgb/image_rect_color
+  info_topic: /camera/rgb/camera_info
+  depth_topic: /camera/depth/image_rect_raw
 # 颜色阈值设置
 colors:
   cabinet_handle:
@@ -29,8 +29,8 @@ colors:
         lower: [100, 100, 100]
         upper: [140, 255, 255]
     area_threshold:
-        min_area: 200
-        max_area: 1200
+        min_area: 1000
+        max_area: 6500
 
   
 

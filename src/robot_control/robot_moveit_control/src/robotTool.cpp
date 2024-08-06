@@ -89,7 +89,7 @@ void robotTool::publishStaticTFwithRot(const geometry_msgs::Pose &p, std::string
     // 设置头信息
     ts.header.seq = 100;
     ts.header.stamp = ros::Time::now();
-    ts.header.frame_id = "base_link_rm";
+    ts.header.frame_id = "xMate3_base";
     // 设置子级坐标系
     ts.child_frame_id = name;
     // 设置子级相对于父级的偏移量

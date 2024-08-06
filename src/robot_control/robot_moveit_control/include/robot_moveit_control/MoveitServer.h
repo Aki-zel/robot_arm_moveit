@@ -61,6 +61,7 @@ public:
 	moveit::planning_interface::MoveGroupInterface arm_;
 private:
 	// std::string reference_frame;
+	std::string plan_group;
 	ros::NodeHandle nh_;
 	tf2_ros::Buffer tfBuffer;
 	std::unique_ptr<tf2_ros::TransformListener> tfListener;

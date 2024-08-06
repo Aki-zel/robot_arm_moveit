@@ -191,10 +191,11 @@ add_library(robotTool_h
 add_executable(ydtest src/test.cpp)
 add_executable(controlcenter src/ArmControlCenter.cpp)
 
-add_executable(example01 example/example01.cpp)
-add_executable(example02 example/example02.cpp)
-add_executable(example03 example/example03.cpp)
-add_executable(example04 example/example04.cpp)
+# add_executable(example01 example/example01.cpp)
+# add_executable(example02 example/example02.cpp)
+# add_executable(example03 example/example03.cpp)
+# add_executable(example04 example/example04.cpp)
+add_executable(example05 example/example05.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -226,22 +227,27 @@ target_link_libraries(controlcenter
   robotTool_h
   ${catkin_LIBRARIES}
 )
-target_link_libraries(example01
-  MoveitServer_h
-  robotTool_h
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(example02
-  MoveitServer_h
-  robotTool_h
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(example03
-  MoveitServer_h
-  robotTool_h
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(example04
+# target_link_libraries(example01
+#   MoveitServer_h
+#   robotTool_h
+#   ${catkin_LIBRARIES}
+# )
+# target_link_libraries(example02
+#   MoveitServer_h
+#   robotTool_h
+#   ${catkin_LIBRARIES}
+# )
+# target_link_libraries(example03
+#   MoveitServer_h
+#   robotTool_h
+#   ${catkin_LIBRARIES}
+# )
+# target_link_libraries(example04
+#   MoveitServer_h
+#   robotTool_h
+#   ${catkin_LIBRARIES}
+# )
+target_link_libraries(example05
   MoveitServer_h
   robotTool_h
   ${catkin_LIBRARIES}

@@ -32,6 +32,8 @@
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
 #include <moveit/trajectory_processing/iterative_spline_parameterization.h>
 #include <robotTool.h>
+#include <rokae_msgs/SetIoOutput.h>
+#include <moveit_msgs/GetMotionSequence.h>
 /// @brief 构造函数
 /// @param PLANNING_GROUP
 MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), spinner(3)
@@ -43,12 +45,13 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	// 	return;
 	// }
 	// Set arm properties
+	plan_group=PLANNING_GROUP;
 	arm_.setGoalPositionTolerance(0.01);
 	arm_.setGoalOrientationTolerance(0.01);
 	arm_.setGoalJointTolerance(0.01);
 	arm_.setMaxAccelerationScalingFactor(0.1);
 	arm_.setMaxVelocityScalingFactor(0.1);
-	arm_.setPoseReferenceFrame("base_link_rm");
+	// arm_.setPoseReferenceFrame("base_link_rm");
 	arm_.allowReplanning(true);
 	arm_.setPlanningTime(5.0);
 	// arm_.setPlannerId("LBTRRT");
@@ -58,7 +61,8 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	// arm_.setPlannerId("RRTstar");
 	// arm_.setEndEffectorLink("ee_link");
 	tfListener = std::make_unique<tf2_ros::TransformListener>(tfBuffer);
-	tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
+	// tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
+	tool_do_pub=nh_.advertise<rokae_msgs::SetIoOutput>("set_io",10);
 	collision_stage_pub = nh_.advertise<std_msgs::Int16>("/rm_driver/Set_Collision_Stage", 1);
 	moveL_cmd = nh_.advertise<rm_msgs::MoveL>("/rm_driver/MoveL_Cmd", 10);
 	joint_model_group = arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
@@ -188,10 +192,10 @@ geometry_msgs::Pose MoveitServer::getCurrent_Pose()
 	{
 		current_pose = this->arm_.getCurrentPose(arm_.getEndEffectorLink());
 		// 获取 base 到 base_rm 的转换
-		geometry_msgs::TransformStamped transformStamped = this->tfBuffer.lookupTransform("base_link_rm", "base_link", ros::Time(0));
+		// geometry_msgs::TransformStamped transformStamped = this->tfBuffer.lookupTransform("base_link_rm", "base_link", ros::Time(0));
 
-		// 将姿态从 base 转换到 base_rm
-		tf2::doTransform(current_pose, current_pose, transformStamped);
+		// // 将姿态从 base 转换到 base_rm
+		// tf2::doTransform(current_pose, current_pose, transformStamped);
 	}
 	catch (tf2::TransformException &ex)
 	{
@@ -245,9 +249,13 @@ void MoveitServer::setCollisionMatrix()
 /// @param state Flase为开，True为关
 void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
 {
-	rm_msgs::Tool_Digital_Output tool_do_msg;
-	tool_do_msg.num = num;
-	tool_do_msg.state = state;
+	// rm_msgs::Tool_Digital_Output tool_do_msg;
+	// tool_do_msg.num = num;
+	// tool_do_msg.state = state;
+	rokae_msgs::SetIoOutput tool_do_msg;
+	tool_do_msg.board=1;
+	tool_do_msg.num=num;
+	tool_do_msg.state=state;
 	tool_do_pub.publish(tool_do_msg);
 	ROS_INFO("Published Tool Digital Output message with num = %d and state = %s", num, state ? "true" : "false");
 	ros::Duration(1).sleep();
@@ -257,16 +265,16 @@ void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
 void MoveitServer::initializeClaw()
 {
 	arm_.setNamedTarget("zero");
-	arm_.asyncMove();
-	Set_Tool_DO(1, false);
-	Set_Tool_DO(2, false);
+	arm_.move();
+	Set_Tool_DO(0, true);
 	Set_Tool_DO(1, true);
+
 	Set_Tool_DO(1, false);
-	Set_Tool_DO(2, true);
-	Set_Tool_DO(2, false);
+	Set_Tool_DO(1, true);
+	// Set_Tool_DO(2, false);
 	std_msgs::Int16 msg;
 	msg.data = 4;
-	this->collision_stage_pub.publish(msg);
+	// this->collision_stage_pub.publish(msg);
 	ROS_INFO("Collision Stage 4 setup");
 	ROS_INFO("Claw initialization completed");
 }
@@ -477,7 +485,7 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 		if (fraction == 1)
 		{
 			ROS_INFO("Path computed successfully. Moving the arm.");
-			robot_trajectory::RobotTrajectory rt(arm_.getCurrentState()->getRobotModel(), "arm");
+			robot_trajectory::RobotTrajectory rt(arm_.getCurrentState()->getRobotModel(), plan_group);
 			rt.setRobotTrajectoryMsg(*arm_.getCurrentState(), trajectory);
 
 			trajectory_processing::IterativeParabolicTimeParameterization iptp;

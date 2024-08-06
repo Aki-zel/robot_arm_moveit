@@ -149,33 +149,10 @@ class ColorDetectServer(BaseDetection):
                     camera_xyz = self.getObject3DPosition(
                         center_x, center_y)
                     camera_xyz = np.round(np.array(camera_xyz), 3).tolist()
-                    world_position = self.tf_transform(camera_xyz)
-                   # 创建PoseStamped消息
-                    pose = PoseStamped()
-                    pose.header.stamp = rospy.Time.now()
-                    pose.header.frame_id = "camera_color_optical_frame"
-
-                    # 设置位置
-                    pose.pose.position.x = world_position.pose.position.x
-                    pose.pose.position.y = world_position.pose.position.y
-                    pose.pose.position.z = world_position.pose.position.z
-
-                    # 末端工具默认朝下时的姿态
-                    initial_quaternion = [0, 1, 0, 0] # 初始四元数
-                    # 计算绕 Z 轴旋转的四元数
-                    rotation_quaternion = quaternion_from_euler(
-                        0, 0, np.deg2rad(angle))
-                    # 合成四元数
-                    final_quaternion = quaternion_multiply(
-                        initial_quaternion, rotation_quaternion)
-                    # 设置姿态
-                    pose.pose.orientation.x = final_quaternion[0]
-                    pose.pose.orientation.y = final_quaternion[1]
-                    pose.pose.orientation.z = final_quaternion[2]
-                    pose.pose.orientation.w = final_quaternion[3]
-
+                    world_position = self.tf_transform(
+                        camera_xyz, [0, 0, np.deg2rad(angle)])
                     response.labels.append(label)
-                    response.positions.append(pose)
+                    response.positions.append(world_position)
 
             else:
                 rospy.logwarn("No image received yet.")

@@ -44,7 +44,7 @@ class BaseDetection:
             print(e)
 
     def depth_image_cb(self, msg):
-        self.depth_img = self.bridge.imgmsg_to_cv2(msg, "32FC1")
+        self.depth_img = self.bridge.imgmsg_to_cv2(msg)
 
     def camera_info_cb(self, msg):
         self.camera_info = msg
@@ -62,8 +62,10 @@ class BaseDetection:
             rospy.logerr("未检测到深度信息!!!!!")
         else:
             Z = depth_value / 1000
-            X = (x - cx) * Z / fx 
-            Y = (y - cy) * Z / fy 
+            X = (x - cx) * Z / fx
+            Y = (y - cy) * Z / fy
+            rospy.loginfo(
+                f"Position: x={X:.2f}, y={Y:.2f}, z={Z:.2f}")
 
         return [X, Y, Z]
 
@@ -89,7 +91,7 @@ class BaseDetection:
             world_point = tf2_geometry_msgs.do_transform_pose(
                 camera_point, transform)
             if world_point is not None:
-                # rospy.loginfo("World point: %s", world_point.pose)
+                rospy.loginfo("World point: %s", world_point.pose)
 
                 self.tf_broad(world_point)
                 return world_point

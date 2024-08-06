@@ -55,7 +55,7 @@ add_message_files(
   FILES
   # Message1.msg
   # Message2.msg
-  MoveL_Data.msg
+  # MoveL_Data.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -66,6 +66,7 @@ add_service_files(
   Hand_Catch.srv
   Task_Call.srv
   Objection_Detect.srv
+  Get_Board_State.srv
 )
 
 ## Generate actions in the 'action' folder
