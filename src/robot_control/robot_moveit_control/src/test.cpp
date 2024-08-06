@@ -1,7 +1,6 @@
 #include <ros/ros.h>
 #include <MoveitServer.h>
 #include <robot_msgs/Hand_Catch.h>
-#include <robotTool.h>
 using namespace std;
 
 int main(int argc, char **argv)

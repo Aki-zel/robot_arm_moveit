@@ -17,6 +17,19 @@
             ],
             "group": "build",
             "label": "catkin_make: build"
+        },
+        {
+            "type": "catkin_make",
+            "args": [
+                "--directory",
+                "/home/yds/rwm_moveit",
+                "-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+            ],
+            "problemMatcher": [
+                "$catkin-gcc"
+            ],
+            "group": "build",
+            "label": "catkin_make: build"
         }
     ]
 }

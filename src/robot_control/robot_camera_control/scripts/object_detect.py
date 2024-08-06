@@ -96,6 +96,30 @@ class Yolo(BaseDetection):
         return sorted_objects
 
 
+def process_objects(object_list, filter_label=None):
+    """处理并筛选特定标签的对象，返回其世界坐标"""
+    global model
+    labels = []
+    positions = []
+    for obj in object_list:
+        label = obj["label"]
+        if filter_label and label != filter_label:
+            continue
+
+        box_coords = obj["box_coordinates"]
+        ux = int((box_coords[0] + box_coords[2]) / 2)
+        uy = int((box_coords[1] + box_coords[3]) / 2)
+
+        camera_xyz = model.getObject3DPosition(ux, uy)
+        camera_xyz = np.round(np.array(camera_xyz), 3).tolist() # 保留小数点后3位
+
+        if camera_xyz[2] < 100.0 and camera_xyz[2] != 0:
+            world_pose = model.tf_transform(camera_xyz)
+            positions.append(world_pose)
+            labels.append(label)
+    return labels, positions
+
+
 def getObjCoordinate(request):
     global model
     labels = []
@@ -110,8 +134,8 @@ def getObjCoordinate(request):
             model.Predicts(color_image)
             # t_end = time.time()  # 结束计时
             # print("预测时间" + str((t_end-t_start)*1000))  # 打印预测时间
-            res = model.visual(color_image)  # 可视化检测结果
-            # cv2.imshow("res", res)
+            # res = model.visual(color_image)  # 可视化检测结果
+            # cv2.imshow("res", res) # 显示检测结果
             # cv2.waitKey(0)
             object_list = model.getFilteredObjects()  # 获取筛选后的目标信息列表
             # print("目标数量" + str(len(object_list)))
@@ -146,14 +170,15 @@ def getObjCoordinate(request):
             respond.positions = positions
             print(respond.labels, respond.positions)
             return respond
-    except Exception as r:
-        rospy.loginfo("[ERROR] %s" % r)
+
+    except Exception as e:
+        rospy.loginfo(f"[ERROR] {e}")
 
 
 def realtime_detect_call_back(goal):
     global model
     run = goal.run
-    camera_xyz=[0,0,0]
+    camera_xyz = [0, 0, 0]
     if run:
         rospy.loginfo("检索目标")
         feedback = Objection_DetectResponse()
@@ -193,7 +218,7 @@ def realtime_detect_call_back(goal):
         except Exception as r:
             rospy.loginfo("[ERROR] %s" % r)
         print(feedback.result, feedback.position.pose.position.x,
-              feedback.position.pose.position.y, feedback.position.pose.position.z,camera_xyz[2])
+              feedback.position.pose.position.y, feedback.position.pose.position.z, camera_xyz[2])
         return feedback
 
 

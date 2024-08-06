@@ -264,8 +264,6 @@ void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
 /// @brief 初始化夹爪并将机械臂回到零位
 void MoveitServer::initializeClaw()
 {
-	arm_.setNamedTarget("zero");
-	arm_.move();
 	Set_Tool_DO(0, true);
 	Set_Tool_DO(1, true);
 
@@ -277,6 +275,7 @@ void MoveitServer::initializeClaw()
 	// this->collision_stage_pub.publish(msg);
 	ROS_INFO("Collision Stage 4 setup");
 	ROS_INFO("Claw initialization completed");
+	go_home();
 }
 
 /// @brief 停止当前运动并清空目标

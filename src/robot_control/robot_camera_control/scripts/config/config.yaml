@@ -25,8 +25,8 @@ threshold:
   color_threshold:
     roi_min: [0, 0, 100]
     roi_max: [60, 60, 180]
-    lower: [100, 50, 150]
-    upper: [255, 255, 255]
+    lower: [100, 25, 100]
+    upper: [255, 255, 210]
   area_threshold:
     min_area: 1300
     max_area: 6000
@@ -39,7 +39,7 @@ threshold:
 device: 'gpu'
 model_type: 'yolov5'
 # 模型权重路径
-model_file: /home/ydf/Documents/rwm_moveit/src/robot_control/robot_camera_control/model/handle.onnx
+model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/handle.onnx
 params_file: ""
 config_file: ""
 gmodel_file: ""
