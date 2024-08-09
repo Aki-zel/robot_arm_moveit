@@ -4,7 +4,7 @@ robot:
 camera:
   frame_id: camera_rgb_optical_frame
   color_topic: /camera/rgb/image_rect_color
-  info_topic: /camera/rgb/camera_info
+  info_topic: /camera/depth/camera_info
   depth_topic: /camera/depth/image_rect_raw
 # 颜色阈值设置
 colors:
@@ -29,14 +29,14 @@ colors:
         lower: [100, 100, 100]
         upper: [140, 255, 255]
     area_threshold:
-        min_area: 100
+        min_area: 800
         max_area: 6500
   orange:
     color_threshold:
         lower: [0, 100, 150]   # HSV lower bound for orange color
         upper: [15, 255, 255]  # HSV upper bound for orange color
     area_threshold:
-        min_area: 20
+        min_area: 800
         max_area: 6500
 
 

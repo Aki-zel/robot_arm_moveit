@@ -31,6 +31,7 @@
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
 #include <moveit/trajectory_processing/iterative_spline_parameterization.h>
+#include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
 #include <robotTool.h>
 #include <rokae_msgs/SetIoOutput.h>
 #include <moveit_msgs/GetMotionSequence.h>
@@ -38,6 +39,7 @@
 /// @param PLANNING_GROUP
 MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), spinner(3)
 {
+	setlocale(LC_ALL, ""); 	// 设置编码
 	spinner.start();
 	// if (!arm_.getCurrentState())
 	// {
@@ -45,7 +47,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	// 	return;
 	// }
 	// Set arm properties
-	plan_group=PLANNING_GROUP;
+	plan_group = PLANNING_GROUP;
 	arm_.setGoalPositionTolerance(0.01);
 	arm_.setGoalOrientationTolerance(0.01);
 	arm_.setGoalJointTolerance(0.01);
@@ -55,14 +57,16 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	arm_.allowReplanning(true);
 	arm_.setPlanningTime(5.0);
 	// arm_.setPlannerId("LBTRRT");
+	// arm_.setPlanningPipelineId("ompl");
 	// arm_.setPlannerId("TRRT");
+	arm_.setPlanningPipelineId("pilz_industrial_motion_planner");
 	arm_.setPlannerId("PTP");
 	// arm_.setPlannerId("RRTConnect");
 	// arm_.setPlannerId("RRTstar");
 	// arm_.setEndEffectorLink("ee_link");
 	tfListener = std::make_unique<tf2_ros::TransformListener>(tfBuffer);
 	// tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
-	tool_do_pub=nh_.advertise<rokae_msgs::SetIoOutput>("set_io",10);
+	tool_do_pub = nh_.advertise<rokae_msgs::SetIoOutput>("set_io", 10);
 	collision_stage_pub = nh_.advertise<std_msgs::Int16>("/rm_driver/Set_Collision_Stage", 1);
 	moveL_cmd = nh_.advertise<rm_msgs::MoveL>("/rm_driver/MoveL_Cmd", 10);
 	joint_model_group = arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
@@ -76,9 +80,9 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 }
 /// @brief 设置最大速度和加速度
 /// @param speed
-void MoveitServer::setMaxVelocity(double speed)
+void MoveitServer::setMaxVelocity(double speed, double speed1)
 {
-	arm_.setMaxAccelerationScalingFactor(speed);
+	arm_.setMaxAccelerationScalingFactor(speed1);
 	arm_.setMaxVelocityScalingFactor(speed);
 }
 /// @brief 规划求解并执行运动
@@ -213,7 +217,7 @@ geometry_msgs::Transform MoveitServer::getCurrent_State()
 
 	try
 	{
-		transformStamped = this->tfBuffer.lookupTransform("base_link_rm", "ee_link", ros::Time(0));
+		transformStamped = this->tfBuffer.lookupTransform("xMate3_base", "tool", ros::Time(0));
 		this->current_state = transformStamped.transform;
 		return transformStamped.transform;
 	}
@@ -253,12 +257,12 @@ void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
 	// tool_do_msg.num = num;
 	// tool_do_msg.state = state;
 	rokae_msgs::SetIoOutput tool_do_msg;
-	tool_do_msg.board=1;
-	tool_do_msg.num=num;
-	tool_do_msg.state=state;
+	tool_do_msg.board = 1;
+	tool_do_msg.num = num;
+	tool_do_msg.state = state;
 	tool_do_pub.publish(tool_do_msg);
 	ROS_INFO("Published Tool Digital Output message with num = %d and state = %s", num, state ? "true" : "false");
-	ros::Duration(1).sleep();
+	ros::Duration(2).sleep();
 }
 
 /// @brief 初始化夹爪并将机械臂回到零位
@@ -275,7 +279,7 @@ void MoveitServer::initializeClaw()
 	// this->collision_stage_pub.publish(msg);
 	ROS_INFO("Collision Stage 4 setup");
 	ROS_INFO("Claw initialization completed");
-	go_home();
+	// go_home();
 }
 
 /// @brief 停止当前运动并清空目标
@@ -470,8 +474,8 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 	// visual_tools->deleteAllMarkers();
 	if (succeed)
 	{
-		const double jump_threshold = 15.0;
-		const double eef_step = 0.005;
+		const double jump_threshold = 0.0;
+		const double eef_step = 0.01;
 		double fraction = 0.0;
 		int maxtries = 10;
 		int attempts = 0;
@@ -484,19 +488,19 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 		if (fraction == 1)
 		{
 			ROS_INFO("Path computed successfully. Moving the arm.");
-			robot_trajectory::RobotTrajectory rt(arm_.getCurrentState()->getRobotModel(), plan_group);
+			moveit::core::RobotModelConstPtr robot_model = arm_.getCurrentState()->getRobotModel();
+			robot_trajectory::RobotTrajectory rt(robot_model, plan_group);
 			rt.setRobotTrajectoryMsg(*arm_.getCurrentState(), trajectory);
 
 			trajectory_processing::IterativeParabolicTimeParameterization iptp;
-			bool success = iptp.computeTimeStamps(rt, 0.1, 0.1); // 速度和加速度缩放因子
-			trajectory_processing::IterativeSplineParameterization ipp;
-			success = ipp.computeTimeStamps(rt, 1, 1); // 速度和加速度缩放因子
-			//   trajectory_processing::TimeOptimalTrajectoryGeneration totg;
-			// bool success = totg.computeTimeStamps(rt); // 使用 TOTG 方法
-
+			bool success=true;
+			success = iptp.computeTimeStamps(rt,1, 0.95); // 速度和加速度缩放因子
+			// trajectory_processing::IterativeSplineParameterization ipp;
+			// success = ipp.computeTimeStamps(rt,1, 1); // 速度和加速度缩放因子
+			
 			if (success)
 			{
-				// ROS_INFO("Time parametrization succeeded");
+				ROS_INFO("Time parametrization succeeded");
 				rt.getRobotTrajectoryMsg(trajectory);
 
 				moveit::planning_interface::MoveGroupInterface::Plan plan;

@@ -39,3 +39,6 @@ src/yd_msgs
 src/percipio*
 src/robot_control/robot_camera_control/scripts/1.py
 install
+1.png
+1.py
+positions_output*.txt

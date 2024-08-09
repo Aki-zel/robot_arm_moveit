@@ -1,4 +1,5 @@
 bool run
+bool getpositions
 ---
 int32[] board
 geometry_msgs/PoseStamped[] positions

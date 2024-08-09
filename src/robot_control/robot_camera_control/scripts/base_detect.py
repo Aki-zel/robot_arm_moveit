@@ -96,7 +96,7 @@ class BaseDetection:
             if world_point is not None:
                 rospy.loginfo("World point: %s", world_point.pose)
 
-                self.tf_broad(world_point)
+                # self.tf_broad(world_point)
                 return world_point
             else:
                 return None
