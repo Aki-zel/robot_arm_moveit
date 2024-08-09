@@ -25,12 +25,10 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2
   geometry_msgs
-  rm_msgs
   moveit_ros_planning_interface
   robot_msgs
   moveit_visual_tools
   rviz_visual_tools
-  yd_msgs
   actionlib
   actionlib_msgs
 )
