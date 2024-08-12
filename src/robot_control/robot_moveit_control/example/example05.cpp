@@ -31,7 +31,7 @@ public:
         arm = std::make_unique<MoveitServer>(planGroup);
         cube_detection = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect");
         obj_detection = nh.serviceClient<robot_msgs::Get_Board_State>("chessboard_detect");
-        arm->setMaxVelocity(0.2);
+        arm->setMaxVelocity(0.5);
         poses.clear();
     }
     int checkVictory(int board[3][3]);
@@ -290,6 +290,7 @@ bool playRobot::startGame()
         if (checkVictory(cb.board) == 10)
         {
             Victory();
+            break;
         }
         ros::Duration(3).sleep();
     }

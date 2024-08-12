@@ -39,7 +39,7 @@
 /// @param PLANNING_GROUP
 MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), spinner(3)
 {
-	setlocale(LC_ALL, ""); 	// 设置编码
+	setlocale(LC_ALL, ""); // 设置编码
 	spinner.start();
 	// if (!arm_.getCurrentState())
 	// {
@@ -57,10 +57,10 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	arm_.allowReplanning(true);
 	arm_.setPlanningTime(5.0);
 	// arm_.setPlannerId("LBTRRT");
-	// arm_.setPlanningPipelineId("ompl");
-	// arm_.setPlannerId("TRRT");
-	arm_.setPlanningPipelineId("pilz_industrial_motion_planner");
-	arm_.setPlannerId("PTP");
+	arm_.setPlanningPipelineId("ompl");
+	arm_.setPlannerId("TRRT");
+	// arm_.setPlanningPipelineId("pilz_industrial_motion_planner");
+	// arm_.setPlannerId("PTP");
 	// arm_.setPlannerId("RRTConnect");
 	// arm_.setPlannerId("RRTstar");
 	// arm_.setEndEffectorLink("ee_link");
@@ -374,38 +374,9 @@ bool MoveitServer::move_p(const geometry_msgs::PoseStamped &msg, bool succeed) /
 	}
 	return succeed;
 }
-/// @brief 笛卡尔空间坐标运动，附带约束
-/// @param target_pose pose
-/// @param succeed 是否运行该语句
-/// @return True表示成功规划并执行，False表示规划失败
-bool MoveitServer::move_p_with_constrains(geometry_msgs::Pose &target_pose, bool succeed)
+void MoveitServer::setConstraint(const moveit_msgs::Constraints cons)
 {
-	// geometry_msgs::Pose target_pose;
-	// target_pose.position.x = position[0];
-	// target_pose.position.y = position[1];
-	// target_pose.position.z = position[2];
-
-	// geometry_msgs::Pose current_pose = arm_.getCurrentPose().pose;
-	if (succeed)
-	{
-		moveit_msgs::OrientationConstraint ocm;
-		ocm.link_name = arm_.getEndEffectorLink();
-		ocm.header.frame_id = arm_.getPoseReferenceFrame();
-		ocm.orientation = target_pose.orientation;
-		ocm.absolute_x_axis_tolerance = 0.1;
-		ocm.absolute_y_axis_tolerance = 0.1;
-		ocm.absolute_z_axis_tolerance = 0.1;
-		ocm.weight = 1.0;
-
-		moveit_msgs::Constraints test_constraints;
-		test_constraints.orientation_constraints.push_back(ocm);
-		arm_.setPathConstraints(test_constraints);
-
-		arm_.setStartStateToCurrentState();
-		arm_.setPoseTarget(target_pose);
-		return Planer();
-	}
-	return succeed;
+	arm_.setPathConstraints(cons);
 }
 
 /// @brief 笛卡尔空间直线运动
@@ -493,11 +464,11 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 			rt.setRobotTrajectoryMsg(*arm_.getCurrentState(), trajectory);
 
 			trajectory_processing::IterativeParabolicTimeParameterization iptp;
-			bool success=true;
-			success = iptp.computeTimeStamps(rt,1, 0.95); // 速度和加速度缩放因子
+			bool success = true;
+			success = iptp.computeTimeStamps(rt, 0.5, 0.4); // 速度和加速度缩放因子
 			// trajectory_processing::IterativeSplineParameterization ipp;
 			// success = ipp.computeTimeStamps(rt,1, 1); // 速度和加速度缩放因子
-			
+
 			if (success)
 			{
 				ROS_INFO("Time parametrization succeeded");

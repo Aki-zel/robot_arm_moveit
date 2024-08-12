@@ -71,7 +71,13 @@ class ChessboardDetection(BaseDetection):
                 box = np.int0(box)
                 # 计算物体中心点和角度
                 center_x, center_y = rect[0]
+                width, height = rect[1]
                 angle = rect[2]
+                # 根据检测框宽高调整角度，使得夹取间距较短
+                if width <= height: # 默认左下边为宽，顺时针转为正方向
+                    angle = angle 
+                else:
+                    angle = angle-90
                 cv2.drawContours(cv_image, [box], 0, (0, 255, 0), 2)
                 cv2.circle(cv_image, (int(center_x), int(center_y)),
                            5, (0, 0, 255), -1)
@@ -112,29 +118,7 @@ class ChessboardDetection(BaseDetection):
                         center_x, center_y)
                     camera_xyz = np.round(np.array(camera_xyz), 3).tolist()
                     world_position = self.tf_transform(camera_xyz)
-                    # 创建PoseStamped消息
-                    pose = PoseStamped()
-                    pose.header.stamp = rospy.Time.now()
-                    pose.header.frame_id = "camera_color_optical_frame"
-
-                    # 设置位置
-                    pose.pose.position.x = world_position.pose.position.x
-                    pose.pose.position.y = world_position.pose.position.y
-                    pose.pose.position.z = world_position.pose.position.z
-
-                    # 末端工具默认朝下时的姿态
-                    initial_quaternion = [0, 1, 0, 0]  # 初始四元数
-                    # 计算绕 Z 轴旋转的四元数
-                    rotation_quaternion = quaternion_from_euler(
-                        0, 0, np.deg2rad(angle))
-                    # 合成四元数
-                    final_quaternion = quaternion_multiply(
-                        initial_quaternion, rotation_quaternion)
-                    # 设置姿态
-                    pose.pose.orientation.x = final_quaternion[0]
-                    pose.pose.orientation.y = final_quaternion[1]
-                    pose.pose.orientation.z = final_quaternion[2]
-                    pose.pose.orientation.w = final_quaternion[3]
+                    pose = self.transform_pose(world_position, angle) 
 
                     response.labels.append(label)
                     response.positions.append(pose)
@@ -271,6 +255,9 @@ class ChessboardDetection(BaseDetection):
     # 棋盘状态回调函数
     def handle_chessboard_detection(self, request):
         response = Get_Board_StateResponse()
+        positions = []
+        board = []
+        round = 0
         if request.run:
             if self.cv_image is None:
                 rospy.logwarn("尚未接收到图像。")
@@ -313,10 +300,6 @@ class ChessboardDetection(BaseDetection):
                              np.cos(angle_rad)) + center[1]
                     rotated_centers.append((x_rot, y_rot))
 
-                positions = []
-                board = []
-                round = 0
-
                 if request.getpositions:
                     # 计算逆旋转变换矩阵
                     R_inv = cv2.getRotationMatrix2D(center, angle_rad, 1)
@@ -340,7 +323,6 @@ class ChessboardDetection(BaseDetection):
                             np.array(camera_xyz), 3).tolist()  # 四舍五入到3位小数
                         # 将相机坐标系中的位置转换为世界坐标系中的位置
                         world_position = self.tf_transform(camera_xyz)
-                        # self.tf_broad(world_position)
                         # 将世界坐标添加到positions数组
                         positions.append(world_position)
 

@@ -40,11 +40,11 @@ public:
 	bool move_p(const geometry_msgs::Pose &msg, bool succeed = true);
 	bool move_p_l(const geometry_msgs::Pose &msg, bool succeed = true);
 	bool move_p(const geometry_msgs::PoseStamped &msg, bool succeed = true);
-	bool move_p_with_constrains(geometry_msgs::Pose &target_pose, bool succeed=true);
 	bool move_l(const std::vector<double> &pose, bool succeed = true);
 	bool move_l(const std::vector<std::vector<double>> &posees, bool succeed = true);
 	bool move_l(const std::vector<geometry_msgs::Pose> Points, bool succeed = true);
 	bool move_l(const geometry_msgs::Pose &position, bool succeed = true);
+	void setConstraint(const moveit_msgs::Constraints cons);
 	void Set_Tool_DO(int num, bool state);
 	geometry_msgs::Transform getCurrent_State();
 	geometry_msgs::Pose getCurrent_Pose();
