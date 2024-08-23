@@ -32,6 +32,8 @@
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
 #include <moveit/trajectory_processing/iterative_spline_parameterization.h>
 #include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
+#include <moveit/trajectory_processing/ruckig_traj_smoothing.h>
+#include <industrial_trajectory_filters/uniform_sample_filter.h>
 #include <robotTool.h>
 #include <rokae_msgs/SetIoOutput.h>
 #include <moveit_msgs/GetMotionSequence.h>
@@ -248,21 +250,22 @@ void MoveitServer::setCollisionMatrix()
 	planning_scene.getPlanningSceneMsg(scene);
 	planning_scene_interface.applyPlanningScene(scene);
 }
-/// @brief 设置夹爪开合（睿尔曼机械臂接口）
-/// @param num IO口 参数1，2
-/// @param state Flase为开，True为关
+/// @brief 设置夹爪开合（Rokae机械臂接口）
+/// @param num IO口 参数0，1
+/// @param state Flase为关，True为开
 void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
 {
 	// rm_msgs::Tool_Digital_Output tool_do_msg;
 	// tool_do_msg.num = num;
 	// tool_do_msg.state = state;
+	ros::Duration(0.5).sleep();
 	rokae_msgs::SetIoOutput tool_do_msg;
 	tool_do_msg.board = 1;
 	tool_do_msg.num = num;
 	tool_do_msg.state = state;
 	tool_do_pub.publish(tool_do_msg);
 	ROS_INFO("Published Tool Digital Output message with num = %d and state = %s", num, state ? "true" : "false");
-	ros::Duration(2).sleep();
+	ros::Duration(1).sleep();
 }
 
 /// @brief 初始化夹爪并将机械臂回到零位
@@ -321,8 +324,23 @@ bool MoveitServer::move_p(const std::vector<double> &pose, bool succeed) // 按�
 		geometry_msgs::Pose target_pose;
 		target_pose = this->setPoint(pose);
 
-		arm_.setPoseTarget(target_pose);
-		return Planer();
+		// arm_.setPoseTarget(target_pose);
+		return move_p(target_pose);
+	}
+	return succeed;
+}
+/// @brief 笛卡尔空间坐标运动
+/// @param msg posestamped
+/// @param succeed 是否运行该语句
+/// @return True表示成功规划并执行，False表示规划失败
+bool MoveitServer::move_p(const geometry_msgs::PoseStamped &msg, bool succeed) // 按目标空间位姿移动(接收目标物体位姿)
+{
+	if (succeed)
+	{
+		geometry_msgs::Pose target_pose;
+		target_pose = msg.pose;
+		// arm_.setPoseTarget(target_pose);
+		return move_p(target_pose);
 	}
 	return succeed;
 }
@@ -358,21 +376,6 @@ bool MoveitServer::move_p_l(const geometry_msgs::Pose &msg, bool succeed)
 	}
 	arm_.setPlannerId("PTP");
 	return s;
-}
-/// @brief 笛卡尔空间坐标运动
-/// @param msg posestamped
-/// @param succeed 是否运行该语句
-/// @return True表示成功规划并执行，False表示规划失败
-bool MoveitServer::move_p(const geometry_msgs::PoseStamped &msg, bool succeed) // 按目标空间位姿移动(接收目标物体位姿)
-{
-	if (succeed)
-	{
-		geometry_msgs::Pose target_pose;
-		target_pose = msg.pose;
-		arm_.setPoseTarget(target_pose);
-		return Planer();
-	}
-	return succeed;
 }
 void MoveitServer::setConstraint(const moveit_msgs::Constraints cons)
 {
@@ -442,11 +445,10 @@ bool MoveitServer::move_l(const std::vector<std::vector<double>> &posees, bool s
 bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool succeed)
 {
 	moveit_msgs::RobotTrajectory trajectory;
-	// visual_tools->deleteAllMarkers();
 	if (succeed)
 	{
-		const double jump_threshold = 0.0;
-		const double eef_step = 0.01;
+		const double jump_threshold = 10;
+		const double eef_step = 0.001;
 		double fraction = 0.0;
 		int maxtries = 10;
 		int attempts = 0;
@@ -462,22 +464,35 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 			moveit::core::RobotModelConstPtr robot_model = arm_.getCurrentState()->getRobotModel();
 			robot_trajectory::RobotTrajectory rt(robot_model, plan_group);
 			rt.setRobotTrajectoryMsg(*arm_.getCurrentState(), trajectory);
-
-			trajectory_processing::IterativeParabolicTimeParameterization iptp;
 			bool success = true;
-			success = iptp.computeTimeStamps(rt, 0.5, 0.4); // 速度和加速度缩放因子
+			// trajectory_processing::IterativeParabolicTimeParameterization iptp;
+			// // 速度和加速度缩放因子
+			// success = iptp.computeTimeStamps(rt, 0.6, 0.4);
 			// trajectory_processing::IterativeSplineParameterization ipp;
-			// success = ipp.computeTimeStamps(rt,1, 1); // 速度和加速度缩放因子
-
+			// success = ipp.computeTimeStamps(rt, 1, 1); // 速度和加速度缩放因子
+			trajectory_processing::TimeOptimalTrajectoryGeneration totg;
+			success = totg.computeTimeStamps(rt, 0.6, 0.4); // 速度和加速度缩放因子
 			if (success)
 			{
-				ROS_INFO("Time parametrization succeeded");
 				rt.getRobotTrajectoryMsg(trajectory);
+				industrial_trajectory_filters::MessageAdapter msg_adapter;
+				msg_adapter.request.trajectory = trajectory.joint_trajectory;
+				industrial_trajectory_filters::UniformSampleFilter<industrial_trajectory_filters::MessageAdapter> uniform_sample_filter;
+				uniform_sample_filter.configure();
 
+				industrial_trajectory_filters::MessageAdapter filtered_msg_adapter;
+				if (uniform_sample_filter.update(msg_adapter, filtered_msg_adapter))
+				{
+					rt.setRobotTrajectoryMsg(*arm_.getCurrentState(), filtered_msg_adapter.request.trajectory);
+				}
+				else
+				{
+					ROS_WARN("Uniform sample filter failed.");
+				}
+				rt.getRobotTrajectoryMsg(trajectory);
 				moveit::planning_interface::MoveGroupInterface::Plan plan;
 				plan.trajectory_ = trajectory;
 				arm_.execute(plan);
-				// visual_tools->prompt("Press 'next' in the RvizVisualToolsGui window to continue");
 				return true;
 			}
 		}

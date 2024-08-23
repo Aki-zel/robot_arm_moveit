@@ -77,7 +77,7 @@
       "name": "example",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/example05",
+      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/example05p",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",

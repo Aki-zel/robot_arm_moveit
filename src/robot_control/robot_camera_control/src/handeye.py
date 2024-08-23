@@ -94,11 +94,12 @@ class HandEyeCalibration:
                 
                 
                 # Define kernel for sharpening
-                # kernel = np.array([[0, -1, 0],
-                #                 [-1, 5, -1],
-                #                 [0, -1, 0]])
+                kernel = np.array([[0, -1, 0],
+                                [-1, 5, -1],
+                                [0, -1, 0]])
+                gray = cv2.filter2D(gray, -1, kernel)
                 gray = cv2.medianBlur(gray, 3)
-                # gray = cv2.filter2D(gray, -1, kernel)
+              
                 # _, gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                 cv2.imshow("Chessboard gray", gray)
 

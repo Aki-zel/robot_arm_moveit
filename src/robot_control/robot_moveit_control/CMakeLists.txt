@@ -31,6 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
   rviz_visual_tools
   actionlib
   actionlib_msgs
+  industrial_trajectory_filters
 )
 
 
@@ -130,7 +131,7 @@ catkin_package(
 #  LIBRARIES robot_moveit_control
  CATKIN_DEPENDS roscpp rospy std_msgs rviz  sensor_msgs cv_bridge image_transport tf2_eigen tf2_geometry_msgs tf2_ros tf2 
  geometry_msgs rm_msgs moveit_ros_planning_interface robot_msgs moveit_visual_tools rviz_visual_tools yd_msgs  actionlib
- actionlib_msgs
+ actionlib_msgs industrial_trajectory_filters
 #  DEPENDS system_lib
 )
 set(QT_LIBRARIES Qt5::Core Qt5::Widgets Qt5::Gui)
@@ -195,6 +196,7 @@ add_executable(controlcenter src/ArmControlCenter.cpp)
 # add_executable(example03 example/example03.cpp)
 # add_executable(example04 example/example04.cpp)
 add_executable(example05 example/example05.cpp)
+add_executable(example05p example/example05p.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -247,6 +249,11 @@ target_link_libraries(controlcenter
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(example05
+  MoveitServer_h
+  robotTool_h
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(example05p
   MoveitServer_h
   robotTool_h
   ${catkin_LIBRARIES}

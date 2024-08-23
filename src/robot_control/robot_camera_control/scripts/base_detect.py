@@ -95,7 +95,7 @@ class BaseDetection:
                 camera_point, transform)
             if world_point is not None:
                 # rospy.loginfo("World point: %s", world_point.pose)
-                self.tf_broad(world_point)
+                # self.tf_broad(world_point)
                 return world_point
             else:
                 return None
@@ -159,12 +159,16 @@ class BaseDetection:
         pose.pose.position.y = world_position.pose.position.y
         pose.pose.position.z = world_position.pose.position.z
         # 末端工具默认朝下时的姿态（初始四元数）
-        initial_quaternion = [0, 1, 0, 0]  # 初始四元数，表示末端工具默认朝下
+   
+        rospy.loginfo("angle %f",angle)
         yaw = math.radians(angle)  # 将yaw角转换成弧度
+        initial_quaternion = quaternion_from_euler(3.14159,0,0, axes='sxyz')  # 初始四元数，表示末端工具默认朝下
+        # rospy.loginfo(f'Final Quaternion: {initial_quaternion}')
         # 计算绕 Z 轴旋转的四元数
         rotation_quaternion = quaternion_from_euler(0, 0, yaw) # 参数为roll、pitch、yaw
         # 合成最终的四元数（将初始四元数与旋转四元数相乘）
         final_quaternion = quaternion_multiply(initial_quaternion, rotation_quaternion)
+        # rospy.loginfo(f'Final Quaternion: {final_quaternion}')
         # 设置姿态
         pose.pose.orientation.x = final_quaternion[0]
         pose.pose.orientation.y = final_quaternion[1]
