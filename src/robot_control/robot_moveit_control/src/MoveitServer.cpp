@@ -258,7 +258,7 @@ void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
 	// rm_msgs::Tool_Digital_Output tool_do_msg;
 	// tool_do_msg.num = num;
 	// tool_do_msg.state = state;
-	ros::Duration(0.5).sleep();
+	ros::Duration(2).sleep();
 	rokae_msgs::SetIoOutput tool_do_msg;
 	tool_do_msg.board = 1;
 	tool_do_msg.num = num;
@@ -466,12 +466,12 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 			rt.setRobotTrajectoryMsg(*arm_.getCurrentState(), trajectory);
 			bool success = true;
 			// trajectory_processing::IterativeParabolicTimeParameterization iptp;
-			// // 速度和加速度缩放因子
-			// success = iptp.computeTimeStamps(rt, 0.6, 0.4);
+			// // // 速度和加速度缩放因子
+			// success = iptp.computeTimeStamps(rt, 0.8, 0.6);
 			// trajectory_processing::IterativeSplineParameterization ipp;
 			// success = ipp.computeTimeStamps(rt, 1, 1); // 速度和加速度缩放因子
 			trajectory_processing::TimeOptimalTrajectoryGeneration totg;
-			success = totg.computeTimeStamps(rt, 0.6, 0.4); // 速度和加速度缩放因子
+			success = totg.computeTimeStamps(rt, 0.8, 0.8); // 速度和加速度缩放因子
 			if (success)
 			{
 				rt.getRobotTrajectoryMsg(trajectory);

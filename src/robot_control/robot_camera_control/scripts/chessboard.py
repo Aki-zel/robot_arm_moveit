@@ -201,7 +201,37 @@ class ChessboardDetection(BaseDetection):
 
         cropped_image = result[y_min:y_max, x_min:x_max]
         return cropped_image
+    def crop_circles(self,image, x,y, diameter):
+        """
+        从给定的图像中裁剪出指定直径的圆形区域，并保存这些区域。
+        
+        :param image: 要裁剪的原始图像 (numpy array)。
+        :param rotated_centers: 圆心的坐标列表，格式为 [(x1, y1), (x2, y2), ...]。
+        :param diameter: 圆的直径 (int)。
+        :return: 裁剪出的圆形图片列表 (list of numpy arrays)。
+        """
+        radius = int(diameter / 2)
 
+        
+        # 创建一个空白的掩码
+        mask = np.zeros_like(image, dtype=np.uint8)
+
+        # 在掩码上绘制圆形
+        cv2.circle(mask, (int(x), int(y)), radius, (255, 255, 255), thickness=-1)
+
+        # 使用掩码裁剪图像
+        circular_region = cv2.bitwise_and(image, mask)
+
+        # 获取圆形区域的边界
+        x_min = max(int(x - radius), 0)
+        y_min = max(int(y - radius), 0)
+        x_max = min(int(x + radius), image.shape[1])
+        y_max = min(int(y + radius), image.shape[0])
+
+        # 裁剪圆形区域的边界框
+        cropped_image = circular_region[y_min:y_max, x_min:x_max]
+
+        return cropped_image
     # 棋盘检测
     def chessboard_detect(self, cv_image):
         # 预处理图像
@@ -288,11 +318,11 @@ class ChessboardDetection(BaseDetection):
 
                 # 计算每个棋盘格的中心点
                 grid_centers = []
-                for i in range(board_size[1]):
-                    for j in range(board_size[0]):
+                for i in range(board_size[1]-1):
+                    for j in range(board_size[0]-1):
                         # 局部坐标（棋盘格中心点）
-                        local_x = j * cell_width + cell_width / 2
-                        local_y = i * cell_height + cell_height / 2
+                        local_x = j * cell_width + cell_width 
+                        local_y = i * cell_height + cell_height 
 
                         # 将偏移量应用到全局坐标系统中
                         global_x = local_x + center[0] - width/2
@@ -318,26 +348,33 @@ class ChessboardDetection(BaseDetection):
                         world_position = self.tf_transform(camera_xyz)
                         positions.append(world_position)
 
-                    # for (x_rot, y_rot) in rotated_centers:
-                    #     cv2.circle(cv_image, (int(x_rot), int(y_rot)),
-                    #                5, (255, 0, 0), -1)
+                for (x_rot, y_rot) in rotated_centers:
+                    # cv2.circle(cv_image, (int(x_rot), int(y_rot)),
+                    #             5, (255, 0, 0), -1)
+                    cropped_image=self.crop_circles(cv_image,x_rot,y_rot,cell_width)
+                    # cv2.imwrite(f"{x_rot}_{y_rot}.jpg", cropped_image)
+                    if cropped_image.size > 0:
+                        has_piece = self.check_for_piece(cropped_image)
+                        if has_piece == 1 or has_piece == 0:
+                            round += 1
+                        board.append(has_piece)   
 
-                # 遍历每个棋盘格并裁剪
-                for i in range(board_size[1]):
-                    for j in range(board_size[0]):
-                        # 按存储顺序(行优先)访问
-                        cx, cy = rotated_centers[i * board_size[1] + j]
-                        corners = self.get_rotated_rect_corners(
-                            (cx, cy), (cell_width, cell_height), angle)
+                # # 遍历每个棋盘格并裁剪
+                # for i in range(board_size[1]-1):
+                #     for j in range(board_size[0]-1):
+                #         # 按存储顺序(行优先)访问
+                #         cx, cy = rotated_centers[i * board_size[1]-1 + j]
+                #         corners = self.get_rotated_rect_corners(
+                #             (cx, cy), (cell_width, cell_height), angle)
 
-                        cropped_image = self.crop_polygon(cv_image, corners)
-                        # cv2.imwrite(f"{i}_{j}.jpg", cropped_image)
+                #         cropped_image = self.crop_polygon(cv_image, corners)
+                #         # cv2.imwrite(f"{i}_{j}.jpg", cropped_image)
 
-                        if cropped_image.size > 0:
-                            has_piece = self.check_for_piece(cropped_image)
-                            if has_piece == 1 or has_piece == 0:
-                                round += 1
-                            board.append(has_piece)
+                #         if cropped_image.size > 0:
+                #             has_piece = self.check_for_piece(cropped_image)
+                #             if has_piece == 1 or has_piece == 0:
+                #                 round += 1
+                #             board.append(has_piece)
 
                 try:
                     self.image_pub.publish(
