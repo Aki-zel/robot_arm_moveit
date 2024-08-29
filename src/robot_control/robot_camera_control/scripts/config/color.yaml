@@ -33,12 +33,18 @@ colors:
         max_area: 3000
   orange:
     color_threshold:
-        lower: [0, 100, 150]   # HSV lower bound for orange color
-        upper: [15, 255, 255]  # HSV upper bound for orange color
+        lower: [0, 100, 150]  
+        upper: [15, 255, 255]  
     area_threshold:
         min_area: 300
         max_area: 1200
-
+  green:
+    color_threshold:
+        lower: [50, 70, 70]
+        upper: [90, 255, 255]
+    area_threshold:
+        min_area: 300
+        max_area: 3000
 
   
 

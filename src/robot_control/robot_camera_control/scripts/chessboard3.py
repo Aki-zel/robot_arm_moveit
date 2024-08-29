@@ -57,7 +57,7 @@ class ChessboardDetection(BaseDetection):
         # 按图像y坐标对轮廓进行排序(从上到下)
         contours = sorted(
             contours, key=lambda contour: cv2.boundingRect(contour)[1])
-
+        
         # 将检测到的目标信息保存到列表中
         objects_info = []
         for contour in contours:
@@ -72,8 +72,8 @@ class ChessboardDetection(BaseDetection):
                 width, height = rect[1]
                 angle = rect[2]
                 # 根据检测框宽高调整角度，使得夹取间距较短
-                if width <= height:  # 默认左下边为宽，顺时针转为正方向
-                    angle = angle
+                if width <= height: # 默认左下边为宽，顺时针转为正方向
+                    angle = angle 
                 else:
                     angle = angle-90
                 cv2.drawContours(cv_image, [box], 0, (0, 255, 0), 2)
@@ -116,7 +116,7 @@ class ChessboardDetection(BaseDetection):
                         center_x, center_y)
                     camera_xyz = np.round(np.array(camera_xyz), 3).tolist()
                     world_position = self.tf_transform(camera_xyz)
-                    pose = self.transform_pose(world_position, angle)
+                    pose = self.transform_pose(world_position, angle) 
 
                     response.labels.append(label)
                     response.positions.append(pose)
@@ -130,15 +130,13 @@ class ChessboardDetection(BaseDetection):
         # 获取颜色的阈值范围
         lower = np.array(self.colors[color_name]['color_threshold']['lower'])
         upper = np.array(self.colors[color_name]['color_threshold']['upper'])
-
+        
         # 创建颜色掩码并进行形态学开运算
         mask = cv2.inRange(hsv_image, lower, upper)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,
-                                np.ones((5, 5), np.uint8))
-
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
+        
         # 查找掩码中的轮廓
-        contours, _ = cv2.findContours(
-            mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             area = cv2.contourArea(contour)
             if self.colors[color_name]['area_threshold']['min_area'] < area < self.colors[color_name]['area_threshold']['max_area']:
@@ -149,20 +147,21 @@ class ChessboardDetection(BaseDetection):
     def check_for_piece(self, cell_img):
         # 将输入图像转换为 HSV 色域
         hsv_image = cv2.cvtColor(cell_img, cv2.COLOR_BGR2HSV)
-
-        # 检查己方
-        player_detected = self.detect_color(hsv_image, 'green')
-
-        # 检查敌方
-        opponent_detected = self.detect_color(hsv_image, 'orange')
+        
+        # 检查蓝色
+        blue_detected = self.detect_color(hsv_image, 'blue')
+        
+        # 检查橙色
+        orange_detected = self.detect_color(hsv_image, 'orange')
 
         # 返回检测结果
-        if player_detected:
-            return 1  # 检测到己方
-        elif opponent_detected:
-            return 0  # 检测到敌方
+        if blue_detected:
+            return 1  # 检测到蓝色
+        elif orange_detected:
+            return 0  # 检测到橙色
         else:
             return -1  # 未检测到颜色
+
 
     # 获取旋转矩形的四个顶点坐标
     def get_rotated_rect_corners(self, center, size, angle):
@@ -182,9 +181,6 @@ class ChessboardDetection(BaseDetection):
         if corners.shape != (4, 2):  # 检查数组形状
             raise ValueError("Corners array must be of shape (4, 2)")
 
-        # 转换角点数据类型为 int32
-        corners = np.int32(corners)
-
         mask = np.zeros(cv_image.shape[:2], dtype=np.uint8)
         cv2.fillPoly(mask, [corners], 255)
 
@@ -201,57 +197,15 @@ class ChessboardDetection(BaseDetection):
 
         cropped_image = result[y_min:y_max, x_min:x_max]
         return cropped_image
-    def crop_circles(self,image, x,y, diameter):
-        """
-        从给定的图像中裁剪出指定直径的圆形区域，并保存这些区域。
-        
-        :param image: 要裁剪的原始图像 (numpy array)。
-        :param rotated_centers: 圆心的坐标列表，格式为 [(x1, y1), (x2, y2), ...]。
-        :param diameter: 圆的直径 (int)。
-        :return: 裁剪出的圆形图片列表 (list of numpy arrays)。
-        """
-        radius = int(diameter / 2)
 
-        
-        # 创建一个空白的掩码
-        mask = np.zeros_like(image, dtype=np.uint8)
-
-        # 在掩码上绘制圆形
-        cv2.circle(mask, (int(x), int(y)), radius, (255, 255, 255), thickness=-1)
-
-        # 使用掩码裁剪图像
-        circular_region = cv2.bitwise_and(image, mask)
-
-        # 获取圆形区域的边界
-        x_min = max(int(x - radius), 0)
-        y_min = max(int(y - radius), 0)
-        x_max = min(int(x + radius), image.shape[1])
-        y_max = min(int(y + radius), image.shape[0])
-
-        # 裁剪圆形区域的边界框
-        cropped_image = circular_region[y_min:y_max, x_min:x_max]
-
-        return cropped_image
     # 棋盘检测
     def chessboard_detect(self, cv_image):
         # 预处理图像
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-        # 去噪
-        dst = cv2.fastNlMeansDenoising(gray, None, 25, 7, 21)
-        # cv2.imwrite("dst.jpg", dst)
-        blur = cv2.GaussianBlur(dst, (5, 5), 0)
-        # 使用拉普拉斯算子计算图像的二阶导数
-        laplacian = cv2.Laplacian(blur, cv2.CV_64F)
-        # 将拉普拉斯算子的结果转化为与原图像相同的数据类型
-        laplacian = np.uint8(np.absolute(laplacian))
-        # 锐化图像：原图像 - 拉普拉斯算子结果
-        sharpened = cv2.subtract(blur, laplacian)
-        # cv2.imwrite("sharpened.jpg", sharpened)
-        edges = cv2.Canny(sharpened, 50, 150)
-        # cv2.imwrite("edges.jpg", edges)
+        blur = cv2.GaussianBlur(gray, (5, 5), 0)
+        edges = cv2.Canny(blur, 50, 150)
         kernel = np.ones((5, 5), np.uint8)
         closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
-        # cv2.imwrite("closed.jpg", closed)
         contours, _ = cv2.findContours(
             closed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -259,41 +213,34 @@ class ChessboardDetection(BaseDetection):
         squares = []
         for contour in contours:
             epsilon = 0.02 * \
-                cv2.arcLength(contour, True)  # 轮廓的近似程度，设为轮廓周长的1%,越小越近似
+                cv2.arcLength(contour, True)  # 轮廓的近似程度，设为轮廓周长的2%
             approx = cv2.approxPolyDP(contour, epsilon, True)  # 轮廓的近似多边形
             area = cv2.contourArea(approx)  # 计算轮廓面积
             # 满足轮廓面积条件(顶点数量为4并且大于棋子的轮廓面积)，则将轮廓添加到列表中
-            if len(approx) == 4 and cv2.isContourConvex(approx) and area > 1000:
+            if len(approx) == 4 and cv2.isContourConvex(approx) and area > self.colors['blue']['area_threshold']['max_area']:
                 squares.append(approx)
 
         if len(squares) > 0:
             # 合并轮廓并计算凸包
             merged_contour = np.vstack(squares).squeeze()
             hull = cv2.convexHull(merged_contour)  # 计算凸包,凸包是包含轮廓所有点的最小凸多边形
-            # cv_image = cv2.drawContours(
-            #     cv_image, [hull], -1, (0, 255, 0), 3)
-            
+            cv_image = cv2.drawContours(
+                cv_image, [hull], -1, (0, 255, 0), 3)
             # 计算最小外接矩形
             rect = cv2.minAreaRect(hull)
             center, (width, height), angle = rect
             center = np.array(center)
-            # 获取矩形的四个顶点
-            box = cv2.boxPoints(rect)
-            box = np.int0(box)  # 将顶点转换为整数
-            cv_image = cv2.drawContours(
-                cv_image, [box], -1, (0, 0, 255), 3)
             
-            return True, center, width, height, angle, box
+            return True, center, width, height, angle, hull
         else:
             return False, None, None, None, None, None
 
+    # 棋盘状态回调函数
     def handle_chessboard_detection(self, request):
         response = Get_Board_StateResponse()
         positions = []
         board = []
         round = 0
-        board_size = (10, 10)
-
         if request.run:
             if self.cv_image is None:
                 rospy.logwarn("尚未接收到图像。")
@@ -303,82 +250,85 @@ class ChessboardDetection(BaseDetection):
                 return response
 
             # 调用棋盘检测函数
-            detected, center, width, height, angle, box = self.chessboard_detect(
+            detected, center, width, height, angle, hull = self.chessboard_detect(
                 self.cv_image)
 
             if detected:
                 # 绘制检测到的棋盘
                 cv_image = self.cv_image.copy()
                 cv_image = cv2.drawContours(
-                    cv_image, [box], -1, (0, 255, 0), 3)
+                    cv_image, [hull], -1, (0, 255, 0), 3)
 
                 # 计算棋盘格宽高
+                board_size = (3, 3)
                 cell_width = width / board_size[0]
                 cell_height = height / board_size[1]
 
-                # 计算每个棋盘格的中心点
+                # 添加每个棋盘格的中心点(按照行优先存储中心点)
                 grid_centers = []
-                for i in range(board_size[1]-1):
-                    for j in range(board_size[0]-1):
-                        # 局部坐标（棋盘格中心点）
-                        local_x = j * cell_width + cell_width 
-                        local_y = i * cell_height + cell_height 
+                for i in range(board_size[0]):
+                    for j in range(board_size[1]):
+                        x = (j - 1) * cell_width
+                        y = (i - 1) * cell_height
+                        grid_centers.append((x, y))
 
-                        # 将偏移量应用到全局坐标系统中
-                        global_x = local_x + center[0] - width/2
-                        global_y = local_y + center[1] - height/2
-                        
-                        grid_centers.append((global_x, global_y))
-
-                if angle<=45:
-                    rotation_matrix = cv2.getRotationMatrix2D(center, -angle, 1)
-                else:
-                    rotation_matrix = cv2.getRotationMatrix2D(center, 90-angle, 1)
-
+                # 计算旋转后的中心点
+                angle_rad = np.deg2rad(angle)
                 rotated_centers = []
                 for (x, y) in grid_centers:
-                    # cv2.circle(cv_image, (int(x), int(y)),
-                    #                5, (255, 0, 0), -1)
-                    point = np.array([[x], [y], [1]])
-                    rotated_point = np.dot(rotation_matrix, point)
-                    rotated_centers.append(
-                        (rotated_point[0][0], rotated_point[1][0]))
-                    
+                    # 使用旋转矩阵旋转坐标
+                    x_rot = (x * np.cos(angle_rad) - y *
+                             np.sin(angle_rad)) + center[0]
+                    y_rot = (x * np.sin(angle_rad) + y *
+                             np.cos(angle_rad)) + center[1]
+                    rotated_centers.append((x_rot, y_rot))
+
                 if request.getpositions:
-                    for (x, y) in grid_centers:
-                        # 转换坐标系
-                        camera_xyz = self.getObject3DPosition(x, y)
-                        camera_xyz = np.round(np.array(camera_xyz), 3).tolist()  # 四舍五入到3位小数
+                    # 计算逆旋转变换矩阵
+                    R_inv = cv2.getRotationMatrix2D(center, angle_rad, 1)
+
+                    # 将旋转后的坐标变换回原图坐标
+                    original_centers = []
+                    for (x_rot, y_rot) in rotated_centers:
+                        x_orig, y_orig = np.dot(
+                            R_inv[:, :2], [x_rot - center[0], y_rot - center[1]]) + center
+                        original_centers.append((x_orig, y_orig))
+
+                    # 将旋转后的棋盘格中心点转换为世界坐标
+                    for (cx, cy) in original_centers:
+                        # cv2.circle(cv_image, (int(cx), int(cy)),
+                        #            5, (255, 0, 0), -1)
+                        # cv2.putText(cv_image, f"({int(cx)}, {int(cy)})", (int(cx), int(
+                        #     cy) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+                        # 获取图像坐标的3D位置(相机坐标系中)
+                        camera_xyz = self.getObject3DPosition(cx, cy)
+                        camera_xyz = np.round(
+                            np.array(camera_xyz), 3).tolist()  # 四舍五入到3位小数
+                        # 将相机坐标系中的位置转换为世界坐标系中的位置
                         world_position = self.tf_transform(camera_xyz)
+                        # 将世界坐标添加到positions数组
                         positions.append(world_position)
 
-                for (x_rot, y_rot) in rotated_centers:
-                    # cv2.circle(cv_image, (int(x_rot), int(y_rot)),
-                    #             5, (255, 0, 0), -1)
-                    cropped_image=self.crop_circles(cv_image,x_rot,y_rot,cell_width)
-                    # cv2.imwrite(f"{x_rot}_{y_rot}.jpg", cropped_image)
-                    if cropped_image.size > 0:
-                        has_piece = self.check_for_piece(cropped_image)
-                        if has_piece == 1 or has_piece == 0:
-                            round += 1
-                        board.append(has_piece)   
+                # 输出旋转后的棋盘格中心点的原图坐标
+                # for idx, (cx, cy) in enumerate(original_centers):
+                #     print(f"棋盘格中心 {idx + 1}: ({cx:.2f}, {cy:.2f})")
 
-                # # 遍历每个棋盘格并裁剪
-                # for i in range(board_size[1]-1):
-                #     for j in range(board_size[0]-1):
-                #         # 按存储顺序(行优先)访问
-                #         cx, cy = rotated_centers[i * board_size[1]-1 + j]
-                #         corners = self.get_rotated_rect_corners(
-                #             (cx, cy), (cell_width, cell_height), angle)
+                    # 遍历每个棋盘格并裁剪
+                    for i in range(board_size[0]):
+                        for j in range(board_size[1]):
+                            # 按存储顺序(行优先)访问
+                            cx, cy = rotated_centers[i * board_size[1] + j]
+                            corners = self.get_rotated_rect_corners(
+                                (cx, cy), (cell_width, cell_height), angle)
 
-                #         cropped_image = self.crop_polygon(cv_image, corners)
-                #         # cv2.imwrite(f"{i}_{j}.jpg", cropped_image)
+                            cropped_image = self.crop_polygon(cv_image, corners)
+                            # cv2.imwrite(f"{i}_{j}.jpg", cropped_image)
 
-                #         if cropped_image.size > 0:
-                #             has_piece = self.check_for_piece(cropped_image)
-                #             if has_piece == 1 or has_piece == 0:
-                #                 round += 1
-                #             board.append(has_piece)
+                            if cropped_image.size > 0:
+                                has_piece = self.check_for_piece(cropped_image)
+                                if has_piece == 1 or has_piece == 0:
+                                    round += 1
+                                board.append(has_piece)
 
                 try:
                     self.image_pub.publish(

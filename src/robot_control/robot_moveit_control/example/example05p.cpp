@@ -5,27 +5,35 @@
 #include <robot_msgs/Get_Board_State.h>
 #include <robot_msgs/Hand_Catch.h>
 #include <std_msgs/Int32MultiArray.h>
-const int BOARD_SIZE = 9;
-const int NUM_STATES = 3; // 0: em, 1: human, 2: robot
+
+const int BOARD_SIZE = 9; // 棋盘的大小为9x9
+const int NUM_STATES = 3; // 棋子的三种状态：空(em)，人类(human)，机器人(robot)
+
 // 定义模式的最大值
 const int MAX_PATTERN = 32; // 5位模式，范围是 0 到 31
+
 // 使用数组存储模式对应的分数
 int patternScores[MAX_PATTERN] = {0};
+
 // 定义评分阈值
 const int FIVE = 10000;
 const int FOUR = 1000;
 const int THREE = 100;
 const int TWO = 10;
+
 // 定义用于存储分数和深度的结构体
 struct TranspositionEntry
 {
-    int score;
-    int depth;
+    int score; // 分数
+    int depth; // 搜索深度
 };
+
+// 表示棋盘上的一个位置
 struct position
 {
-    int x;
-    int y;
+    int x; // 行
+    int y; // 列
+
     // 定义比较操作符，用于 std::set 的去重和排序
     bool operator<(const position &other) const
     {
@@ -34,46 +42,55 @@ struct position
         return y < other.y;
     }
 };
+
+// 棋盘状态的结构体
 struct checkerboard
 {
-    int board[BOARD_SIZE][BOARD_SIZE];
-    int round; // 回合数
+    int board[BOARD_SIZE][BOARD_SIZE]; // 棋盘上的棋子状态
+    int round;                         // 当前回合数
 };
+
+// 枚举定义棋子的三种状态
 enum chess
 {
-    em = -1,
-    human, // O
-    robot  // X
+    em = -1, // 空位置
+    human,   // 人类棋子（O）
+    robot    // 机器人棋子（X）
 };
-// Zobrist 表
-std::vector<std::vector<std::vector<std::size_t>>> zobristTable(BOARD_SIZE, std::vector<std::vector<std::size_t>>(BOARD_SIZE, std::vector<std::size_t>(NUM_STATES)));
-// 置换表
+
+// Zobrist 哈希表，用于快速计算棋盘状态的唯一标识
+std::vector<std::vector<std::vector<std::size_t>>> zobristTable(
+    BOARD_SIZE, std::vector<std::vector<std::size_t>>(BOARD_SIZE, std::vector<std::size_t>(NUM_STATES)));
+
+// 置换表，用于缓存搜索结果以优化计算
 std::unordered_map<std::size_t, TranspositionEntry> transpositionTable;
+
+// 机器人下棋类
 class playRobot
 {
 private:
-    ros::NodeHandle nh;
-    std::unique_ptr<MoveitServer> arm;
-    robotTool tools;
-    checkerboard cb;
-    ros::ServiceClient obj_detection, cube_detection;
-    std::vector<geometry_msgs::PoseStamped> poses;
-    ros::Publisher boardStatePub;
+    ros::NodeHandle nh;                               // ROS节点句柄
+    std::unique_ptr<MoveitServer> arm;                // Moveit 机械臂服务器
+    robotTool tools;                                  // 机器人工具
+    checkerboard cb;                                  // 当前棋盘状态
+    ros::ServiceClient obj_detection, cube_detection; // 服务客户端，用于检测棋盘和抓取棋子
+    std::vector<geometry_msgs::PoseStamped> poses;    // 棋子的位置姿态
+    ros::Publisher boardStatePub;                     // 棋盘状态的发布者
 
 public:
     playRobot(std::string planGroup)
     {
+        // 初始化机械臂、服务客户端、设置机械臂速度、广告发布棋盘状态
         arm = std::make_unique<MoveitServer>(planGroup);
         cube_detection = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect");
         obj_detection = nh.serviceClient<robot_msgs::Get_Board_State>("chessboard_detect");
         arm->setMaxVelocity(0.8, 0.8);
         boardStatePub = nh.advertise<std_msgs::Int32MultiArray>("/boardState", 10);
-        poses.clear();
+        poses.clear(); // 清空位置姿态
     }
 
     int evaluateLine(const checkerboard &state, int startX, int startY, int dx, int dy);
     bool checkDirection(const checkerboard &state, int player, int startX, int startY, int dx, int dy);
-    double calculateDistance(int x1, int y1, int x2, int y2);
     std::vector<position> getPossibleMoves(const checkerboard &state, int player);
     bool isWinningMove(const checkerboard &state, int player);
     int evaluate(const checkerboard &state);
@@ -86,9 +103,8 @@ public:
     bool getchess();
     bool Victory();
     bool startGame();
-    ~playRobot()
-    {
-    }
+
+    ~playRobot() {} // 析构函数
 };
 
 // 初始化 Zobrist 表
@@ -189,16 +205,15 @@ int main(int argc, char *argv[])
     initializeZobristTable();
     initializePatternScores();
     arm.startGame();
-    // checkerboard board2 = {{{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                         {-1, -1, -1, -1, 1, -1, -1, -1, -1, -1},
-    //                         {-1, -1, -1, 0, 0, 0, -1, -1, -1, -1},
-    //                         {-1, -1, -1, -1, 0, 1, 1, -1, -1, -1},
-    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1}},
+    // checkerboard board2 = {{{-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                         {-1, -1, -1, -1, 0, -1, -1, -1, -1},
+    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                         {-1, -1, -1, -1, -1, -1, -1, -1, -1}},
     //                        1};
     // printBoard(board2);
     // int k1, k2;
@@ -207,39 +222,39 @@ int main(int argc, char *argv[])
     //     arm.findBestMove(board2, k1, k2);
     //     board2.board[k1][k2] = robot;
     //     printBoard(board2);
-    //     // for (int i = 0; i < BOARD_SIZE; ++i)
-    //     // {
-    //     //     for (int j = 0; j < BOARD_SIZE; ++j)
-    //     //     {
-    //     //         if (board2.board[i][j] == 0)
-    //     //         {
-    //     //             board2.board[i][j] = 1;
-    //     //         }
-    //     //         else if (board2.board[i][j] == 1)
-    //     //         {
-    //     //             board2.board[i][j] = 0;
-    //     //         }
-    //     //         // -1 保持不变，不需处理
-    //     //     }
-    //     // }
-    //     // arm.findBestMove(board2, k1, k2);
-    //     std::cout<<"输入：";
-    //     std::cin>>k1>>k2;
-    //     board2.board[k1][k2] = human;
-    //     // for (int i = 0; i < BOARD_SIZE; ++i)
-    //     // {
-    //     //     for (int j = 0; j < BOARD_SIZE; ++j)
-    //     //     {
-    //     //         if (board2.board[i][j] == 0)
-    //     //         {
-    //     //             board2.board[i][j] = 1;
-    //     //         }
-    //     //         else if (board2.board[i][j] == 1)
-    //     //         {
-    //     //             board2.board[i][j] = 0;
-    //     //         }
-    //     //     }
-    //     // }
+    //     for (int i = 0; i < BOARD_SIZE; ++i)
+    //     {
+    //         for (int j = 0; j < BOARD_SIZE; ++j)
+    //         {
+    //             if (board2.board[i][j] == 0)
+    //             {
+    //                 board2.board[i][j] = 1;
+    //             }
+    //             else if (board2.board[i][j] == 1)
+    //             {
+    //                 board2.board[i][j] = 0;
+    //             }
+    //             // -1 保持不变，不需处理
+    //         }
+    //     }
+    //     arm.findBestMove(board2, k1, k2);
+    //     // std::cout << "输入：";
+    //     // std::cin >> k1 >> k2;
+    //     board2.board[k1][k2] = robot;
+    //     for (int i = 0; i < BOARD_SIZE; ++i)
+    //     {
+    //         for (int j = 0; j < BOARD_SIZE; ++j)
+    //         {
+    //             if (board2.board[i][j] == 0)
+    //             {
+    //                 board2.board[i][j] = 1;
+    //             }
+    //             else if (board2.board[i][j] == 1)
+    //             {
+    //                 board2.board[i][j] = 0;
+    //             }
+    //         }
+    //     }
     //     printBoard(board2);
     //     bool c = true;
     //     for (int i = 0; i < BOARD_SIZE; ++i)
@@ -258,16 +273,15 @@ int main(int argc, char *argv[])
     //     if (arm.isWinningMove(board2, robot) || arm.isWinningMove(board2, human) || c)
     //     {
 
-    //         board2 = {{{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1}},
+    //         board2 = {{{-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1},
+    //                    {-1, -1, -1, -1, -1, -1, -1, -1, -1}},
     //                   1};
     //         printBoard(board2);
     //         std::cout << "输入下棋位置：";
@@ -276,16 +290,6 @@ int main(int argc, char *argv[])
     //         printBoard(board2);
     //     }
     // }
-    // arm.searchBoard();
-    // int board[3][3] =
-    //     {
-    //         {human, human, robot},
-    //         {human, robot, em},
-    //         {em, em, robot}};
-    // std::cout<<arm.findBestMove();
-
-    // arm.getchess();
-    // arm.Victory();
     return 0;
 }
 
@@ -332,14 +336,6 @@ bool playRobot::isWinningMove(const checkerboard &state, int player)
         }
     }
     return false;
-}
-
-// 计算两点间的欧几里得距离
-double playRobot::calculateDistance(int x1, int y1, int x2, int y2)
-{
-    int dx = x1 - x2;
-    int dy = y1 - y2;
-    return dx * dx + dy * dy; // 返回平方距离
 }
 
 // 辅助函数：检查某个位置是否有邻居
@@ -665,7 +661,7 @@ int playRobot::minimax(checkerboard &state, std::vector<position> possiblemoves,
             if (state.board[move.x][move.y] == em)
             {
                 state.board[move.x][move.y] = human;
-
+                // moves = getPossibleMoves(state, robot);
                 best = std::min(best, minimax(state, possiblemoves, depth + 1, !isMax, alpha, beta));
                 state.board[move.x][move.y] = em;
                 beta = std::min(beta, best);
@@ -787,7 +783,7 @@ bool playRobot::move(geometry_msgs::Pose pose)
 {
     pose = tools.transPose(pose, "tool", "xMate3_link6");
     pose = arm->setPoint(pose.position.x, pose.position.y, pose.position.z);
-    pose = tools.calculateTargetPose(pose, arm->setPoint(std::vector<double>{0, 0.01, 0, 0, 0, 0}));
+    pose = tools.calculateTargetPose(pose, arm->setPoint(std::vector<double>{0, 0.005, 0, 0, 0, 0}));
     tools.publishStaticTFwithRot(pose, "board");
     arm->move_l(tools.moveFromPose(pose, -0.25));
     arm->move_l(tools.moveFromPose(pose, -0.02));
@@ -803,7 +799,7 @@ bool playRobot::getchess()
     //                                 tools.degreesToRadians(0), tools.degreesToRadians(-100), tools.degreesToRadians(0)});
     ROS_INFO("Get Chess");
     robot_msgs::Hand_Catch ct;
-    ct.request.name = "blue";
+    ct.request.name = "green";
     ct.request.run = true;
     bool success;
     while ((true))
@@ -815,7 +811,7 @@ bool playRobot::getchess()
             p = tools.transPose(p, "tool", "xMate3_link6");
             // p = arm->setPoint(p.position.x, p.position.y, p.position.z);
             tools.publishStaticTFwithRot(p, "chess");
-            success = arm->move_l(tools.calculateTargetPose(p, arm->setPoint(std::vector<double>{-0.05, 0, -0.30, 0, 0, 0})));
+            success = arm->move_l(tools.calculateTargetPose(p, arm->setPoint(std::vector<double>{-0.10, 0, -0.35, 0, 0, 0})));
             ros::Duration(4).sleep();
             while ((true))
             {
@@ -823,6 +819,7 @@ bool playRobot::getchess()
                 {
                     p = ct.response.positions[0].pose;
                     p = tools.transPose(p, "tool", "xMate3_link6");
+                    // p = tools.calculateTargetPose(p, arm->setPoint(std::vector<double>{0, -0.005, 0, 0, 0, 0}));
                     tools.publishStaticTFwithRot(p, "chess");
                     success = arm->move_l(tools.moveFromPose(p, -0.10));
                     success = arm->move_l(p, success);
@@ -880,6 +877,7 @@ bool playRobot::startGame()
             Victory();
             break;
         }
+        
     }
     return true;
 }

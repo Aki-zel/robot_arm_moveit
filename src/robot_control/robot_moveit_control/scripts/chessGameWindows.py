@@ -3,7 +3,7 @@
 import sys
 from PySide2.QtCore import Qt, QTimer,QThread
 from PySide2.QtWidgets import QApplication, QWidget 
-from PySide2.QtGui import QImage
+from PySide2.QtGui import QImage,QGuiApplication
 from qframelesswindow import FramelessMainWindow, StandardTitleBar
 from UI.chessGameWindows_ui import Ui_Form
 from qfluentwidgets import *
@@ -28,13 +28,14 @@ class MainWindows(QWidget, Ui_Form):
         # self.setTitleBar(StandardTitleBar(self))
         # self.titleBar.raise_()
         # self.resize(1000,650)
+        self.setWindowTitle("五子棋游戏")
         self.start = False
-        self.boardState = np.full((10, 10), -1)
+        self.boardState = np.full((9, 9), -1)
         # 居中
-        rect = QApplication.desktop().availableGeometry()
+        screen = QGuiApplication.primaryScreen()
+        rect = screen.availableGeometry()
         w, h = rect.width(), rect.height()
         self.move(w//2-self.width()//2, h//2-self.height()//2)
-
         self.ruleButton.clicked.connect(self.ruleMessageBoxShow)
         self.startButton.clicked.connect(self.startGame)
         self.imageLabel.text = ""
@@ -42,13 +43,14 @@ class MainWindows(QWidget, Ui_Form):
             "/boardState", Int32MultiArray, self.getBoardState, queue_size=10)
         # self.imageLabel.setImage()
             # 启动 ROS spin 线程
-        ros_spin_thread = RosSpinThread()
-        ros_spin_thread.start()
+        self.ros_spin_thread = RosSpinThread()
+        self.ros_spin_thread.start()
 
     def closeEvent(self, event):
         rospy.signal_shutdown("Shutting down ROS thread")
-        self.ros_thread.wait()  # 等待线程完全退出
+        self.ros_spin_thread.wait()  # 等待线程完全退出
         event.accept()
+
 
     def ruleMessageBoxShow(self):
         w = MessageBox(
@@ -69,15 +71,15 @@ class MainWindows(QWidget, Ui_Form):
         绘制五子棋棋盘，board 是一个 10x10 的 numpy 数组，-1 表示空，0 表示黑棋，1 表示白棋。
         """
         fig, ax = plt.subplots(figsize=(6, 6))
-        ax.set_xlim(-1, 10)
-        ax.set_ylim(-1, 10)
-        ax.set_xticks(np.arange(0, 10, 1))
-        ax.set_yticks(np.arange(0, 10, 1))
+        ax.set_xlim(-1, 9)
+        ax.set_ylim(-1, 9)
+        ax.set_xticks(np.arange(0, 9, 1))
+        ax.set_yticks(np.arange(0, 9, 1))
         ax.grid(True)
 
         # 绘制棋子
-        for y in range(10):
-            for x in range(10):
+        for y in range(9):
+            for x in range(9):
                 if board[y, x] == 0:  # 黑棋
                     ax.plot(x, y, 'ko', markersize=20)
                 elif board[y, x] == 1:  # 白棋
