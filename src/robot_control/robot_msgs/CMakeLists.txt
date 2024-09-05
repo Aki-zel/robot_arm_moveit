@@ -53,7 +53,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  # Message1.msg
+  CubePosition.msg
+  ChessBoardState.msg
   # Message2.msg
   # MoveL_Data.msg
 )
@@ -67,6 +68,7 @@ add_service_files(
   Task_Call.srv
   Objection_Detect.srv
   Get_Board_State.srv
+  Board_State.srv
 )
 
 ## Generate actions in the 'action' folder

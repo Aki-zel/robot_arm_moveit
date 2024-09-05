@@ -197,6 +197,7 @@ add_executable(controlcenter src/ArmControlCenter.cpp)
 # add_executable(example04 example/example04.cpp)
 add_executable(example05 example/example05.cpp)
 add_executable(example05p example/example05p.cpp)
+add_executable(example07 example/example07.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -254,6 +255,11 @@ target_link_libraries(example05
   ${catkin_LIBRARIES}
 )
 target_link_libraries(example05p
+  MoveitServer_h
+  robotTool_h
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(example07
   MoveitServer_h
   robotTool_h
   ${catkin_LIBRARIES}

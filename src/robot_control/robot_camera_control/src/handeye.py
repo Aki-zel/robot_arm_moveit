@@ -30,9 +30,9 @@ class HandEyeCalibration:
 
         # ROS订阅图像话题和相机内参话题
         self.image_sub = rospy.Subscriber(
-            "/camera/rgb/image_rect_color", Image, self.image_callback)
+            "/camera/color/image_raw", Image, self.image_callback)
         self.camera_info_sub = rospy.Subscriber(
-            "/camera/rgb/camera_info", CameraInfo, self.camera_info_callback)
+            "/camera/color/camera_info", CameraInfo, self.camera_info_callback)
 
         # 角点检测结果的发布者
         self.calib_result_pub = rospy.Publisher(
@@ -90,18 +90,18 @@ class HandEyeCalibration:
                 # Convert to grayscale
                 gray = cv2.cvtColor(self.cv_image, cv2.COLOR_BGR2GRAY)
                 # Denoising
-                gray = cv2.fastNlMeansDenoising(gray, None, 25, 12, 21)
+                # gray = cv2.fastNlMeansDenoising(gray, None, 25, 12, 21)
                 
-                
+                # gray=cv2.GaussianBlur(gray, (3, 3),sigmaX=0)
                 # Define kernel for sharpening
-                kernel = np.array([[0, -1, 0],
-                                [-1, 5, -1],
-                                [0, -1, 0]])
-                gray = cv2.filter2D(gray, -1, kernel)
-                gray = cv2.medianBlur(gray, 3)
+                # kernel = np.array([[0, -1, 0],
+                #                 [-1, 5, -1],
+                #                 [0, -1, 0]])
+                # gray = cv2.filter2D(gray, -1, kernel)
+                # gray = cv2.medianBlur(gray, 3)
               
                 # _, gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-                cv2.imshow("Chessboard gray", gray)
+                # cv2.imwrite("Chessboard.png", gray)
 
                 #  cv::CALIB_CB_EXHAUSTIVE | cv::CALIB_CB_ACCURACY
                 # 检测棋盘格角点
@@ -148,8 +148,8 @@ class HandEyeCalibration:
                     cv2.drawChessboardCorners(
                         deep_copied_image, self.board_size, corners2, ret)
 
-                cv2.imshow("Chessboard Corners", deep_copied_image)
-                cv2.waitKey(1)
+                cv2.imwrite("ChessboardCorners.png", deep_copied_image)
+                # cv2.waitKey(1)
 
     def get_robot_pose(self):
         try:

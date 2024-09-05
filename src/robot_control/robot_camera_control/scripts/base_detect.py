@@ -63,7 +63,7 @@ class BaseDetection:
         depth_value = self.depth_img[y, x]
         if depth_value == 0:
             rospy.logerr("未检测到深度信息!!!!!")
-            raise ValueError("Depth value is zero")
+            X=Y=Z=0
         else:
             Z = depth_value / 1000
             X = (x - cx) * Z / fx 
@@ -162,7 +162,7 @@ class BaseDetection:
    
         rospy.loginfo("angle %f",angle)
         yaw = math.radians(angle)  # 将yaw角转换成弧度
-        initial_quaternion = quaternion_from_euler(3.14159,0,0, axes='sxyz')  # 初始四元数，表示末端工具默认朝下
+        initial_quaternion = quaternion_from_euler(0,3.14159,0, axes='sxyz')  # 初始四元数，表示末端工具默认朝下
         # rospy.loginfo(f'Final Quaternion: {initial_quaternion}')
         # 计算绕 Z 轴旋转的四元数
         rotation_quaternion = quaternion_from_euler(0, 0, yaw) # 参数为roll、pitch、yaw

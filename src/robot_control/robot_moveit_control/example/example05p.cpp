@@ -4,7 +4,8 @@
 #include <robotTool.h>
 #include <robot_msgs/Get_Board_State.h>
 #include <robot_msgs/Hand_Catch.h>
-#include <std_msgs/Int32MultiArray.h>
+#include <std_msgs/Bool.h>
+#include <robot_msgs/ChessBoardState.h>
 
 const int BOARD_SIZE = 9; // 棋盘的大小为9x9
 const int NUM_STATES = 3; // 棋子的三种状态：空(em)，人类(human)，机器人(robot)
@@ -76,6 +77,8 @@ private:
     ros::ServiceClient obj_detection, cube_detection; // 服务客户端，用于检测棋盘和抓取棋子
     std::vector<geometry_msgs::PoseStamped> poses;    // 棋子的位置姿态
     ros::Publisher boardStatePub;                     // 棋盘状态的发布者
+    ros::Subscriber startGameSub;
+    bool is_start = false;
 
 public:
     playRobot(std::string planGroup)
@@ -85,7 +88,8 @@ public:
         cube_detection = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect");
         obj_detection = nh.serviceClient<robot_msgs::Get_Board_State>("chessboard_detect");
         arm->setMaxVelocity(0.8, 0.8);
-        boardStatePub = nh.advertise<std_msgs::Int32MultiArray>("/boardState", 10);
+        boardStatePub = nh.advertise<robot_msgs::ChessBoardState>("/boardState", 10);
+        startGameSub = nh.subscribe("/startGame", 10, &playRobot::subscribeCallback, this);
         poses.clear(); // 清空位置姿态
     }
 
@@ -103,6 +107,10 @@ public:
     bool getchess();
     bool Victory();
     bool startGame();
+    void subscribeCallback(const std_msgs::Bool::ConstPtr &msg)
+    {
+        is_start = msg->data;
+    }
 
     ~playRobot() {} // 析构函数
 };
@@ -419,43 +427,44 @@ std::vector<position> playRobot::getPossibleMoves(const checkerboard &state, int
     {
         return HThrees;
     }
-    if (!comFours.empty() && humFours.empty())
-    {
-        // comFours.insert(comFours.end(), Threes.begin(), Threes.end());
-        return comFours;
-    }
-    if (comFours.empty() && !humFours.empty())
-    {
-        humFours.insert(humFours.end(), Threes.begin(), Threes.end());
-        return humFours;
-    }
+    // if (!comFours.empty() && humFours.empty())
+    // {
+    //     // comFours.insert(comFours.end(), Threes.begin(), Threes.end());
+    //     return comFours;
+    // }
+    // if (comFours.empty() && !humFours.empty())
+    // {
+    //     humFours.insert(humFours.end(), Threes.begin(), Threes.end());
+    //     return humFours;
+    // }
     std::vector<position> fours;
-    if (!comFours.empty() && !humFours.empty())
-    {
-        fours.insert(fours.end(), humFours.begin(), humFours.end());
-        fours.insert(fours.end(), comFours.begin(), comFours.end());
-        if (fours.size() >= 6)
-            return fours;
-        else
-        {
-            fours.insert(fours.end(), Threes.begin(), Threes.end());
-            return fours;
-        }
-    }
+    // if (!comFours.empty() && !humFours.empty())
+    // {
+    fours.insert(fours.end(), humFours.begin(), humFours.end());
+    fours.insert(fours.end(), comFours.begin(), comFours.end());
+    // if (fours.size() >= 6)
+    //     return fours;
+    // else
+    // {
+    //     fours.insert(fours.end(), Threes.begin(), Threes.end());
+    //     return fours;
+    // }
+    // }
     std::vector<position> result;
-    if (Threes.size() >= 10)
-    {
-        return Threes;
-    }
-    else
-    {
-        result.insert(result.end(), Threes.begin(), Threes.end());
-    }
+    result.insert(result.end(), fours.begin(), fours.end());
+    // if (Threes.size() >= 10)
+    // {
+    //     return Threes;
+    // }
+    // else
+    // {
+    result.insert(result.end(), Threes.begin(), Threes.end());
+    // }
 
     result.insert(result.end(), Twos.begin(), Twos.end());
     result.insert(result.end(), neighbors.begin(), neighbors.end());
     // 如果低分走法过多，限制返回的数量
-    const int countLimit = 20; // 可以通过配置传递
+    const int countLimit = 25; // 可以通过配置传递
     if (result.size() > countLimit)
     {
         result.resize(countLimit);
@@ -584,11 +593,11 @@ int playRobot::evaluateLine(const checkerboard &state, int startX, int startY, i
             humanScore += patternScores[humanPattern];
             if (humancount > 2)
             {
-                humanScore *= humancount * 10;
+                humanScore *= humancount; 
             }
         }
     }
-    return (10 * robotScore - humanScore);
+    return (10*robotScore - humanScore);
 }
 
 std::mutex transpositionTableMutex;
@@ -643,8 +652,8 @@ int playRobot::minimax(checkerboard &state, std::vector<position> possiblemoves,
             if (state.board[move.x][move.y] == em)
             {
                 state.board[move.x][move.y] = robot;
-                moves = getPossibleMoves(state, robot);
-                best = std::max(best, minimax(state, moves, depth + 1, !isMax, alpha, beta));
+                // moves = getPossibleMoves(state, robot);
+                best = std::max(best, minimax(state, possiblemoves, depth + 1, !isMax, alpha, beta));
                 state.board[move.x][move.y] = em;
                 alpha = std::max(alpha, best);
 
@@ -661,8 +670,8 @@ int playRobot::minimax(checkerboard &state, std::vector<position> possiblemoves,
             if (state.board[move.x][move.y] == em)
             {
                 state.board[move.x][move.y] = human;
-                // moves = getPossibleMoves(state, robot);
-                best = std::min(best, minimax(state, possiblemoves, depth + 1, !isMax, alpha, beta));
+                moves = getPossibleMoves(state, robot);
+                best = std::min(best, minimax(state, moves, depth + 1, !isMax, alpha, beta));
                 state.board[move.x][move.y] = em;
                 beta = std::min(beta, best);
 
@@ -736,7 +745,7 @@ int playRobot::findBestMove(checkerboard &state, int &k1, int &k2)
 }
 bool playRobot::searchBoard()
 {
-    ros::Duration(4).sleep();
+    ros::Duration(2).sleep();
     try
     {
         robot_msgs::Get_Board_State states;
@@ -761,9 +770,12 @@ bool playRobot::searchBoard()
                     }
                 }
                 cb.round = states.response.round;
-                std_msgs::Int32MultiArray msg;
-                msg.data.clear(); // 清空数据
-                msg.data.insert(msg.data.end(), states.response.board.begin(), states.response.board.end());
+                robot_msgs::ChessBoardState msg;
+                for (int i = 0; i < BOARD_SIZE; i++)
+                    for (int j = 0; j < BOARD_SIZE; j++)
+                        msg.board.push_back(cb.board[i][j]);
+                msg.turn = cb.round;
+                msg.iswin = 0;
                 boardStatePub.publish(msg);
                 ROS_INFO("ROUND: %d ", cb.round);
                 if (poses.empty())
@@ -782,15 +794,15 @@ bool playRobot::searchBoard()
 bool playRobot::move(geometry_msgs::Pose pose)
 {
     pose = tools.transPose(pose, "tool", "xMate3_link6");
-    pose = arm->setPoint(pose.position.x, pose.position.y, pose.position.z);
-    pose = tools.calculateTargetPose(pose, arm->setPoint(std::vector<double>{0, 0.005, 0, 0, 0, 0}));
+    pose = arm->setPoint(std::vector<double>{pose.position.x, pose.position.y, pose.position.z, 0, tools.degreesToRadians(180), 0});
+    // pose = tools.calculateTargetPose(pose, arm->setPoint(std::vector<double>{0, 0.005, 0, 0, 0, 0}));
     tools.publishStaticTFwithRot(pose, "board");
     arm->move_l(tools.moveFromPose(pose, -0.25));
-    arm->move_l(tools.moveFromPose(pose, -0.02));
+    arm->move_l(tools.moveFromPose(pose, -0.01));
     arm->Set_Tool_DO(1, true);
     arm->move_l(tools.moveFromPose(pose, -0.25));
-    arm->move_j(std::vector<double>{tools.degreesToRadians(100), tools.degreesToRadians(-13), tools.degreesToRadians(-55),
-                                    tools.degreesToRadians(0), tools.degreesToRadians(-110), tools.degreesToRadians(0)});
+    arm->move_j(std::vector<double>{tools.degreesToRadians(0), tools.degreesToRadians(19), tools.degreesToRadians(53),
+                                    tools.degreesToRadians(0), tools.degreesToRadians(109), tools.degreesToRadians(90)});
     return true;
 }
 bool playRobot::getchess()
@@ -812,25 +824,26 @@ bool playRobot::getchess()
             // p = arm->setPoint(p.position.x, p.position.y, p.position.z);
             tools.publishStaticTFwithRot(p, "chess");
             success = arm->move_l(tools.calculateTargetPose(p, arm->setPoint(std::vector<double>{-0.10, 0, -0.35, 0, 0, 0})));
-            ros::Duration(4).sleep();
+            ros::Duration(2).sleep();
             while ((true))
             {
                 if (cube_detection.call(ct) && !ct.response.positions.empty())
                 {
                     p = ct.response.positions[0].pose;
+                    p.position.z = 0.001;
                     p = tools.transPose(p, "tool", "xMate3_link6");
                     // p = tools.calculateTargetPose(p, arm->setPoint(std::vector<double>{0, -0.005, 0, 0, 0, 0}));
                     tools.publishStaticTFwithRot(p, "chess");
                     success = arm->move_l(tools.moveFromPose(p, -0.10));
                     success = arm->move_l(p, success);
                     arm->Set_Tool_DO(1, false);
-                    success = arm->move_l(tools.moveFromPose(p, -0.15), success);
+                    success = arm->move_l(tools.moveFromPose(p, -0.35), success);
                     break;
                 }
             }
 
-            arm->move_j(std::vector<double>{tools.degreesToRadians(100), tools.degreesToRadians(-20), tools.degreesToRadians(-80),
-                                            tools.degreesToRadians(0), tools.degreesToRadians(-80), tools.degreesToRadians(0)});
+            // arm->move_j(std::vector<double>{tools.degreesToRadians(0), tools.degreesToRadians(0), tools.degreesToRadians(75),
+            //                                 tools.degreesToRadians(0), tools.degreesToRadians(105), tools.degreesToRadians(90)});
             break;
         }
     }
@@ -840,44 +853,72 @@ bool playRobot::getchess()
 bool playRobot::Victory()
 {
     ROS_INFO("ROBOT Victroy !!!");
-    arm->move_j(std::vector<double>{tools.degreesToRadians(100), 0, tools.degreesToRadians(-100),
-                                    0, tools.degreesToRadians(100), 0});
+    arm->move_j(std::vector<double>{tools.degreesToRadians(0), 0, tools.degreesToRadians(100),
+                                    0, tools.degreesToRadians(-100), 0});
     // arm->setMaxVelocity(0.6);
-    arm->move_j(std::vector<double>{tools.degreesToRadians(100), 0, tools.degreesToRadians(-100),
-                                    tools.degreesToRadians(-40), tools.degreesToRadians(100), 0});
-    arm->move_j(std::vector<double>{tools.degreesToRadians(100), 0, tools.degreesToRadians(-100),
-                                    tools.degreesToRadians(40), tools.degreesToRadians(100), 0});
-    arm->move_j(std::vector<double>{tools.degreesToRadians(100), 0, tools.degreesToRadians(-100),
-                                    tools.degreesToRadians(-40), tools.degreesToRadians(100), 0});
-    arm->move_j(std::vector<double>{tools.degreesToRadians(100), 0, tools.degreesToRadians(-100),
-                                    0, tools.degreesToRadians(100), 0});
+    arm->move_j(std::vector<double>{tools.degreesToRadians(0), 0, tools.degreesToRadians(100),
+                                    tools.degreesToRadians(-40), tools.degreesToRadians(-100), 0});
+    arm->move_j(std::vector<double>{tools.degreesToRadians(0), 0, tools.degreesToRadians(100),
+                                    tools.degreesToRadians(40), tools.degreesToRadians(-100), 0});
+    arm->move_j(std::vector<double>{tools.degreesToRadians(0), 0, tools.degreesToRadians(100),
+                                    tools.degreesToRadians(-40), tools.degreesToRadians(-100), 0});
+    arm->move_j(std::vector<double>{tools.degreesToRadians(0), 0, tools.degreesToRadians(100),
+                                    0, tools.degreesToRadians(-100), 0});
+    arm->move_j(std::vector<double>{tools.degreesToRadians(0), tools.degreesToRadians(19), tools.degreesToRadians(53),
+                                tools.degreesToRadians(0), tools.degreesToRadians(109), tools.degreesToRadians(90)});
     return true;
 }
 bool playRobot::startGame()
 {
     ROS_INFO("Start Game!");
-    arm->move_j(std::vector<double>{tools.degreesToRadians(100), tools.degreesToRadians(-13), tools.degreesToRadians(-55),
-                                    tools.degreesToRadians(0), tools.degreesToRadians(-110), tools.degreesToRadians(0)});
-    ros::Duration(3).sleep();
+    arm->move_j(std::vector<double>{tools.degreesToRadians(0), tools.degreesToRadians(19), tools.degreesToRadians(53),
+                                    tools.degreesToRadians(0), tools.degreesToRadians(109), tools.degreesToRadians(90)});
+    ros::Duration(1).sleep();
     while (true)
-    {
-        if (searchBoard() && cb.round % 2 != 0)
+        if (is_start)
         {
-            ROS_INFO("Robot's trun");
-            int k1, k2;
-            int p = findBestMove(cb, k1, k2);
-            ROS_INFO("p:%d ", p);
-            getchess();
-            move(poses[p].pose);
-            // cb.board[k1][k2] == robot;
-            // cb.round++;
+            robot_msgs::ChessBoardState states;
+            while (true)
+            {
+
+                if (searchBoard() && cb.round % 2 != 0)
+                {
+
+                    for (int i = 0; i < BOARD_SIZE; i++)
+                        for (int j = 0; j < BOARD_SIZE; j++)
+                            states.board.push_back(cb.board[i][j]);
+                    states.turn = cb.round;
+                    if (isWinningMove(cb, robot))
+                    {
+                        states.iswin = 1;
+                        boardStatePub.publish(states);
+                        is_start = false;
+                        Victory();
+                        break;
+                    }
+                    if (isWinningMove(cb, human))
+                    {
+                        states.iswin = 2;
+                        boardStatePub.publish(states);
+                        is_start = false;
+                        Victory();
+                        break;
+                    }
+                    ROS_INFO("Robot's trun");
+                    int k1, k2;
+                    int p = findBestMove(cb, k1, k2);
+                    ROS_INFO("p:%d ", p);
+                    getchess();
+                    move(poses[p].pose);
+                    // cb.board[k1][k2] == robot;
+                    // cb.round++;
+                }
+            }
         }
-        if (isWinningMove(cb, robot))
+        else
         {
-            Victory();
-            break;
+            cb.round = 0;
         }
-        
-    }
+
     return true;
 }

@@ -32,21 +32,26 @@ class ChessboardDetection(BaseDetection):
         if success:
             # 创建棋盘区域掩码
             chessboard_mask = np.zeros(cv_image.shape[:2], dtype=np.uint8)
-            cv2.drawContours(chessboard_mask, [hull], -1, 255, -1)
+            # cv2.drawContours(chessboard_mask, [hull], -1, 255, -1)
             chessboard_mask_inv = cv2.bitwise_not(chessboard_mask)
         else:
             chessboard_mask_inv = None
 
         hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+        image_path = os.path.join(current_work_dir, "1.png") 
+        cv2.imwrite(image_path, cv_image) # 保存处理后的图像
         # 读取配置文件中的颜色阈值
         lower_color = np.array(self.color_threshold["lower"])
         upper_color = np.array(self.color_threshold["upper"])
         # 创建颜色掩码
         mask = cv2.inRange(hsv_image, lower_color, upper_color)
+        image_path = os.path.join(current_work_dir, "2.png") 
+        cv2.imwrite(image_path, mask) # 保存处理后的图像
         # 进行形态学开运算去除噪点
-        kernel1 = np.ones((5, 5), np.uint8)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel1)
-
+        # kernel1 = np.ones((5, 5), np.uint8)
+        # mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel1)
+        # image_path = os.path.join(current_work_dir, "3.png") 
+        # cv2.imwrite(image_path, mask) # 保存处理后的图像
         # 应用棋盘区域掩码，排除棋盘区域
         if chessboard_mask_inv is not None:
             mask = cv2.bitwise_and(mask, mask, mask=chessboard_mask_inv)
@@ -56,14 +61,16 @@ class ChessboardDetection(BaseDetection):
             mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         # 按图像y坐标对轮廓进行排序(从上到下)
         contours = sorted(
-            contours, key=lambda contour: cv2.boundingRect(contour)[1])
+            contours, key=lambda contour: cv2.boundingRect(contour)[0],reverse=True)
 
         # 将检测到的目标信息保存到列表中
         objects_info = []
         for contour in contours:
             area = cv2.contourArea(contour)
+            # epsilon = 0.02 * cv2.arcLength(contour, True)
+            # approx = cv2.approxPolyDP(contour, epsilon, True)
             print(area)  # 输出轮廓面积
-            if self.area_threshold["min_area"] < area < self.area_threshold["max_area"]:
+            if self.area_threshold["min_area"] < area < self.area_threshold["max_area"] :
                 rect = cv2.minAreaRect(contour)
                 box = cv2.boxPoints(rect)
                 box = np.int0(box)
@@ -76,7 +83,7 @@ class ChessboardDetection(BaseDetection):
                     angle = angle
                 else:
                     angle = angle-90
-                cv2.drawContours(cv_image, [box], 0, (0, 255, 0), 2)
+                # cv2.drawContours(cv_image, [box], 0, (0, 255, 0), 2)
                 cv2.circle(cv_image, (int(center_x), int(center_y)),
                            5, (0, 0, 255), -1)
 
@@ -114,6 +121,8 @@ class ChessboardDetection(BaseDetection):
 
                     camera_xyz = self.getObject3DPosition(
                         center_x, center_y)
+                    if camera_xyz == [0,0,0]:
+                        continue
                     camera_xyz = np.round(np.array(camera_xyz), 3).tolist()
                     world_position = self.tf_transform(camera_xyz)
                     pose = self.transform_pose(world_position, angle)
@@ -271,7 +280,7 @@ class ChessboardDetection(BaseDetection):
             merged_contour = np.vstack(squares).squeeze()
             hull = cv2.convexHull(merged_contour)  # 计算凸包,凸包是包含轮廓所有点的最小凸多边形
             # cv_image = cv2.drawContours(
-            #     cv_image, [hull], -1, (0, 255, 0), 3)
+            #     cv_image, [hull], -1, (255, 255, 0), 3)
             
             # 计算最小外接矩形
             rect = cv2.minAreaRect(hull)
@@ -280,12 +289,36 @@ class ChessboardDetection(BaseDetection):
             # 获取矩形的四个顶点
             box = cv2.boxPoints(rect)
             box = np.int0(box)  # 将顶点转换为整数
-            cv_image = cv2.drawContours(
-                cv_image, [box], -1, (0, 0, 255), 3)
+            # cv_image = cv2.drawContours(
+            #     cv_image, [box], -1, (0, 0, 255), 3)
+            # 计算凸包的边长
+            hull_edges = []
+            for i in range(len(hull)):
+                pt1 = hull[i][0]
+                pt2 = hull[(i + 1) % len(hull)][0]  # 相邻点，注意取模处理循环边界
+                edge_length = np.linalg.norm(pt1 - pt2)  # 计算两点之间的欧几里得距离
+                hull_edges.append(edge_length)
             
-            return True, center, width, height, angle, box
+            return True, center, width, height, angle, hull
         else:
             return False, None, None, None, None, None
+    def line_equation(self,p1, p2):
+        """计算两点之间的直线方程 Ax + By + C = 0"""
+        A = p2[1] - p1[1]
+        B = p1[0] - p2[0]
+        C = A * p1[0] + B * p1[1]
+        return A, B, -C
+
+    def intersection(self,line1, line2):
+        """计算两条直线的交点"""
+        A1, B1, C1 = line1
+        A2, B2, C2 = line2
+        det = A1 * B2 - A2 * B1
+        if det == 0:
+            return None  # 直线平行
+        x = (B2 * C1 - B1 * C2) / det
+        y = (A1 * C2 - A2 * C1) / det
+        return np.array([x, y])
 
     def handle_chessboard_detection(self, request):
         response = Get_Board_StateResponse()
@@ -301,10 +334,15 @@ class ChessboardDetection(BaseDetection):
                 response.positions = []
                 response.round = 0
                 return response
-
+            
             # 调用棋盘检测函数
             detected, center, width, height, angle, box = self.chessboard_detect(
                 self.cv_image)
+            grid_centers1=self.divide_trapezoid_into_grid(box, (10, 10))
+            for row in grid_centers1:
+                for center1 in row:
+                    # 绘制中心点
+                    cv2.circle(self.cv_image, (int(center1[0][0]), int(center1[0][1])), radius=5, color=(255, 0, 255), thickness=-1)
 
             if detected:
                 # 绘制检测到的棋盘
@@ -353,8 +391,8 @@ class ChessboardDetection(BaseDetection):
                         positions.append(world_position)
 
                 for (x_rot, y_rot) in rotated_centers:
-                    # cv2.circle(cv_image, (int(x_rot), int(y_rot)),
-                    #             5, (255, 0, 0), -1)
+                    cv2.circle(cv_image, (int(x_rot), int(y_rot)),
+                                5, (255, 0, 0), -1)
                     cropped_image=self.crop_circles(cv_image,x_rot,y_rot,cell_width)
                     # cv2.imwrite(f"{x_rot}_{y_rot}.jpg", cropped_image)
                     if cropped_image.size > 0:

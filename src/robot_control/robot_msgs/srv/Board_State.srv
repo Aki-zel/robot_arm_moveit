@@ -1,0 +1,6 @@
+CubePosition[] positions
+int32[] angle
+int32[] color
+int32 type 
+---
+bool success

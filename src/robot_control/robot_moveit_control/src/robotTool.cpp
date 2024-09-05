@@ -193,5 +193,5 @@ double robotTool::round(double num, int exponent) // 四舍五入浮点数
 }
 double robotTool::degreesToRadians(double degrees)
 {
-    return round((degrees * M_PI / 180.0), 4);
+    return round((degrees * M_PI / 180.0), 6);
 }

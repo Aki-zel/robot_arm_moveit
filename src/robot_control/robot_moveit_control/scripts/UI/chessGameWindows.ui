@@ -6,74 +6,485 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>834</width>
-    <height>666</height>
+    <width>852</width>
+    <height>704</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="ImageLabel" name="imageLabel">
+  <widget class="QStackedWidget" name="stackedWidget">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>30</y>
-     <width>600</width>
-     <height>600</height>
+     <x>10</x>
+     <y>50</y>
+     <width>881</width>
+     <height>641</height>
     </rect>
    </property>
-   <property name="text">
-    <string>1</string>
+   <property name="currentIndex">
+    <number>0</number>
    </property>
-  </widget>
-  <widget class="QSplitter" name="splitter_2">
-   <property name="geometry">
-    <rect>
-     <x>690</x>
-     <y>30</y>
-     <width>121</width>
-     <height>101</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Vertical</enum>
-   </property>
-   <widget class="PushButton" name="startButton">
-    <property name="text">
-     <string>开始游戏</string>
-    </property>
+   <widget class="QWidget" name="page">
+    <widget class="BodyLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>670</x>
+       <y>220</y>
+       <width>71</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:16pt; font-weight:600;&quot;&gt;Player&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+    <widget class="ImageLabel" name="imageLabel">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>600</width>
+       <height>600</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>1</string>
+     </property>
+    </widget>
+    <widget class="QSplitter" name="splitter_2">
+     <property name="geometry">
+      <rect>
+       <x>660</x>
+       <y>30</y>
+       <width>121</width>
+       <height>101</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <widget class="PushButton" name="startButton">
+      <property name="text">
+       <string>开始游戏</string>
+      </property>
+     </widget>
+     <widget class="TransparentPushButton" name="ruleButton">
+      <property name="text">
+       <string>游戏规则</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="BodyLabel" name="playerName">
+     <property name="geometry">
+      <rect>
+       <x>670</x>
+       <y>260</y>
+       <width>101</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:22pt; font-weight:600; color:#ef2929;&quot;&gt;Human&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+    <widget class="PushButton" name="stopbutton">
+     <property name="geometry">
+      <rect>
+       <x>660</x>
+       <y>140</y>
+       <width>121</width>
+       <height>49</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>结束游戏</string>
+     </property>
+    </widget>
    </widget>
-   <widget class="TransparentPushButton" name="ruleButton">
-    <property name="text">
-     <string>游戏规则</string>
-    </property>
+   <widget class="QWidget" name="page_2">
+    <widget class="QTableWidget" name="game2_table">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>70</y>
+       <width>500</width>
+       <height>500</height>
+      </rect>
+     </property>
+     <row>
+      <property name="text">
+       <string>新建行</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>新建行</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>新建行</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>新建行</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>新建行</string>
+      </property>
+     </row>
+     <column>
+      <property name="text">
+       <string>新建列</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>新建列</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>新建列</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>新建列</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>新建列</string>
+      </property>
+     </column>
+    </widget>
+    <widget class="PushButton" name="game2_setButton">
+     <property name="geometry">
+      <rect>
+       <x>620</x>
+       <y>70</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>设置堆叠样式</string>
+     </property>
+    </widget>
+    <widget class="PushButton" name="game2_setButton_2">
+     <property name="geometry">
+      <rect>
+       <x>620</x>
+       <y>130</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>开始堆叠</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="game2_imageBox">
+     <property name="geometry">
+      <rect>
+       <x>550</x>
+       <y>350</y>
+       <width>250</width>
+       <height>250</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="PushButton" name="game2_setButton_3">
+     <property name="geometry">
+      <rect>
+       <x>620</x>
+       <y>190</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>一键清空</string>
+     </property>
+    </widget>
+    <widget class="QWidget" name="">
+     <property name="geometry">
+      <rect>
+       <x>540</x>
+       <y>240</y>
+       <width>281</width>
+       <height>101</height>
+      </rect>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="BodyLabel" name="label_2">
+        <property name="text">
+         <string>模版：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="PushButton" name="game2_put_Button_1">
+        <property name="text">
+         <string>模版1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="PushButton" name="game2_put_Button_2">
+        <property name="text">
+         <string>模版2</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="PushButton" name="game2_put_Button_3">
+        <property name="text">
+         <string>模版3</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="PushButton" name="game2_put_Button_4">
+        <property name="text">
+         <string>模版4</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="PushButton" name="game2_put_Button_5">
+        <property name="text">
+         <string>模版5</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="PushButton" name="game2_put_Button_6">
+        <property name="text">
+         <string>模版6</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="page_3">
+    <widget class="PushButton" name="game3_setButton_2">
+     <property name="geometry">
+      <rect>
+       <x>620</x>
+       <y>130</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>开始摆放</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="game3_imageBox">
+     <property name="geometry">
+      <rect>
+       <x>560</x>
+       <y>360</y>
+       <width>250</width>
+       <height>250</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="PushButton" name="game3_setButton">
+     <property name="geometry">
+      <rect>
+       <x>620</x>
+       <y>70</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>设置摆放样式</string>
+     </property>
+    </widget>
+    <widget class="QTableWidget" name="game3_table">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>70</y>
+       <width>500</width>
+       <height>500</height>
+      </rect>
+     </property>
+     <row>
+      <property name="text">
+       <string>新建行</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>新建行</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>新建行</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>新建行</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>新建行</string>
+      </property>
+     </row>
+     <column>
+      <property name="text">
+       <string>新建列</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>新建列</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>新建列</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>新建列</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>新建列</string>
+      </property>
+     </column>
+    </widget>
+    <widget class="PushButton" name="game3_setButton_3">
+     <property name="geometry">
+      <rect>
+       <x>620</x>
+       <y>190</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>一键清空</string>
+     </property>
+    </widget>
+    <widget class="QWidget" name="layoutWidget_2">
+     <property name="geometry">
+      <rect>
+       <x>540</x>
+       <y>240</y>
+       <width>281</width>
+       <height>111</height>
+      </rect>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="1" column="1">
+       <widget class="PushButton" name="game3_numButton_2">
+        <property name="text">
+         <string>数字6</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="PushButton" name="game3_numButton_1">
+        <property name="text">
+         <string>数字4</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="PushButton" name="game3_numButton_5">
+        <property name="text">
+         <string>字符X</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="PushButton" name="game3_numButton_4">
+        <property name="text">
+         <string>字母P</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="PushButton" name="game3_numButton_3">
+        <property name="text">
+         <string>数字8</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="PushButton" name="game3_numButton_6">
+        <property name="text">
+         <string>印花</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="BodyLabel" name="label_3">
+        <property name="text">
+         <string>模版：</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </widget>
   </widget>
-  <widget class="BodyLabel" name="label">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>700</x>
-     <y>220</y>
-     <width>71</width>
-     <height>41</height>
+     <x>10</x>
+     <y>10</y>
+     <width>591</width>
+     <height>61</height>
     </rect>
    </property>
-   <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:16pt; font-weight:600;&quot;&gt;Player&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-  </widget>
-  <widget class="BodyLabel" name="playerName">
-   <property name="geometry">
-    <rect>
-     <x>700</x>
-     <y>260</y>
-     <width>101</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:22pt; font-weight:600; color:#ef2929;&quot;&gt;Human&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="PrimaryPushButton" name="game_one_bt">
+      <property name="text">
+       <string>五子棋游戏</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="PrimaryPushButton" name="game_two_bt">
+      <property name="text">
+       <string>堆叠方块</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="PrimaryPushButton" name="game_three_bt">
+      <property name="text">
+       <string>摆放方块</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <customwidgets>
@@ -95,6 +506,11 @@
   <customwidget>
    <class>BodyLabel</class>
    <extends>QLabel</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>PrimaryPushButton</class>
+   <extends>QPushButton</extends>
    <header>qfluentwidgets</header>
   </customwidget>
  </customwidgets>
