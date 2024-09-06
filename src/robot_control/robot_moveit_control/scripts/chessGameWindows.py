@@ -24,7 +24,7 @@ from std_msgs.msg import Int32MultiArray, Bool
 from robot_msgs.srv import Board_State, Board_StateRequest, Board_StateResponse
 from robot_msgs.msg import CubePosition, ChessBoardState
 
-
+board_size=11
 class RosSpinThread(QThread):
     """ROS Spin 线程类，用于运行 rospy.spin()"""
 
@@ -46,7 +46,7 @@ class MainWindows(QWidget, Ui_Form):
         """初始化用户界面相关设置"""
         self.setWindowTitle("方块的使用方式")
         self.start = False
-        self.boardState = np.full((9, 9), -1)
+        self.boardState = np.full((board_size, board_size), -1)
 
         # 居中显示窗口
         screen = QGuiApplication.primaryScreen()
@@ -357,7 +357,7 @@ class MainWindows(QWidget, Ui_Form):
                     vaild_stack.append((i, j, 0, color_changed[i, j]))
         # 如果所有检查通过，则将color_changed保存为类内变量
         self.color_changed_matrix = vaild_stack
-        print("所有的上层格子均满足条件，color_changed_matrix 已创建。")
+        print("所有的上层格子均满足条件, color_changed_matrix 已创建。")
 
     def is_valid_position(self, row, col, rows, cols):
         """检查位置是否在有效的表格范围内"""
@@ -530,7 +530,7 @@ class MainWindows(QWidget, Ui_Form):
         """显示游戏规则对话框"""
         w = MessageBox(
             "游戏规则",
-            "单击“开始游戏”运行;\n玩家默认持黑棋（橙色方块），机器人持白棋（蓝色方块）;\n机器人将会等待玩家行动结束后自动下棋；\n",
+            "单击“开始游戏”运行;\n玩家默认持黑棋(橙色方块），机器人持白棋（蓝色方块）;\n机器人将会等待玩家行动结束后自动下棋;\n",
             self,
         )
         w.exec()
@@ -550,14 +550,14 @@ class MainWindows(QWidget, Ui_Form):
     def draw_gomoku_board(self, board):
         """绘制五子棋棋盘并返回图像"""
         fig, ax = plt.subplots(figsize=(6, 6))
-        ax.set_xlim(-1, 9)
-        ax.set_ylim(-1, 9)
-        ax.set_xticks(np.arange(0, 9, 1))
-        ax.set_yticks(np.arange(0, 9, 1))
+        ax.set_xlim(-1, board_size)
+        ax.set_ylim(-1, board_size)
+        ax.set_xticks(np.arange(0, board_size, 1))
+        ax.set_yticks(np.arange(0, board_size, 1))
         ax.grid(True)
 
-        for y in range(9):
-            for x in range(9):
+        for y in range(board_size):
+            for x in range(board_size):
                 if board[y, x] == 0:  # 黑棋
                     ax.plot(x, y, "ko", markersize=20)
                 elif board[y, x] == 1:  # 白棋
@@ -586,9 +586,9 @@ class MainWindows(QWidget, Ui_Form):
         else:
             data = np.array(msg.board)
 
-            if data.size != 81:
+            if data.size != board_size*board_size:
                 raise ValueError(
-                    "Received data size is not 81, cannot reshape into 9x9 board."
+                    "Received data size is not 81, cannot reshape into 10*10 board."
                 )
 
             if msg.turn % 2 != 0:
@@ -598,7 +598,7 @@ class MainWindows(QWidget, Ui_Form):
                 self.playerName.setText(QCoreApplication.translate(
                     "Form", u"<html><head/><body><p><span style=\" font-size:22pt; font-weight:600; color:#ef2929;\">Human</span></p></body></html>", None))
                 
-            self.boardState = data.reshape((9, 9))
+            self.boardState = data.reshape((board_size, board_size))
             buf = self.draw_gomoku_board(self.boardState)
             self.imageLabel.setImage(buf)
 

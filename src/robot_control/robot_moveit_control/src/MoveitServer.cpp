@@ -258,7 +258,7 @@ void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
 	// rm_msgs::Tool_Digital_Output tool_do_msg;
 	// tool_do_msg.num = num;
 	// tool_do_msg.state = state;
-	ros::Duration(2).sleep();
+	ros::Duration(1).sleep();
 	rokae_msgs::SetIoOutput tool_do_msg;
 	tool_do_msg.board = 1;
 	tool_do_msg.num = num;

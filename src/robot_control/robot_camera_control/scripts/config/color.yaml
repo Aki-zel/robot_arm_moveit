@@ -29,21 +29,21 @@ colors:
         lower: [100, 100, 100] #[100, 100, 90]
         upper: [140, 255, 255]
     area_threshold:
-        min_area: 120
+        min_area: 200
         max_area: 3000
   orange:
     color_threshold:
-        lower: [0, 100, 150]   #[0, 90, 118]  
+        lower: [0, 130, 160]   #[0, 90, 118]  
         upper: [15, 255, 255]  
     area_threshold:
-        min_area: 120
+        min_area: 200
         max_area: 3000
   green:
     color_threshold:
-        lower: [50, 70, 70] #[60, 70, 50]
+        lower: [50, 40, 40] #[60, 70, 50]
         upper: [90, 255, 255]
     area_threshold:
-        min_area: 120
+        min_area: 200
         max_area: 3000
 
   
