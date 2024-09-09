@@ -136,7 +136,7 @@ class ChessboardDetection(BaseDetection):
                     camera_xyz = np.round(np.array(camera_xyz), 3).tolist()
                     world_position = self.tf_transform(camera_xyz)
                     pose = self.transform_pose(world_position, angle)
-                    # rospy.loginfo(pose.pose.position.z)
+                    rospy.loginfo(pose.pose.position.z)
                     response.labels.append(label)
                     response.positions.append(pose)
 
