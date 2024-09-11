@@ -196,25 +196,29 @@ std::size_t computeHash(const checkerboard &state)
     }
     return hash;
 }
+
 // 打印棋盘状态的函数
 void printBoard(const checkerboard &state)
 {
-    std::cout << "  ";
+    int width = 4; // 设置每列的宽度
+
+    std::cout << std::setw(width) << " "; // 设置初始空格
     for (int i = 0; i < BOARD_SIZE; ++i)
-        std::cout << i << " ";
+        std::cout << std::setw(width) << i; // 设置每个数字的宽度
     std::cout << "\n";
 
     for (int i = 0; i < BOARD_SIZE; ++i)
     {
-        std::cout << i << " ";
+        std::cout << std::setw(width) << i; // 输出行号
         for (int j = 0; j < BOARD_SIZE; ++j)
         {
             char symbol = state.board[i][j] == human ? 'O' : (state.board[i][j] == robot ? 'X' : '.');
-            std::cout << symbol << " ";
+            std::cout << std::setw(width) << symbol; // 设置每个符号的宽度
         }
         std::cout << "\n";
     }
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -223,42 +227,43 @@ int main(int argc, char *argv[])
     playRobot arm("rokae_arm");
     initializeZobristTable();
     initializePatternScores();
-    arm.startGame();
-    // checkerboard board2;
-    // printBoard(board2);
-    // int k1, k2;
-    // bool c = true;
-    // while (true)
-    // {
+    // arm.startGame();
+    checkerboard board2;
+    printBoard(board2);
+    // arm.evaluate(board2);
+    int k1, k2;
+    bool c = true;
+    while (true)
+    {
 
-    //     std::cout << "输入：";
-    //     std::cin >> k1 >> k2;
-    //     board2.board[k1][k2] = human;
-    //     printBoard(board2);
-    //     arm.findBestMove(board2, k1, k2);
-    //     board2.board[k1][k2] = robot;
-    //     printBoard(board2);
-    //     for (int i = 0; i < BOARD_SIZE; ++i)
-    //     {
-    //         for (int j = 0; j < BOARD_SIZE; ++j)
-    //         {
-    //             if (board2.board[i][j] == -1)
-    //             {
-    //                 c = false;
-    //                 break;
-    //             }
-    //         }
-    //         if (!c)
-    //             break;
-    //     }
-    //     if (arm.isWinningMove(board2, robot) || arm.isWinningMove(board2, human) || c)
-    //     {
+        std::cout << "输入：";
+        std::cin >> k1 >> k2;
+        board2.board[k1][k2] = human;
+        printBoard(board2);
+        arm.findBestMove(board2, k1, k2);
+        board2.board[k1][k2] = robot;
+        printBoard(board2);
+        for (int i = 0; i < BOARD_SIZE; ++i)
+        {
+            for (int j = 0; j < BOARD_SIZE; ++j)
+            {
+                if (board2.board[i][j] == -1)
+                {
+                    c = false;
+                    break;
+                }
+            }
+            if (!c)
+                break;
+        }
+        if (arm.isWinningMove(board2, robot) || arm.isWinningMove(board2, human) || c)
+        {
 
-    //         checkerboard board;
-    //         board2 = board;
-    //         printBoard(board2);
-    //     }
-    // }
+            checkerboard board;
+            board2 = board;
+            printBoard(board2);
+        }
+    }
     return 0;
 }
 
@@ -500,7 +505,7 @@ int playRobot::evaluate(const checkerboard &state)
     {
         score += evaluateLine(state, i, 0, 0, 1); // 横线
         score += evaluateLine(state, 0, i, 1, 0); // 竖线
-        if (i <= 5)
+        if (i < BOARD_SIZE-3)
         {
             score += evaluateLine(state, 0, i, 1, 1);               // 正对角线
             score += evaluateLine(state, 0, BOARD_SIZE - i, 1, -1); // 反对角线
@@ -515,7 +520,7 @@ int playRobot::evaluate(const checkerboard &state)
 int playRobot::evaluateLine(const checkerboard &state, int startX, int startY, int dx, int dy)
 {
     int humanScore = 0, robotScore = 0;
-    for (int i = 0; i < 6; ++i)
+    for (int i = 0; i < 7; ++i)
     { // 评估的起点
         int humanPattern = 0, robotPattern = 0, count = 0;
         int humancount = 0;
@@ -580,7 +585,7 @@ int playRobot::minimax(checkerboard &state, std::vector<position> possiblemoves,
     std::vector<position> moves;
     int score = evaluate(state);
     // 终止条件
-    if (depth >= 4 || isWinningMove(state, human) || isWinningMove(state, robot) || possiblemoves.empty())
+    if (depth >= 5 || isWinningMove(state, human) || isWinningMove(state, robot) || possiblemoves.empty())
     {
         return score;
     }
