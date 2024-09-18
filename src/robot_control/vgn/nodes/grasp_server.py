@@ -15,8 +15,6 @@ import std_srvs.srv
 from robot_helpers.ros import tf
 from robot_helpers.ros.conversions import *
 from vgn.perception import UniformTSDFVolume
-import vgn.srv
-from vgn.utils import *
 
 
 class GraspServer:

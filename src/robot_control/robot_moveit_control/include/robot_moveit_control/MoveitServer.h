@@ -10,8 +10,6 @@
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/CollisionObject.h>
-#include <rm_msgs/Tool_Digital_Output.h>
-#include <rm_msgs/Tool_IO_State.h>
 #include <sensor_msgs/JointState.h>
 #include <tf2/buffer_core.h>
 #include <tf2_ros/buffer.h>
@@ -69,7 +67,6 @@ private:
 	geometry_msgs::Transform current_state;
 	ros::Publisher tool_do_pub, collision_stage_pub;
 	ros::AsyncSpinner spinner;
-	ros::Publisher moveL_cmd;
 	// constmoveit::core::LinkModel * end_effector_link ;
 	moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
 	const moveit::core::JointModelGroup* joint_model_group;

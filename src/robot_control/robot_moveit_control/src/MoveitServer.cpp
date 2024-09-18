@@ -1,5 +1,4 @@
 #include <MoveitServer.h>
-#include <rm_msgs/MoveL.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Transform.h>
@@ -15,8 +14,6 @@
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/CollisionObject.h>
-#include <rm_msgs/Tool_Digital_Output.h>
-#include <rm_msgs/Tool_IO_State.h>
 #include <sensor_msgs/JointState.h>
 #include <tf2/buffer_core.h>
 #include <tf2_ros/buffer.h>
@@ -43,14 +40,8 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 {
 	setlocale(LC_ALL, ""); // 设置编码
 	spinner.start();
-	// if (!arm_.getCurrentState())
-	// {
-	// 	ROS_ERROR("Error: MoveGroupInterface current state is not initialized.");
-	// 	return;
-	// }
-	// Set arm properties
 	plan_group = PLANNING_GROUP;
-	arm_.setGoalPositionTolerance(0.01);
+	arm_.setGoalPositionTolerance(0.001);
 	arm_.setGoalOrientationTolerance(0.01);
 	arm_.setGoalJointTolerance(0.01);
 	arm_.setMaxAccelerationScalingFactor(0.1);
@@ -67,17 +58,10 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	// arm_.setPlannerId("RRTstar");
 	// arm_.setEndEffectorLink("ee_link");
 	tfListener = std::make_unique<tf2_ros::TransformListener>(tfBuffer);
-	// tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
 	tool_do_pub = nh_.advertise<rokae_msgs::SetIoOutput>("set_io", 10);
 	collision_stage_pub = nh_.advertise<std_msgs::Int16>("/rm_driver/Set_Collision_Stage", 1);
-	moveL_cmd = nh_.advertise<rm_msgs::MoveL>("/rm_driver/MoveL_Cmd", 10);
 	joint_model_group = arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 	ROS_INFO_NAMED("tutorial", "Start MOVEITSERVER");
-	// ROS_INFO("%s", arm_.getEndEffectorLink().c_str());
-	// visual_tools = new moveit_visual_tools::MoveItVisualTools("base_link");
-	// visual_tools->deleteAllMarkers();
-	// visual_tools->loadRemoteControl();
-	// end_effector_link = arm_.getRobotModel()->getLinkModel(arm_.getEndEffectorLink());
 	initializeClaw();
 }
 /// @brief 设置最大速度和加速度
@@ -92,7 +76,6 @@ void MoveitServer::setMaxVelocity(double speed, double speed1)
 bool MoveitServer::Planer()
 {
 	bool success = false;
-	// visual_tools->deleteAllMarkers();
 	try
 	{
 		moveit::planning_interface::MoveGroupInterface::Plan my_plan;
@@ -102,11 +85,6 @@ bool MoveitServer::Planer()
 		{
 			ROS_INFO_NAMED("tutorial", "Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
 			this->arm_.execute(my_plan);
-			// robot_trajectory::RobotTrajectory trajectory_(arm_.getRobotModel());
-			// trajectory_.setRobotTrajectoryMsg(*arm_.getCurrentState(), my_plan.trajectory_);
-			// visual_tools->publishTrajectoryLine(trajectory_, end_effector_link);
-			// visual_tools->trigger();
-			// visual_tools->prompt("Press 'next' in the RvizVisualToolsGui window to continue");
 		}
 		arm_.clearPathConstraints();
 	}
@@ -276,11 +254,6 @@ void MoveitServer::initializeClaw()
 
 	Set_Tool_DO(1, false);
 	Set_Tool_DO(1, true);
-	// Set_Tool_DO(2, false);
-	std_msgs::Int16 msg;
-	msg.data = 4;
-	// this->collision_stage_pub.publish(msg);
-	ROS_INFO("Collision Stage 4 setup");
 	ROS_INFO("Claw initialization completed");
 	// go_home();
 }

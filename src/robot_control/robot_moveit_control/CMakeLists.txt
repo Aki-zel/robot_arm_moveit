@@ -189,7 +189,7 @@ add_library(robotTool_h
 # add_executable(${PROJECT_NAME}_node src/robot_moveit_control_node.cpp)
 # add_executable(ydrobot ${QRC_FILES} ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
 add_executable(ydtest src/test.cpp)
-add_executable(controlcenter src/ArmControlCenter.cpp)
+#add_executable(controlcenter src/ArmControlCenter.cpp)
 
 # add_executable(example01 example/example01.cpp)
 # add_executable(example02 example/example02.cpp)
@@ -208,7 +208,7 @@ add_executable(example07 example/example07.cpp)
 ## same as for the library above
 # add_dependencies(ydrobot ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(ydtest ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(controlcenter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#add_dependencies(controlcenter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
@@ -224,11 +224,11 @@ target_link_libraries(ydtest
   robotTool_h
   ${catkin_LIBRARIES}
 )
-target_link_libraries(controlcenter
-  MoveitServer_h
-  robotTool_h
-  ${catkin_LIBRARIES}
-)
+# target_link_libraries(controlcenter
+#   MoveitServer_h
+#   robotTool_h
+#   ${catkin_LIBRARIES}
+# )
 # target_link_libraries(example01
 #   MoveitServer_h
 #   robotTool_h

@@ -24,7 +24,7 @@
           "ignoreFailures": true
         }
       ],
-      "visualizerFile": "/home/yds/.config/Code/User/workspaceStorage/f3f31ab202c8a8876bfe59b4d13bf4da/tonka3000.qtvsctools/qt.natvis.xml"
+      "visualizerFile": "/home/ydt/.config/Code/User/workspaceStorage/e63f73e9e1506b04887ce6cbfba4ffe6/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "ydtest",
@@ -49,7 +49,7 @@
           "ignoreFailures": true
         }
       ],
-      "visualizerFile": "/home/yds/.config/Code/User/workspaceStorage/f3f31ab202c8a8876bfe59b4d13bf4da/tonka3000.qtvsctools/qt.natvis.xml"
+      "visualizerFile": "/home/ydt/.config/Code/User/workspaceStorage/e63f73e9e1506b04887ce6cbfba4ffe6/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "controlcenter",
@@ -74,13 +74,13 @@
           "ignoreFailures": true
         }
       ],
-      "visualizerFile": "/home/yds/.config/Code/User/workspaceStorage/f3f31ab202c8a8876bfe59b4d13bf4da/tonka3000.qtvsctools/qt.natvis.xml"
+      "visualizerFile": "/home/ydt/.config/Code/User/workspaceStorage/e63f73e9e1506b04887ce6cbfba4ffe6/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "example",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/example07",
+      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/example05p",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
@@ -99,7 +99,7 @@
           "ignoreFailures": true
         }
       ],
-      "visualizerFile": "/home/yds/.config/Code/User/workspaceStorage/f3f31ab202c8a8876bfe59b4d13bf4da/tonka3000.qtvsctools/qt.natvis.xml"
+      "visualizerFile": "/home/ydt/.config/Code/User/workspaceStorage/e63f73e9e1506b04887ce6cbfba4ffe6/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "rokae_control",
@@ -124,7 +124,7 @@
           "ignoreFailures": true
         }
       ],
-      "visualizerFile": "/home/yds/.config/Code/User/workspaceStorage/f3f31ab202c8a8876bfe59b4d13bf4da/tonka3000.qtvsctools/qt.natvis.xml"
+      "visualizerFile": "/home/ydt/.config/Code/User/workspaceStorage/e63f73e9e1506b04887ce6cbfba4ffe6/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "ROS: Launch",
