@@ -21,8 +21,8 @@ public:
         cube_detection = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect");
         board_state = nh.advertiseService("/cubegame", &playRobot::handleBoardState, this);
         arm->setMaxVelocity(0.5);
-        arm->move_j(std::vector<double>{tools.degreesToRadians(0), tools.degreesToRadians(0), tools.degreesToRadians(75),
-                                    tools.degreesToRadians(0), tools.degreesToRadians(105), tools.degreesToRadians(90)});
+        arm->move_j(std::vector<double>{tools.degreesToRadians(0), tools.degreesToRadians(-20), tools.degreesToRadians(72),
+                                    tools.degreesToRadians(0), tools.degreesToRadians(109), tools.degreesToRadians(90)});
     }
     bool move(geometry_msgs::Pose pose);
     bool searchBoard();
@@ -40,66 +40,83 @@ bool playRobot::move(geometry_msgs::Pose pose)
     arm->move_l(pose);
     arm->Set_Tool_DO(1, true);
     arm->move_l(tools.moveFromPose(pose, -0.1));
-    arm->move_j(std::vector<double>{tools.degreesToRadians(0), tools.degreesToRadians(0), tools.degreesToRadians(75),
-                                    tools.degreesToRadians(0), tools.degreesToRadians(105), tools.degreesToRadians(90)});
-    return true;
+    arm->move_j(std::vector<double>{tools.degreesToRadians(0), tools.degreesToRadians(-20), tools.degreesToRadians(72),
+                                    tools.degreesToRadians(0), tools.degreesToRadians(109), tools.degreesToRadians(90)});
 }
 
 // 抓取
 bool playRobot::getcube(std::string color)
 {
-    ROS_INFO("Get Cube");
+    ROS_INFO("Get Chess");
     robot_msgs::Hand_Catch ct;
     ct.request.name = color;
     ct.request.run = true;
-    ros::Duration(1).sleep();
     bool success;
+    int i = 0;
     while ((true))
     {
         if (cube_detection.call(ct) && !ct.response.positions.empty())
         {
-            geometry_msgs::Pose p = ct.response.positions[0].pose;
-            p = arm->setPoint(p.position.x, p.position.y, p.position.z);
-            p = tools.transPose(p, "tool", "xMate3_link6");
-            // p = arm->setPoint(p.position.x, p.position.y, p.position.z);
-            tools.publishStaticTFwithRot(p, "chess");
-            success = arm->move_l(tools.calculateTargetPose(p, arm->setPoint(std::vector<double>{0, -0.10, -0.35, 0, 0, 0})));
-            ros::Duration(2).sleep();
-            while ((true))
+            success = false;
+            while (!success && i < ct.response.positions.size())
             {
-                if (cube_detection.call(ct) && !ct.response.positions.empty())
+                geometry_msgs::Pose p = ct.response.positions[i].pose;
+                p = arm->setPoint(std::vector<double>{p.position.x, p.position.y, p.position.z, 0, tools.degreesToRadians(180), tools.degreesToRadians(-90)});
+                p = tools.transPose(p, "tool", "xMate3_link6");
+                // p = arm->setPoint(p.position.x, p.position.y, p.position.z);
+                tools.publishStaticTFwithRot(p, "chess");
+                success = arm->move_l(tools.calculateTargetPose(p, arm->setPoint(std::vector<double>{-0.10, 0, -0.35, 0, 0, 0})));
+                i++;
+            }
+            if (success)
+            {
+                i = 0;
+                success = false;
+                ros::Duration(2).sleep();
+                while (true)
                 {
-                    p = ct.response.positions[0].pose;
+                    if (cube_detection.call(ct) && !ct.response.positions.empty())
+                    {
 
-                    p.position.z=0.001;
-
-                    p = tools.transPose(p, "tool", "xMate3_link6");
-                    // p = tools.calculateTargetPose(p, arm->setPoint(std::vector<double>{0, -0.005, 0, 0, 0, 0}));
-                    tools.publishStaticTFwithRot(p, "chess");
-                    success = arm->move_l(tools.moveFromPose(p, -0.10));
-                    success = arm->move_l(p, success);
-                    arm->Set_Tool_DO(1, false);
-                    success = arm->move_l(tools.moveFromPose(p, -0.25), success);
-                    break;
+                        while (!success && i < ct.response.positions.size())
+                        {
+                            geometry_msgs::Pose p = ct.response.positions[i].pose;
+                            p.position.z = 0.005;
+                            // p = arm->setPoint(p.position.x, p.position.y, p.position.z);
+                            p = tools.transPose(p, "tool", "xMate3_link6");
+                            // p = tools.calculateTargetPose(p, arm->setPoint(std::vector<double>{0, -0.005, 0, 0, 0, 0}));
+                            tools.publishStaticTFwithRot(p, "chess");
+                            success = arm->move_l(tools.moveFromPose(p, -0.10));
+                            success = arm->move_l(p, success);
+                            arm->Set_Tool_DO(1, false);
+                            success = arm->move_l(tools.moveFromPose(p, -0.10), success);
+                            i++;
+                        }
+                        break;
+                    }
+                    if (success)
+                        break;
                 }
             }
 
             // arm->move_j(std::vector<double>{tools.degreesToRadians(0), tools.degreesToRadians(0), tools.degreesToRadians(75),
-            //                         tools.degreesToRadians(0), tools.degreesToRadians(105), tools.degreesToRadians(90)});
-            break;
+            //                                 tools.degreesToRadians(0), tools.degreesToRadians(105), tools.degreesToRadians(90)});
+            if (success)
+                break;
         }
     }
-    return true;
+
+    return success;
 }
 
 // 服务回调函数
 bool playRobot::handleBoardState(robot_msgs::Board_State::Request &req, robot_msgs::Board_State::Response &res)
 {
-    arm->move_j(std::vector<double>{tools.degreesToRadians(0), tools.degreesToRadians(0), tools.degreesToRadians(75),
-                                    tools.degreesToRadians(0), tools.degreesToRadians(105), tools.degreesToRadians(90)});
+    arm->move_j(std::vector<double>{tools.degreesToRadians(0), tools.degreesToRadians(-20), tools.degreesToRadians(72),
+                                    tools.degreesToRadians(0), tools.degreesToRadians(109), tools.degreesToRadians(90)});
 
     geometry_msgs::Pose startPose;
-    startPose.position.x = 0.45;
+    startPose.position.x = 0.56;
     startPose.position.y = 0.0;
     startPose.position.z = 0.002;
     startPose.orientation.w = 1;

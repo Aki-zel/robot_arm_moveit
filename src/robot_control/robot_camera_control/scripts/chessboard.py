@@ -178,7 +178,8 @@ class ChessboardDetection(BaseDetection):
 
         # 检查敌方
         opponent_detected = self.detect_color(hsv_image, "orange")
-
+        if opponent_detected==False:
+            opponent_detected = self.detect_color(hsv_image, "blue")
         # 返回检测结果
         if player_detected:
             return 1  # 检测到己方
@@ -232,7 +233,6 @@ class ChessboardDetection(BaseDetection):
     def crop_circles(self, image, x, y, diameter):
         """
         从给定的图像中裁剪出指定直径的圆形区域，并保存这些区域。
-
         :param image: 要裁剪的原始图像 (numpy array)。
         :param rotated_centers: 圆心的坐标列表，格式为 [(x1, y1), (x2, y2), ...]。
         :param diameter: 圆的直径 (int)。
@@ -260,13 +260,13 @@ class ChessboardDetection(BaseDetection):
         # 计算凸包
         epsilon = 0.01 * cv2.arcLength(hull, True)  # 设定逼近精度
         quadrilateral = cv2.approxPolyDP(hull, epsilon, True)  # 逼近多边形
-        count=0
+        count = 0
         # 如果逼近结果不是四边形，调整epsilon
         while len(quadrilateral) != 4:
-            count+=1
+            count += 1
             epsilon += 0.01 * cv2.arcLength(hull, True)
             quadrilateral = cv2.approxPolyDP(hull, epsilon, True)
-            if count==5:
+            if count == 5:
                 return None
 
         return quadrilateral
@@ -304,30 +304,51 @@ class ChessboardDetection(BaseDetection):
             area = cv2.contourArea(approx)  # 计算轮廓面积
             # 满足轮廓面积条件(顶点数量为4并且大于棋子的轮廓面积)，则将轮廓添加到列表中
             if len(approx) == 4 and cv2.isContourConvex(approx) and area > 1500:
-                squares.append(approx)
+                # 获取轮廓的最小外接矩形
+                rect = cv2.minAreaRect(approx)
+                width, height = rect[1]
+
+                # 确保宽高非零，计算宽高比
+                if width > 0 and height > 0:
+                    aspect_ratio = max(width, height) / min(width, height)
+
+                    # 限制宽高比 (例如：在1到1.5之间)
+                    if 1.0 <= aspect_ratio <= 1.5:
+                        squares.append(approx)
 
         if len(squares) > 0:
-            # 合并轮廓并计算凸包
-            merged_contour = np.vstack(squares).squeeze()
-            hull = cv2.convexHull(
-                merged_contour
-            )  # 计算凸包,凸包是包含轮廓所有点的最小凸多边形
-            # 获取凸包的最小外接四边形
-            min_enclosing_quadrilateral = self.get_min_enclosing_quadrilateral(
-                hull)
-            # cv_image = cv2.drawContours(
-            #     cv_image, [hull], -1, (255, 255, 0), 3)
+            # 计算每个四边形的中心点
+            centers = []
+            for square in squares:
+                M = cv2.moments(square)
+                if M["m00"] != 0:
+                    center_x = int(M["m10"] / M["m00"])
+                    center_y = int(M["m01"] / M["m00"])
+                    centers.append((center_x, center_y))
 
-            # 计算最小外接矩形
-            rect = cv2.minAreaRect(hull)
-            center, (width, height), angle = rect
-            center = np.array(center)
-            # 获取矩形的四个顶点
-            # box = cv2.boxPoints(rect)
-            # box = np.intp(box)  # 将顶点转换为整数
-            # cv_image = cv2.drawContours(
-            #     cv_image, [box], -1, (0, 0, 255), 3)
-            return True, center, width, height, angle, min_enclosing_quadrilateral
+            # 计算这些中心点的平均位置
+            avg_center = np.mean(centers, axis=0)
+
+            # 根据与平均位置的距离排除独立的四边形
+            filtered_squares = []
+            for i, center in enumerate(centers):
+                distance = np.linalg.norm(np.array(center) - avg_center)
+                if distance < 100:  # 设置距离阈值，排除偏离过远的四边形
+                    filtered_squares.append(squares[i])
+
+            if len(filtered_squares) > 0:
+                # 合并轮廓并计算凸包
+                merged_contour = np.vstack(filtered_squares).squeeze()
+                hull = cv2.convexHull(merged_contour)  # 计算凸包,凸包是包含轮廓所有点的最小凸多边形
+                min_enclosing_quadrilateral = self.get_min_enclosing_quadrilateral(
+                    hull)  # 获取凸包的最小外接四边形
+                # 计算最小外接矩形
+                rect = cv2.minAreaRect(hull)
+                center, (width, height), angle = rect
+                center = np.array(center)
+                return True, center, width, height, angle, min_enclosing_quadrilateral
+            else:
+                return False, None, None, None, None, None
         else:
             return False, None, None, None, None, None
 
@@ -350,17 +371,15 @@ class ChessboardDetection(BaseDetection):
             left_bottom = min(bottom_points, key=lambda p: p[0])
             # 右下角: 在下边的点中 x 最大的
             right_bottom = max(bottom_points, key=lambda p: p[0])
-            
+
             # 获取透视变换矩阵
             rect = np.array([[0, 0], [board_size[0]-1, 0], [board_size[0]-1,
                             board_size[1]-1], [0, board_size[1]-1]], dtype="float32")
-            # 构造 dst 数组
-            dst = np.array([left_top, right_top, right_bottom, left_bottom], dtype="float32")
+            # 构造dst数组构造变换后的点
+            dst = np.array([left_top, right_top, right_bottom,
+                           left_bottom], dtype="float32")
             # 透视变换矩阵
             M = cv2.getPerspectiveTransform(rect, dst)
-
-            # dst = np.array([P1, P2, P3, P4], dtype="float32")
-            # M = cv2.getPerspectiveTransform(rect, dst)
 
             # 生成均匀分布的矩形网格点
             grid_points = []
@@ -368,12 +387,21 @@ class ChessboardDetection(BaseDetection):
                 for j in range(board_size[1]):
                     grid_points.append((i, j))
 
+            # # 将矩形网格点变换回图像中的梯形区域
+            # for point in grid_points:
+            #     point_transformed = cv2.perspectiveTransform(
+            #         np.array([[point]], dtype="float32"), M)
+            #     transformed_point = tuple(point_transformed[0][0])
+
+            #     # 使用 pointPolygonTest 检查点是否在凸包内
+            #     if cv2.pointPolygonTest(hull, transformed_point, False) >= 0:
+            #         intersection_points.append(transformed_point)
+            
             # 将矩形网格点变换回图像中的梯形区域
             for point in grid_points:
                 point_transformed = cv2.perspectiveTransform(
                     np.array([[point]], dtype="float32"), M)
                 intersection_points.append(tuple(point_transformed[0][0]))
-                # cv2.circle(img, (int(point_transformed[0][0][0]), int(point_transformed[0][0][1])), 3, (0, 0, 255), -1)
 
         return intersection_points
 
@@ -383,7 +411,7 @@ class ChessboardDetection(BaseDetection):
         positions = []
         board = []
         round = 0
-        board_size = (11, 11)
+        board_size = (12, 10)
 
         if request.run:
             if self.cv_image is None:
@@ -436,9 +464,14 @@ class ChessboardDetection(BaseDetection):
                 #     rotated_point = np.dot(rotation_matrix, point)
                 #     rotated_centers.append(
                 #         (rotated_point[0][0], rotated_point[1][0]))
-
                 if request.getpositions:
+                    i = 0
                     for x, y in grid_centers:
+                        x_index = i // board_size[1]
+                        y_index= i % board_size[1]
+                        i += 1
+                        if x_index==0 or x_index==board_size[0]-1 or y_index==0 or y_index==board_size[1]-1:
+                            continue
                         # 转换坐标系
                         camera_xyz = self.getObject3DPosition(x, y)
                         camera_xyz = np.round(
@@ -446,10 +479,19 @@ class ChessboardDetection(BaseDetection):
                         ).tolist()  # 四舍五入到3位小数
                         world_position = self.tf_transform(camera_xyz)
                         positions.append(world_position)
-                i = 0
+                i=0
                 for x_rot, y_rot in grid_centers:
+
+                    x_index = i // board_size[1]
+                    y_index= i % board_size[1]
+                    i += 1
+                    if x_index==0 or x_index==board_size[0]-1 or y_index==0 or y_index==board_size[1]-1:
+                        continue
                     # cv2.circle(cv_image, (int(x_rot), int(y_rot)),
                     #            5, (255, 0, 255), -1)
+                    # 在点的旁边绘制序号
+                    # cv2.putText(cv_image, (int(x_rot) + 10, int(y_rot) + 10),
+                    #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
                     # cv2.imwrite(str(i)+".png",cv_image)
                     cropped_image = self.crop_circles(
                         cv_image, x_rot, y_rot, cell_width
@@ -460,7 +502,7 @@ class ChessboardDetection(BaseDetection):
                         if has_piece == 1 or has_piece == 0:
                             round += 1
                         board.append(has_piece)
-                    i += 1
+
 
                 # # 遍历每个棋盘格并裁剪
                 # for i in range(board_size[1]-1):

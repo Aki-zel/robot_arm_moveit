@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
+import numpy as np
 import rospy
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image, CameraInfo
@@ -162,7 +163,7 @@ class BaseDetection:
    
         rospy.loginfo("angle %f",angle)
         yaw = math.radians(angle)  # 将yaw角转换成弧度
-        initial_quaternion = quaternion_from_euler(0,3.14159,0, axes='sxyz')  # 初始四元数，表示末端工具默认朝下
+        initial_quaternion = quaternion_from_euler(0,math.pi,0, axes='sxyz')  # 初始四元数，表示末端工具默认朝下
         # rospy.loginfo(f'Final Quaternion: {initial_quaternion}')
         # 计算绕 Z 轴旋转的四元数
         rotation_quaternion = quaternion_from_euler(0, 0, yaw) # 参数为roll、pitch、yaw
