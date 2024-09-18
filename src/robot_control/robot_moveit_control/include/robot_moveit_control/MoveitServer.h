@@ -51,7 +51,7 @@ public:
 	geometry_msgs::Pose setPoint(const std::vector<double> &pose);
 	void stop();
 	void initializeClaw();
-	void setMaxVelocity(double speed,double speed1=0.4);
+	void setMaxVelocity(double vel,double acc=0.4);
 	void setCollisionMatrix();
 	~MoveitServer();
 

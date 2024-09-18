@@ -66,10 +66,10 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 }
 /// @brief 设置最大速度和加速度
 /// @param speed
-void MoveitServer::setMaxVelocity(double speed, double speed1)
+void MoveitServer::setMaxVelocity(double vel, double acc)
 {
-	arm_.setMaxAccelerationScalingFactor(speed1);
-	arm_.setMaxVelocityScalingFactor(speed);
+	arm_.setMaxAccelerationScalingFactor(acc);
+	arm_.setMaxVelocityScalingFactor(vel);
 }
 /// @brief 规划求解并执行运动
 /// @return True表示成功规划并执行，False表示规划失败
