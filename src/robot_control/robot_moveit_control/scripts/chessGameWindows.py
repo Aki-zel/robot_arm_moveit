@@ -24,8 +24,8 @@ from std_msgs.msg import Int32MultiArray, Bool
 from robot_msgs.srv import Board_State, Board_StateRequest, Board_StateResponse
 from robot_msgs.msg import CubePosition, ChessBoardState
 
-board_size_1=10
-board_size_2=8
+ROW=10
+COL=8
 class RosSpinThread(QThread):
     """ROS Spin 线程类，用于运行 rospy.spin()"""
 
@@ -47,7 +47,7 @@ class MainWindows(QWidget, Ui_Form):
         """初始化用户界面相关设置"""
         self.setWindowTitle("方块的使用方式")
         self.start = False
-        self.boardState = np.full((board_size_1, board_size_2), -1)
+        self.boardState = np.full((ROW, COL), -1)
 
         # 居中显示窗口
         screen = QGuiApplication.primaryScreen()
@@ -551,14 +551,14 @@ class MainWindows(QWidget, Ui_Form):
     def draw_gomoku_board(self, board):
         """绘制五子棋棋盘并返回图像"""
         fig, ax = plt.subplots(figsize=(6, 6))
-        ax.set_xlim(-1, board_size_1)
-        ax.set_ylim(-1, board_size_2)
-        ax.set_xticks(np.arange(0, board_size_1, 1))
-        ax.set_yticks(np.arange(0, board_size_2, 1))
+        ax.set_xlim(-1, ROW)
+        ax.set_ylim(-1, COL)
+        ax.set_xticks(np.arange(0, ROW, 1))
+        ax.set_yticks(np.arange(0, COL, 1))
         ax.grid(True)
 
-        for x in range(board_size_1):
-            for y in range(board_size_2):
+        for x in range(ROW):
+            for y in range(COL):
                 if board[x, y] == 0:  # 黑棋
                     ax.plot(x, y, "ko", markersize=20)
                 elif board[x, y] == 1:  # 白棋
@@ -587,7 +587,7 @@ class MainWindows(QWidget, Ui_Form):
         else:
             data = np.array(msg.board)
 
-            if data.size != board_size_1*board_size_2:
+            if data.size != ROW*COL:
                 raise ValueError(
                     "Received data size is not 81, cannot reshape into 10*10 board."
                 )
@@ -599,7 +599,7 @@ class MainWindows(QWidget, Ui_Form):
                 self.playerName.setText(QCoreApplication.translate(
                     "Form", u"<html><head/><body><p><span style=\" font-size:22pt; font-weight:600; color:#ef2929;\">Human</span></p></body></html>", None))
                 
-            self.boardState = data.reshape((board_size_1, board_size_2))
+            self.boardState = data.reshape((ROW, COL))
             buf = self.draw_gomoku_board(self.boardState)
             self.imageLabel.setImage(buf)
 

@@ -7,8 +7,8 @@
 #include <std_msgs/Bool.h>
 #include <robot_msgs/ChessBoardState.h>
 
-const int BOARD_SIZE_1 = 10; // 棋盘大小
-const int BOARD_SIZE_2 = 8;
+const int ROW = 10; // 棋盘大小
+const int COL = 8;
 const int NUM_STATES = 3; // 棋子的三种状态：空(em)，人类(human)，机器人(robot)
 const double J_joint[6] = {0, -26, 77, 0, 109, 90};
 // 定义模式的最大值
@@ -48,14 +48,14 @@ struct position
 // 棋盘状态的结构体
 struct checkerboard
 {
-    int board[BOARD_SIZE_1][BOARD_SIZE_2]; // 棋盘上的棋子状态
+    int board[ROW][COL]; // 棋盘上的棋子状态
     int round;                             // 当前回合数
     checkerboard() : round(0)
     {
         // 初始化棋盘上的值为 -1
-        for (int i = 0; i < BOARD_SIZE_1; ++i)
+        for (int i = 0; i < ROW; ++i)
         {
-            for (int j = 0; j < BOARD_SIZE_2; ++j)
+            for (int j = 0; j < COL; ++j)
             {
                 board[i][j] = -1;
             }
@@ -73,7 +73,7 @@ enum chess
 
 // Zobrist 哈希表，用于快速计算棋盘状态的唯一标识
 std::vector<std::vector<std::vector<std::size_t>>> zobristTable(
-    BOARD_SIZE_1, std::vector<std::vector<std::size_t>>(BOARD_SIZE_1, std::vector<std::size_t>(NUM_STATES)));
+    ROW, std::vector<std::vector<std::size_t>>(ROW, std::vector<std::size_t>(NUM_STATES)));
 
 // 置换表，用于缓存搜索结果以优化计算
 std::unordered_map<std::size_t, TranspositionEntry> transpositionTable;
@@ -133,9 +133,9 @@ void initializeZobristTable()
     std::mt19937_64 rng(std::random_device{}());
     std::uniform_int_distribution<std::size_t> dist;
 
-    for (int i = 0; i < BOARD_SIZE_1; ++i)
+    for (int i = 0; i < ROW; ++i)
     {
-        for (int j = 0; j < BOARD_SIZE_2; ++j)
+        for (int j = 0; j < COL; ++j)
         {
             for (int k = 0; k < NUM_STATES; ++k)
             {
@@ -187,9 +187,9 @@ void initializePatternScores()
 std::size_t computeHash(const checkerboard &state)
 {
     std::size_t hash = 0;
-    for (int i = 0; i < BOARD_SIZE_1; ++i)
+    for (int i = 0; i < ROW; ++i)
     {
-        for (int j = 0; j < BOARD_SIZE_2; ++j)
+        for (int j = 0; j < COL; ++j)
         {
             int piece = state.board[i][j] + 1; // 偏移 -1, 0, 1 到 0, 1, 2
             hash ^= zobristTable[i][j][piece];
@@ -204,14 +204,14 @@ void printBoard(const checkerboard &state)
     int width = 4; // 设置每列的宽度
 
     std::cout << std::setw(width) << " "; // 设置初始空格
-    for (int i = 0; i < BOARD_SIZE_2; ++i)
+    for (int i = 0; i < COL; ++i)
         std::cout << std::setw(width) << i; // 设置每个数字的宽度
     std::cout << "\n";
 
-    for (int i = 0; i < BOARD_SIZE_1; ++i)
+    for (int i = 0; i < ROW; ++i)
     {
         std::cout << std::setw(width) << i; // 输出行号
-        for (int j = 0; j < BOARD_SIZE_2; ++j)
+        for (int j = 0; j < COL; ++j)
         {
             char symbol = state.board[i][j] == human ? 'O' : (state.board[i][j] == robot ? 'X' : '.');
             std::cout << std::setw(width) << symbol; // 设置每个符号的宽度
@@ -246,9 +246,9 @@ int main(int argc, char *argv[])
     //     arm.findBestMove(board2, k1, k2);
     //     board2.board[k1][k2] = robot;
     //     printBoard(board2);
-    //     for (int i = 0; i < BOARD_SIZE_1; ++i)
+    //     for (int i = 0; i < ROW; ++i)
     //     {
-    //         for (int j = 0; j < BOARD_SIZE_2; ++j)
+    //         for (int j = 0; j < COL; ++j)
     //         {
     //             if (board2.board[i][j] == -1)
     //             {
@@ -278,7 +278,7 @@ bool playRobot::checkDirection(const checkerboard &state, int player, int startX
     {
         int x = startX + i * dx;
         int y = startY + i * dy;
-        if (x < 0 || x >= BOARD_SIZE_1 || y < 0 || y >= BOARD_SIZE_2)
+        if (x < 0 || x >= ROW || y < 0 || y >= COL)
             return false;
         if (state.board[x][y] == player)
         {
@@ -295,9 +295,9 @@ bool playRobot::checkDirection(const checkerboard &state, int player, int startX
 bool playRobot::isWinningMove(const checkerboard &state, int player)
 {
     // 横向、纵向、对角线检测
-    for (int i = 0; i < BOARD_SIZE_1; ++i)
+    for (int i = 0; i < ROW; ++i)
     {
-        for (int j = 0; j < BOARD_SIZE_2; ++j)
+        for (int j = 0; j < COL; ++j)
         {
             if (state.board[i][j] == player)
             {
@@ -326,7 +326,7 @@ bool hasNeighbor(const checkerboard &state, int x, int y, int distance = 1)
                 continue;
             int nx = x + i;
             int ny = y + j;
-            if (nx >= 0 && nx < BOARD_SIZE_1 && ny >= 0 && ny < BOARD_SIZE_2)
+            if (nx >= 0 && nx < ROW && ny >= 0 && ny < COL)
             {
                 if (state.board[nx][ny] != em)
                 {
@@ -343,9 +343,9 @@ std::vector<position> playRobot::getPossibleMoves(const checkerboard &state, int
     std::vector<position> Threes, HThrees;
     std::vector<position> Twos, neighbors;
     int opponent = (player == human) ? robot : human;
-    for (int i = 0; i < BOARD_SIZE_1; ++i)
+    for (int i = 0; i < ROW; ++i)
     {
-        for (int j = 0; j < BOARD_SIZE_2; ++j)
+        for (int j = 0; j < COL; ++j)
         {
             if (state.board[i][j] == em && hasNeighbor(state, i, j, 1))
             {
@@ -459,7 +459,7 @@ int playRobot::evaluatePosition(const checkerboard &state, int player, int x, in
                 int nx = x + (i + j) * dir[0];
                 int ny = y + (i + j) * dir[1];
 
-                if (nx >= 0 && nx < BOARD_SIZE_1 && ny >= 0 && ny < BOARD_SIZE_2)
+                if (nx >= 0 && nx < ROW && ny >= 0 && ny < COL)
                 {
                     humanPattern = (humanPattern << 1) | (state.board[nx][ny] == human ? 1 : 0);
                     robotPattern = (robotPattern << 1) | (state.board[nx][ny] == robot ? 1 : 0);
@@ -505,19 +505,19 @@ int playRobot::evaluate(const checkerboard &state)
 {
     int score = 0;
     // 遍历每一行、每一列、每一条对角线
-    for (int i = 0; i < BOARD_SIZE_1; ++i)
+    for (int i = 0; i < ROW; ++i)
     {
-        score += evaluateLine(state, i, 0, 0, 1, BOARD_SIZE_2 - 4); // 横线
-        score += evaluateLine(state, 0, i, 1, 0, BOARD_SIZE_1 - 4); // 竖线
-        if (i < BOARD_SIZE_1 - 3)
+        score += evaluateLine(state, i, 0, 0, 1, COL - 4); // 横线
+        score += evaluateLine(state, 0, i, 1, 0, ROW - 4); // 竖线
+        if (i < ROW - 3)
         {
-            if (i < BOARD_SIZE_2)
+            if (i < COL)
             {
-                score += evaluateLine(state, 0, i, 1, 1, BOARD_SIZE_2 - 4);                     // 正对角线
-                score += evaluateLine(state, 0, BOARD_SIZE_2 - i - 1, 1, -1, BOARD_SIZE_2 - 4); // 反对角线
+                score += evaluateLine(state, 0, i, 1, 1, COL - 4);                     // 正对角线
+                score += evaluateLine(state, 0, COL - i - 1, 1, -1, COL - 4); // 反对角线
             }
-            score += evaluateLine(state, i, 0, 1, 1, BOARD_SIZE_2 - 4);                 // 正对角线
-            score += evaluateLine(state, i, BOARD_SIZE_2 - 1, 1, -1, BOARD_SIZE_2 - 4); // 反对角线
+            score += evaluateLine(state, i, 0, 1, 1, COL - 4);                 // 正对角线
+            score += evaluateLine(state, i, COL - 1, 1, -1, COL - 4); // 反对角线
         }
     }
 
@@ -538,7 +538,7 @@ int playRobot::evaluateLine(const checkerboard &state, int startX, int startY, i
             int x = startX + (i + j) * dx;
             int y = startY + (i + j) * dy;
          
-            if (x < 0 || x >= BOARD_SIZE_1 || y < 0 || y >= BOARD_SIZE_2)
+            if (x < 0 || x >= ROW || y < 0 || y >= COL)
                 break;
             // newstate.board[x][y] = robot;
             if (state.board[x][y] == human)
@@ -689,13 +689,13 @@ int playRobot::findBestMove(checkerboard &state, int &k1, int &k2)
                                          checkerboard localState = stateCopy; // 独立的局部副本，避免并发问题
                                          int i = pos.x;
                                          int j = pos.y;
-                                         if (i >= 0 && i < BOARD_SIZE_1 && j >= 0 && j < BOARD_SIZE_2 && localState.board[i][j] == em)
+                                         if (i >= 0 && i < ROW && j >= 0 && j < COL && localState.board[i][j] == em)
                                          {
                                              localState.board[i][j] = robot;
 
                                              int moveVal = minimax(localState, movesCopy, 0, false, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
                                              localState.board[i][j] = em;
-                                             return {moveVal, i * BOARD_SIZE_2 + j};
+                                             return {moveVal, i * COL + j};
                                          }
                                          return {std::numeric_limits<int>::min(), -1}; // 无效的结果
                                      }));
@@ -714,8 +714,8 @@ int playRobot::findBestMove(checkerboard &state, int &k1, int &k2)
             {
                 bestValue = moveVal;
                 bestMove = move;
-                k1 = bestMove / BOARD_SIZE_2;
-                k2 = bestMove % BOARD_SIZE_2;
+                k1 = bestMove / COL;
+                k2 = bestMove % COL;
             }
         }
         else
@@ -748,11 +748,11 @@ bool playRobot::searchBoard()
             //     int change_count = 0;
             //     if (states.response.round != 0)
             //     {
-            //         for (int i = 0; i < BOARD_SIZE_1; ++i)
+            //         for (int i = 0; i < ROW; ++i)
             //         {
-            //             for (int j = 0; j < BOARD_SIZE_2; ++j)
+            //             for (int j = 0; j < COL; ++j)
             //             {
-            //                 int index=i * BOARD_SIZE_2 + j;
+            //                 int index=i * COL + j;
             //                 if (cb.board[i][j] != states.response.board[index])
             //                 {
             //                     change_count++;
@@ -767,11 +767,11 @@ bool playRobot::searchBoard()
             //         }
             //     }
 
-                for (int i = 0; i < BOARD_SIZE_1; ++i)
+                for (int i = 0; i < ROW; ++i)
                 {
-                    for (int j = 0; j < BOARD_SIZE_2; ++j)
+                    for (int j = 0; j < COL; ++j)
                     {
-                        int index=i * BOARD_SIZE_2 + j;
+                        int index=i * COL + j;
                         cb.board[i][j] = states.response.board[index];
                     }
                 }
@@ -894,8 +894,8 @@ bool playRobot::Victory()
     arm->move_j(std::vector<double>{tools.degreesToRadians(J_joint[0]), tools.degreesToRadians(J_joint[1]), tools.degreesToRadians(J_joint[2]),
                                     tools.degreesToRadians(J_joint[3]), tools.degreesToRadians(J_joint[4]), tools.degreesToRadians(J_joint[5])});
     robot_msgs::ChessBoardState states;
-    for (int i = 0; i < BOARD_SIZE_1; i++)
-        for (int j = 0; j < BOARD_SIZE_2; j++)
+    for (int i = 0; i < ROW; i++)
+        for (int j = 0; j < COL; j++)
             states.board.push_back(cb.board[i][j]);
     states.turn = cb.round;
     states.iswin = 0;
@@ -925,8 +925,8 @@ bool playRobot::startGame()
                 if (searchBoard() && cb.round % 2 != 0)
                 {
 
-                    for (int i = 0; i < BOARD_SIZE_1; i++)
-                        for (int j = 0; j < BOARD_SIZE_2; j++)
+                    for (int i = 0; i < ROW; i++)
+                        for (int j = 0; j < COL; j++)
                             states.board.push_back(cb.board[i][j]);
                     states.turn = cb.round;
                     states.iswin = 0;
