@@ -23,7 +23,8 @@
           "text": "-gdb-set disassembly-flavor intel",
           "ignoreFailures": true
         }
-      ]
+      ],
+      "visualizerFile": "/home/ydt/.config/Code/User/workspaceStorage/e63f73e9e1506b04887ce6cbfba4ffe6/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "ydtest",
@@ -47,7 +48,8 @@
           "text": "-gdb-set disassembly-flavor intel",
           "ignoreFailures": true
         }
-      ]
+      ],
+      "visualizerFile": "/home/ydt/.config/Code/User/workspaceStorage/e63f73e9e1506b04887ce6cbfba4ffe6/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "controlcenter",
@@ -71,7 +73,8 @@
           "text": "-gdb-set disassembly-flavor intel",
           "ignoreFailures": true
         }
-      ]
+      ],
+      "visualizerFile": "/home/ydt/.config/Code/User/workspaceStorage/e63f73e9e1506b04887ce6cbfba4ffe6/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "example",
@@ -95,7 +98,8 @@
           "text": "-gdb-set disassembly-flavor intel",
           "ignoreFailures": true
         }
-      ]
+      ],
+      "visualizerFile": "/home/ydt/.config/Code/User/workspaceStorage/e63f73e9e1506b04887ce6cbfba4ffe6/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "rokae_control",
@@ -119,7 +123,8 @@
           "text": "-gdb-set disassembly-flavor intel",
           "ignoreFailures": true
         }
-      ]
+      ],
+      "visualizerFile": "/home/ydt/.config/Code/User/workspaceStorage/e63f73e9e1506b04887ce6cbfba4ffe6/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "ROS: Launch",
