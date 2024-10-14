@@ -55,6 +55,8 @@ add_message_files(
   FILES
   CubePosition.msg
   ChessBoardState.msg
+  ArmSetting.msg
+  ArmPose.msg
   # Message2.msg
   # MoveL_Data.msg
 )
