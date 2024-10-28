@@ -161,7 +161,7 @@ class BaseDetection:
         pose.pose.position.z = world_position.pose.position.z
         # 末端工具默认朝下时的姿态（初始四元数）
    
-        rospy.loginfo("angle %f",angle)
+        # rospy.loginfo("angle %f",angle)
         yaw = math.radians(angle)  # 将yaw角转换成弧度
         initial_quaternion = quaternion_from_euler(0,math.pi,0, axes='sxyz')  # 初始四元数，表示末端工具默认朝下
         # rospy.loginfo(f'Final Quaternion: {initial_quaternion}')

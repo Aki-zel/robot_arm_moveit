@@ -116,9 +116,9 @@ bool playRobot::handleBoardState(robot_msgs::Board_State::Request &req, robot_ms
                                     tools.degreesToRadians(0), tools.degreesToRadians(109), tools.degreesToRadians(90)});
 
     geometry_msgs::Pose startPose;
-    startPose.position.x = 0.56;
+    startPose.position.x = 0.5;
     startPose.position.y = 0.0;
-    startPose.position.z = 0.002;
+    startPose.position.z = 0.005;
     startPose.orientation.w = 1;
     startPose = tools.calculateTargetPose(startPose, arm->setPoint(std::vector<double>{0, 0, 0, 0, tools.degreesToRadians(180), 0}));
     startPose = tools.transPose(startPose, "tool", "xMate3_link6");
@@ -172,13 +172,12 @@ bool playRobot::handleBoardState(robot_msgs::Board_State::Request &req, robot_ms
             double yOffset = (col - 2) * blockSize;
 
             geometry_msgs::Pose targetPose = startPose;
-            targetPose.position.y += xOffset;
-            targetPose.position.x -= yOffset;
+            targetPose.position.y += yOffset;
+            targetPose.position.x += xOffset;
 
             if (getcube(color_name))
             {
                 targetPose = tools.calculateTargetPose(targetPose, arm->setPoint(std::vector<double>{0, 0, 0, 0, 0, tools.degreesToRadians(angle)}));
-
                 move(targetPose); // 放置方块
             }
         }

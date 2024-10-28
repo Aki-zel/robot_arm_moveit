@@ -46,6 +46,7 @@ public:
     {
     }
 };
+
 int playRobot::checkVictory(int board[3][3])
 {
     int s = 0;
@@ -72,7 +73,6 @@ int playRobot::checkVictory(int board[3][3])
         }
         if (board[0][i] == board[1][i] && board[1][i] == board[2][i] && board[0][i] != -1)
         {
-
             if (board[0][i] == robot)
             {
                 return 10;
@@ -97,6 +97,7 @@ int playRobot::checkVictory(int board[3][3])
     }
     return 0;
 }
+
 bool playRobot::searchBoard()
 {
     ros::Duration(3).sleep();
@@ -134,6 +135,7 @@ bool playRobot::searchBoard()
     }
     return false;
 }
+
 int playRobot::minimax(int board[3][3], int depth, bool isMax)
 {
     int score = checkVictory(board);
@@ -167,14 +169,12 @@ int playRobot::minimax(int board[3][3], int depth, bool isMax)
     else
     {
         int best = 1000;
-
         for (int i = 0; i < 3; i++)
         {
             for (int j = 0; j < 3; j++)
             {
                 if (board[i][j] == em)
                 {
-
                     board[i][j] = human;
                     best = std::min(best,
                                     minimax(board, depth + 1, !isMax));
@@ -185,6 +185,7 @@ int playRobot::minimax(int board[3][3], int depth, bool isMax)
         return best;
     }
 }
+
 int playRobot::findBestMove(int board[3][3], int &k1, int &k2)
 {
     int bestVal = -1000;
@@ -211,6 +212,7 @@ int playRobot::findBestMove(int board[3][3], int &k1, int &k2)
     }
     return point;
 }
+
 bool playRobot::move(geometry_msgs::Pose pose)
 {
     pose = tools.transPose(pose, "tool", "xMate3_link6");
@@ -223,6 +225,7 @@ bool playRobot::move(geometry_msgs::Pose pose)
                                     tools.degreesToRadians(0), tools.degreesToRadians(-100), tools.degreesToRadians(0)});
     return true;
 }
+
 bool playRobot::getchess()
 {
     arm->move_j(std::vector<double>{tools.degreesToRadians(90), tools.degreesToRadians(-20), tools.degreesToRadians(-60),
@@ -253,6 +256,7 @@ bool playRobot::getchess()
 
     return true;
 }
+
 bool playRobot::Victory()
 {
     ROS_INFO("ROBOT Victroy !!!");
@@ -269,6 +273,7 @@ bool playRobot::Victory()
                                     0, tools.degreesToRadians(100), 0});
     return true;
 }
+
 bool playRobot::startGame()
 {
     ROS_INFO("Start Game!");
@@ -296,6 +301,7 @@ bool playRobot::startGame()
     }
     return true;
 }
+
 int main(int argc, char *argv[])
 {
     ros::init(argc, argv, "example05");

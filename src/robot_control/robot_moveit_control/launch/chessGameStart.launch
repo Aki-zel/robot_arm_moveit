@@ -2,7 +2,7 @@
     <include file="$(find rokae_bringup)/launch/start.launch"/>
     <include file="$(find rokae_bringup)/launch/static_tf.launch"/>
     <include file="$(find percipio_launch)/launch/percipio.launch"/>
-    <!-- <node name="chessBoard" pkg="robot_camera_control" type="chessboard.py" output="screen" />  -->
+    <node name="chessBoard" pkg="robot_camera_control" type="chessboard.py" output="screen" /> 
     <!-- <include file="$(find realsense2_camera)/launch/rs_camera.launch"/> -->
-    <!-- <node name="chessGameWindows" pkg="robot_moveit_control" type="chessGameWindows.py" output="screen" />  -->
+    <node name="chessGameWindows" pkg="robot_moveit_control" type="chessGameWindows.py" output="screen" /> 
 </launch>

@@ -69,6 +69,7 @@ add_service_files(
   Objection_Detect.srv
   Get_Board_State.srv
   Board_State.srv
+  NextMove.srv
 )
 
 ## Generate actions in the 'action' folder

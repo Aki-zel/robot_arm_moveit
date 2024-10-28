@@ -3,32 +3,28 @@
 import io
 import random
 import sys
-
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
-import rospy
-
-from std_msgs.msg import Int32MultiArray, Bool
-from robot_msgs.srv import Board_State, Board_StateRequest, Board_StateResponse
-from robot_msgs.msg import CubePosition, ChessBoardState
-from std_msgs.msg import Int32
-
-from PySide2.QtCore import Qt, QTimer, QThread, QCoreApplication, Signal
+from PySide2.QtCore import Qt, QTimer, QThread, QCoreApplication
 from PySide2.QtWidgets import (
     QApplication,
     QWidget,
-    QTableWidget,
     QHeaderView,
     QTableWidgetItem,
     QMenu,
     QMessageBox
 )
-from PySide2.QtGui import QImage, QGuiApplication, QColor, QBrush, QIcon, QPixmap 
-from qframelesswindow import FramelessWindow, StandardTitleBar
+from PySide2.QtGui import QImage, QGuiApplication, QColor, QBrush
+from qframelesswindow import FramelessMainWindow, StandardTitleBar
 from UI.Ui_chessGameWindows import Ui_Form
 from qfluentwidgets import *
-
+import matplotlib.pyplot as plt
+import numpy as np
+import rospy
+import cv2
+import cv_bridge
+from std_msgs.msg import Int32MultiArray, Bool
+from robot_msgs.srv import Board_State, Board_StateRequest, Board_StateResponse
+from robot_msgs.msg import CubePosition, ChessBoardState
+from std_msgs.msg import Int32
 
 ROW=10
 COL=8
@@ -39,13 +35,8 @@ class RosSpinThread(QThread):
         rospy.spin()
 
 
-class MainWindows(FramelessWindow, Ui_Form):
+class MainWindows(QWidget, Ui_Form):
     """主窗口类"""
-    
-    boardErrorSignal = Signal()
-    winGameSignal = Signal()
-    loseGameSignal = Signal()
-    error_shown = False  # 新增标志位，避免重复弹出
 
     def __init__(self):
         super().__init__()
@@ -56,12 +47,9 @@ class MainWindows(FramelessWindow, Ui_Form):
 
     def initializeUI(self):
         """初始化用户界面相关设置"""
-        self.isstart = False
+        self.setWindowTitle("五子棋例程")
+        self.start = False
         self.boardState = np.full((ROW, COL), 0)
-
-         # 设置标题栏
-        self.setTitleBar(StandardTitleBar(self))
-        self.titleBar.raise_()
 
         # 居中显示窗口
         screen = QGuiApplication.primaryScreen()
@@ -112,10 +100,6 @@ class MainWindows(FramelessWindow, Ui_Form):
         self.game2_put_Button_4.clicked.connect(self.put4)
         self.game2_put_Button_5.clicked.connect(self.put5)
         self.game2_put_Button_6.clicked.connect(self.put6)
-        self.boardErrorSignal.connect(self.showBoardErrorMessage)
-        self.winGameSignal.connect(self.winGameMessage)
-        self.loseGameSignal.connect(self.loseGameMessage)
-        
 
     def sendGoal1(self):
         self.sendGoal(self.color_changed_matrix, 1)
@@ -134,17 +118,15 @@ class MainWindows(FramelessWindow, Ui_Form):
         resp = self.cubeGameClient.call(state)
         if resp is not None:
             print("任务完成结果为：", resp.success)
-    
+
     def configureGameTables(self):
         """配置游戏表格的外观和行为"""
         for table in [self.game2_table, self.game3_table]:
             table.verticalHeader().hide()
             table.horizontalHeader().hide()
             table.setShowGrid(True)
-            
             table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-            # 设置选择模式为多选
             table.setSelectionMode(table.MultiSelection)
 
             for i in range(table.rowCount()):
@@ -152,41 +134,6 @@ class MainWindows(FramelessWindow, Ui_Form):
                     item = QTableWidgetItem("")
                     item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
                     table.setItem(i, j, item)
-
-            # 调用调整单元格比例的方法
-            table.resizeEvent = self.adjustCellSizes  # 重载resizeEvent来动态调整单元格比例
-            
-            """配置 QTableWidget 的样式"""
-            table.setStyleSheet("""
-                QTableWidget {
-                    background-color: rgba(0, 0, 0, 0);  /* 设置表格背景为透明 */
-                    gridline-color: black;  /* 设置网格线为黑色 */
-                    border-left: 1px solid black;  /* 设置单元格边框为黑色 */
-                    border-top: 1px solid black;  /* 设置单元格边框为黑色 */          
-                }
-            """)
-            
-    def adjustCellSizes(self, event=None):
-        """动态调整单元格大小,使得宽高比例保持1:1"""
-        for table in [self.game2_table, self.game3_table]:
-            rows = table.rowCount()
-            cols = table.columnCount()
-            if rows > 0 and cols > 0:
-                # 获取表格可用的宽度和高度
-                available_width = table.viewport().width()
-                available_height = table.viewport().height()
-
-                # 计算每个单元格的宽高，使得宽高比例为 1:1
-                cell_size = min(available_width // cols, available_height // rows)
-
-                for i in range(rows):
-                    table.setRowHeight(i, cell_size)
-                for j in range(cols):
-                    table.setColumnWidth(j, cell_size)
-
-        # 调用父类的resizeEvent方法
-        if event:
-            super(QTableWidget, table).resizeEvent(event)
 
     def place1(self):
         self.clear_tabel()
@@ -372,7 +319,7 @@ class MainWindows(FramelessWindow, Ui_Form):
             for i in range(table.rowCount()):
                 for j in range(table.columnCount()):
                     item = table.item(i, j)
-                    item.setBackground(QBrush(QColor(255, 255, 255, 0)))
+                    item.setBackground(QBrush(QColor("white")))
             table.clearSelection()
             table.clearFocus()
 
@@ -441,7 +388,7 @@ class MainWindows(FramelessWindow, Ui_Form):
 
         # 如果左右没有相邻格子，则满足条件，返回 True 和 0 (表示左右方向)
         if left_right_count == 0:
-            return True, 90
+            return True, 0
 
         # 检查上下
         for i in [0, 1]:  # 上下方向
@@ -455,7 +402,7 @@ class MainWindows(FramelessWindow, Ui_Form):
 
         # 如果上下没有相邻格子，则满足条件，返回 True 和 90(表示上下方向)
         if up_down_count == 0:
-            return True, 0
+            return True, 90
 
         # 如果所有方向都有相邻格子，则不满足条件
         return False, None
@@ -542,18 +489,10 @@ class MainWindows(FramelessWindow, Ui_Form):
     def show_color_menu(self, table, row, column):
         """通用的颜色菜单显示函数"""
         menu = QMenu(self)
-        
-        # 创建颜色选项
-        colors = {
-            "橙色": "orange",
-            "蓝色": "blue",
-            "绿色": "green",
-            "复原": "transparent",
-        }
-
-        # 添加颜色选项到菜单
-        for color_name in colors.keys():
-            menu.addAction(color_name)
+        orange_action = menu.addAction("橙色")
+        blue_action = menu.addAction("蓝色")
+        green_action = menu.addAction("绿色")
+        origin_action = menu.addAction("复原")
 
         item_rect = table.visualItemRect(table.item(row, column))
         table_pos = table.viewport().mapToGlobal(item_rect.center())
@@ -561,12 +500,15 @@ class MainWindows(FramelessWindow, Ui_Form):
 
         if action:
             selected_items = table.selectedItems()
-            # 获取用户选择的颜色
-            selected_color = colors[action.text()]
+            color = {
+                orange_action: "orange",
+                blue_action: "blue",
+                green_action: "green",
+                origin_action: "white",
+            }[action]
 
             for item in selected_items:
-                # 设置背景颜色，如果选择了复原，则重置为透明
-                item.setBackground(QBrush(QColor(selected_color) if selected_color != "transparent" else table.palette().base()))
+                item.setBackground(QBrush(QColor(color)))
 
             table.clearSelection()
             table.clearFocus()
@@ -574,8 +516,6 @@ class MainWindows(FramelessWindow, Ui_Form):
     def game_one_botton_function(self):
         """切换到第一个游戏视图"""
         self.stackedWidget.setCurrentIndex(0)
-        buf = self.draw_gomoku_board(self.boardState)
-        self.chessboardLabel.setImage(buf)
 
     def game_two_botton_function(self):
         """切换到第二个游戏视图"""
@@ -599,126 +539,84 @@ class MainWindows(FramelessWindow, Ui_Form):
             self,
         )
         w.exec()
-
+        
     def chooseDegree(self):
         """选择游戏难度"""
-        w = MessageBox("难度设置", "请选择游戏难度：", self)
+        msgBox = QMessageBox(self)
+        msgBox.setWindowTitle("游戏难度")
+        msgBox.setText("请选择游戏难度：")
 
         # 添加按钮选项
-        w.yesButton.setText("正常")
-        w.cancelButton.setText("困难")
+        easyButton = msgBox.addButton("正常", QMessageBox.ActionRole)
+        hardButton = msgBox.addButton("困难", QMessageBox.ActionRole)
+
+        # 显示消息框并等待用户选择
+        msgBox.exec_()
 
         # 根据用户点击的按钮判断选择
-        if w.exec():
+        if msgBox.clickedButton() == easyButton:
             self.chooseDegreepub.publish(Int32(0))
             print("选择了正常难度")
             self.difficulty = "正常"
-        else:
+        elif msgBox.clickedButton() == hardButton:
             self.chooseDegreepub.publish(Int32(1))
             print("选择了困难难度")
             self.difficulty = "困难"
-    
+
     def startGame(self):
         """开始游戏并显示棋盘"""
-        self.isstart = True
-        self.startGamepub.publish(Bool(True))
-        # 检查 boardState 是否为空
-        if np.any(self.boardState):
-            # 弹出提示框
-            QMessageBox.warning(self, "提示", "棋盘状态不为空，请先重置棋盘!")
-            self.isstart = False
-            self.startGamepub.publish(Bool(False))
-            return  # 如果boardState不为空，则不继续执行后续代码
-        self.startButton.setEnabled(False)
-        
-    matplotlib.use('Agg')  # 使用非GUI后端，避免Tkinter后端和多线程操作不兼容
-    def draw_gomoku_board(self, board):
-        """绘制五子棋棋盘并返回图像"""     
-        figsizeH = self.chessboardWidget.size().height() / 90
-        figsizeW = self.chessboardWidget.size().width() / 90
-        # 如果没有图形对象则创建一个，否则清空当前图形
-        if not hasattr(self, 'fig'):  # 检查是否已经存在图形
-            self.fig, self.ax = plt.subplots(figsize=(figsizeW, figsizeH))  # 创建图形和坐标轴
-        else:
-            self.ax.clear()  # 清空现有图形内容
-            self.fig.set_size_inches(figsizeW, figsizeH, forward=True)  # 更新图形大小 forward=True立即生效
-
-        # 创建10x8的网格
-        for x in range(ROW):
-            self.ax.plot([x, x], [0, COL - 1], color='black')
-        for y in range(COL):
-            self.ax.plot([0, ROW - 1], [y, y], color='black')
-
-        # 设置行列标记
-        self.ax.set_xticks(range(ROW))
-        self.ax.set_yticks(range(COL))
-
-        # 设置网格的边界
-        self.ax.set_xlim(-0.5, ROW - 0.5)
-        self.ax.set_ylim(-0.5, COL - 0.5)
-
-        # 设置透明背景
-        self.fig.patch.set_alpha(0.0)  # 图形背景透明
-        self.ax.set_facecolor((1, 1, 1, 0))  # 网格背景透明
-        self.ax.tick_params(axis='both', which='both', length=0)
-
-        # 隐藏坐标轴标签
-        self.ax.tick_params(left=False, bottom=False)
-        plt.gca().invert_yaxis()  # 翻转y轴以匹配棋盘布局
-        
-        # 检查游戏是否处于活动状态
-        if self.isstart:
-            # 绘制棋子
-            for x in range(ROW):
-                for y in range(COL):
-                    if board[x, y] == -1:  # 黑棋(机器人)
-                        self.ax.plot(x, y, "ko", markersize=20)
-                    elif board[x, y] == 1:  # 白棋
-                        self.ax.plot(x, y, "wo", markersize=20, markeredgecolor="black")
-
-        # 保存图像到内存中
-        buf = io.BytesIO()
-        plt.savefig(buf, format="png", bbox_inches='tight', pad_inches=0.1, transparent=True)
-        buf.seek(0) 
-        qimage = QImage.fromData(buf.read())  # 转换为QImage以供PyQt使用
-
-        return qimage
-    
-    def resizeEvent(self, event):
-        """捕捉窗口大小变化事件并重新绘制"""
+        self.start = True
         buf = self.draw_gomoku_board(self.boardState)
-        self.chessboardLabel.setImage(buf)
-        super().resizeEvent(event)  # 调用父类的resizeEvent以处理其他默认行为
+        self.imageLabel.setImage(buf)
+        self.startGamepub.publish(Bool(True))
+        self.startButton.setEnabled(False)
 
     def stopGame(self):
         self.startGamepub.publish(Bool(False))
-        self.isstart = False # 设置游戏停止的标志位
-        buf = self.draw_gomoku_board(np.full((ROW, COL), 0)) # 重置棋盘
-        self.chessboardLabel.setImage(buf)
-        self.startButton.setEnabled(True) # 允许开始游戏
+        self.startButton.setEnabled(True)
+
+    def draw_gomoku_board(self, board):
+        """绘制五子棋棋盘并返回图像"""
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.set_xlim(-1, ROW)
+        ax.set_ylim(-1, COL)
+        ax.set_xticks(np.arange(0, ROW, 1))
+        ax.set_yticks(np.arange(0, COL, 1))
+        ax.grid(True)
+
+        for x in range(ROW):
+            for y in range(COL):
+                if board[x, y] == -1:  # 黑棋(机器人)
+                    ax.plot(x, y, "ko", markersize=20)
+                elif board[x, y] == 1:  # 白棋
+                    ax.plot(x, y, "wo", markersize=20, markeredgecolor="black")
+
+        ax.set_aspect("equal")
+        plt.gca().invert_yaxis()
+        plt.axis("on")
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png")
+        buf.seek(0)
+        qimage = QImage.fromData(buf.read())
+
+        return qimage
 
     def getBoardState(self, msg):
         """接收并处理 ROS 发布的棋盘状态""" 
-        
-        if msg.iserror and not self.error_shown:  # 如果有错误且未显示过
-            # 发出信号
-            self.boardErrorSignal.emit()
-            self.error_shown = True  # 标志位设置为 True，防止重复弹出
+        if msg.iswin == 2:
+            w = MessageBox("游戏结束", "恭喜你赢了！", self)
+            w.exec_()
 
-        elif not msg.iserror:  # 如果错误消失了，允许再次弹出
-            self.error_shown = False
-            
+        elif msg.iswin == 1:
+            w = MessageBox("游戏结束", "很抱歉你输了！", self)
+            w.exec_()
+        else:
             data = np.array(msg.board)
-            
-            if msg.iswin == 2:
-                self.winGameSignal.emit()
 
-            elif msg.iswin == 1:
-                self.loseGameSignal.emit()
-
-            elif data.size != ROW*COL:
+            if data.size != ROW*COL:
                 raise ValueError(
-                    f"Received data size is {len(msg.board)},cannot reshape into 10*8 board."
+                    "Received data size is not 81, cannot reshape into 10*10 board."
                 )
 
             if msg.turn % 2 != 0:
@@ -730,20 +628,9 @@ class MainWindows(FramelessWindow, Ui_Form):
                 
             self.boardState = data.reshape((ROW, COL))
             buf = self.draw_gomoku_board(self.boardState)
-            self.chessboardLabel.setImage(buf)
+            self.imageLabel.setImage(buf)
 
-    def showBoardErrorMessage(self):
-        """显示棋盘错误消息的槽函数"""
-        w = MessageBox("棋盘错误", "请遵守游戏规则！", self)
-        w.exec_()
-    
-    def winGameMessage(self):
-            w = MessageBox("游戏结束", "恭喜你赢了！", self)
-            w.exec_()
 
-    def loseGameMessage(self):
-            w = MessageBox("游戏结束", "很抱歉你输了！", self)
-            w.exec_()
 
 
 if __name__ == "__main__":

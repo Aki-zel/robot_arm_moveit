@@ -1,0 +1,6 @@
+int32[] board_state   # 当前棋盘状态的输入，假设以一维数组形式输入
+int32 last_chess_x   # 上一步落子的x坐标
+int32 last_chess_y   # 上一步落子的y坐标
+---
+int32 x               # 下一步的落子位置 x 坐标
+int32 y               # 下一步的落子位置 y 坐标

@@ -78,7 +78,7 @@ class ChessboardDetection(BaseDetection):
             area = cv2.contourArea(contour)
             # epsilon = 0.02 * cv2.arcLength(contour, True)
             # approx = cv2.approxPolyDP(contour, epsilon, True)
-            print(area)  # 输出轮廓面积
+            # print(area)  # 输出轮廓面积
             if self.area_threshold["min_area"] < area < self.area_threshold["max_area"]:
                 rect = cv2.minAreaRect(contour)
                 box = cv2.boxPoints(rect)
@@ -172,21 +172,19 @@ class ChessboardDetection(BaseDetection):
     def check_for_piece(self, cell_img):
         # 将输入图像转换为 HSV 色域
         hsv_image = cv2.cvtColor(cell_img, cv2.COLOR_BGR2HSV)
-
         # 检查己方
         player_detected = self.detect_color(hsv_image, "green")
-
         # 检查敌方
         opponent_detected = self.detect_color(hsv_image, "orange")
         if opponent_detected==False:
             opponent_detected = self.detect_color(hsv_image, "blue")
         # 返回检测结果
         if player_detected:
-            return 1  # 检测到己方
+            return -1  # 检测到己方(机器人)
         elif opponent_detected:
-            return 0  # 检测到敌方
+            return 1  # 检测到敌方(人类)
         else:
-            return -1  # 未检测到颜色
+            return 0  # 未检测到颜色
 
     # 获取旋转矩形的四个顶点坐标
     def get_rotated_rect_corners(self, center, size, angle):
@@ -333,7 +331,7 @@ class ChessboardDetection(BaseDetection):
             filtered_squares = []
             for i, center in enumerate(centers):
                 distance = np.linalg.norm(np.array(center) - avg_center)
-                if distance < 100:  # 设置距离阈值，排除偏离过远的四边形
+                if distance < 300:  # 设置距离阈值，排除偏离过远的四边形
                     filtered_squares.append(squares[i])
 
             if len(filtered_squares) > 0:
@@ -499,7 +497,7 @@ class ChessboardDetection(BaseDetection):
                     # cv2.imwrite(f"{x_rot}_{y_rot}.jpg", cropped_image)
                     if cropped_image.size > 0:
                         has_piece = self.check_for_piece(cropped_image)
-                        if has_piece == 1 or has_piece == 0:
+                        if has_piece == 1 or has_piece == -1:
                             round += 1
                         board.append(has_piece)
 

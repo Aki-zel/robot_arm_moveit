@@ -80,7 +80,7 @@
       "name": "example",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/example05p",
+      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/example07",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",

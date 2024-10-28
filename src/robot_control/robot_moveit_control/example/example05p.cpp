@@ -4,7 +4,9 @@
 #include <robotTool.h>
 #include <robot_msgs/Get_Board_State.h>
 #include <robot_msgs/Hand_Catch.h>
+#include <robot_msgs/NextMove.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Int32.h>
 #include <robot_msgs/ChessBoardState.h>
 
 const int ROW = 10; // 棋盘大小
@@ -13,6 +15,9 @@ const int NUM_STATES = 3; // 棋子的三种状态：空(em)，人类(human)，�
 const double J_joint[6] = {0, -26, 77, 0, 109, 90};
 // 定义模式的最大值
 const int MAX_PATTERN = 32; // 5位模式，范围是 0 到 31
+int degree = 0; //难度选择
+int last_human_move_x = -1; // 人类上一步坐标
+int last_human_move_y = -1;
 
 // 使用数组存储模式对应的分数
 int patternScores[MAX_PATTERN] = {0};
@@ -49,15 +54,15 @@ struct position
 struct checkerboard
 {
     int board[ROW][COL]; // 棋盘上的棋子状态
-    int round;                             // 当前回合数
+    int round; // 当前回合数
     checkerboard() : round(0)
     {
-        // 初始化棋盘上的值为 -1
+        // 初始化棋盘上的值为0
         for (int i = 0; i < ROW; ++i)
         {
             for (int j = 0; j < COL; ++j)
             {
-                board[i][j] = -1;
+                board[i][j] = 0;
             }
         }
     }
@@ -66,9 +71,9 @@ struct checkerboard
 // 枚举定义棋子的三种状态
 enum chess
 {
-    em = -1, // 空位置
-    human,   // 人类棋子（O）
-    robot    // 机器人棋子（X）
+    em = 0, // 空位置
+    human = 1,  // 人类棋子（O）
+    robot = -1  // 机器人棋子（X）
 };
 
 // Zobrist 哈希表，用于快速计算棋盘状态的唯一标识
@@ -86,10 +91,10 @@ private:
     std::unique_ptr<MoveitServer> arm;                // Moveit 机械臂服务器
     robotTool tools;                                  // 机器人工具
     checkerboard cb;                                  // 当前棋盘状态
-    ros::ServiceClient obj_detection, cube_detection; // 服务客户端，用于检测棋盘和抓取棋子
+    ros::ServiceClient obj_detection, cube_detection, omega_AI; // 服务客户端，用于检测棋盘和抓取棋子
     std::vector<geometry_msgs::PoseStamped> poses;    // 棋子的位置姿态
     ros::Publisher boardStatePub;                     // 棋盘状态的发布者
-    ros::Subscriber startGameSub;
+    ros::Subscriber startGameSub, chooseDegreeSub;    // 订阅开始游戏和选择难度的界面按钮信号
     bool is_start = false;
 
 public:
@@ -99,9 +104,11 @@ public:
         arm = std::make_unique<MoveitServer>(planGroup);
         cube_detection = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect");
         obj_detection = nh.serviceClient<robot_msgs::Get_Board_State>("chessboard_detect");
+        omega_AI = nh.serviceClient<robot_msgs::NextMove>("next_move");
         arm->setMaxVelocity(1, 1);
         boardStatePub = nh.advertise<robot_msgs::ChessBoardState>("/boardState", 10);
         startGameSub = nh.subscribe("/startGame", 10, &playRobot::subscribeCallback, this);
+        chooseDegreeSub = nh.subscribe("/degree", 10, &playRobot::degreeCallback, this);
         poses.clear(); // 清空位置姿态
     }
 
@@ -112,7 +119,7 @@ public:
     int evaluate(const checkerboard &state);
     int evaluatePosition(const checkerboard &state, int player, int x, int y);
     int minimax(checkerboard &state, std::vector<position> possiblemoves, int depth, bool isMax, int alpha, int beta);
-    int findBestMove(checkerboard &state, int &k1, int &k2);
+    int findBestMove(checkerboard &state, int &k1, int &k2, int degree, int &l1, int &l2);
 
     bool move(geometry_msgs::Pose pose);
     bool searchBoard();
@@ -123,11 +130,15 @@ public:
     {
         is_start = msg->data;
     }
+    void degreeCallback(const std_msgs::Int32::ConstPtr &msg)
+    {
+        degree = msg->data;
+    }
 
     ~playRobot() {} // 析构函数
 };
 
-// 初始化 Zobrist 表
+// 初始化Zobrist表
 void initializeZobristTable()
 {
     std::mt19937_64 rng(std::random_device{}());
@@ -157,15 +168,15 @@ void initializePatternScores()
     patternScores[0b01100] = TWO;
     patternScores[0b00110] = TWO;
     patternScores[0b00011] = TWO;
-    patternScores[0b10100] = 2*TWO;
-    patternScores[0b01010] = 2*TWO;
-    patternScores[0b00101] = 2*TWO;
+    patternScores[0b10100] = 3*TWO;
+    patternScores[0b01010] = 3*TWO;
+    patternScores[0b00101] = 3*TWO;
     patternScores[0b10010] = TWO;
     patternScores[0b01001] = TWO;
     patternScores[0b10001] = TWO;
 
     patternScores[0b11100] = THREE;
-    patternScores[0b01110] = 5*THREE;
+    patternScores[0b01110] = 6*THREE;
     patternScores[0b00111] = THREE;
     patternScores[0b11010] = 3*THREE;
     patternScores[0b01101] = 3*THREE;
@@ -220,6 +231,24 @@ void printBoard(const checkerboard &state)
     }
 }
 
+void reverseBoard(checkerboard &cb)
+{
+    for (int i = 0; i < ROW; ++i)
+    {
+        for (int j = 0; j < COL; ++j)
+        {
+            // 检查棋盘上的棋子，1变-1，-1变1
+            if (cb.board[i][j] == 1)
+            {
+                cb.board[i][j] = -1;
+            }
+            else if (cb.board[i][j] == -1)
+            {
+                cb.board[i][j] = 1;
+            }
+        }
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -228,24 +257,36 @@ int main(int argc, char *argv[])
     playRobot arm("rokae_arm");
     initializeZobristTable();
     initializePatternScores();
-    // checkerboard board2;
-    // printBoard(board2);
     arm.startGame();
     // checkerboard board2;
     // printBoard(board2);
     // arm.evaluate(board2);
-    // int k1, k2;
+    // int k1, k2, l1, l2;
+    // l1 = last_human_move_x;
+    // l2 = last_human_move_y;
     // bool c = true;
+
     // while (true)
     // {
-
+    //     // // 每次循环开始时处理消息
+    //     // ros::spinOnce();
+        
     //     std::cout << "输入：";
     //     std::cin >> k1 >> k2;
     //     board2.board[k1][k2] = human;
-    //     printBoard(board2);
-    //     arm.findBestMove(board2, k1, k2);
+    //     // board2.board[5][3] = human;
+    //     l1 = k1;
+    //     l2 = k2;
+    //     arm.findBestMove(board2, k1, k2, degree, l1, l2);
     //     board2.board[k1][k2] = robot;
     //     printBoard(board2);
+        // reverseBoard(board2);
+        // arm.findBestMove(board2, k1, k2, 0, l1, l2);
+        // board2.board[k1][k2] = robot;
+        // l1 = k1;
+        // l2 = k2;
+        // reverseBoard(board2);
+        
     //     for (int i = 0; i < ROW; ++i)
     //     {
     //         for (int j = 0; j < COL; ++j)
@@ -261,13 +302,12 @@ int main(int argc, char *argv[])
     //     }
     //     if (arm.isWinningMove(board2, robot) || arm.isWinningMove(board2, human) || c)
     //     {
-
     //         checkerboard board;
     //         board2 = board;
     //         printBoard(board2);
     //     }
     // }
-    return 0;
+    // return 0;
 }
 
 // 检查某一方向上是否形成五子连珠
@@ -513,16 +553,17 @@ int playRobot::evaluate(const checkerboard &state)
         {
             if (i < COL)
             {
-                score += evaluateLine(state, 0, i, 1, 1, COL - 4);                     // 正对角线
+                score += evaluateLine(state, 0, i, 1, 1, COL - 4); // 正对角线
                 score += evaluateLine(state, 0, COL - i - 1, 1, -1, COL - 4); // 反对角线
             }
-            score += evaluateLine(state, i, 0, 1, 1, COL - 4);                 // 正对角线
+            score += evaluateLine(state, i, 0, 1, 1, COL - 4); // 正对角线
             score += evaluateLine(state, i, COL - 1, 1, -1, COL - 4); // 反对角线
         }
     }
 
     return score;
 }
+
 // 评估一条线的得分
 int playRobot::evaluateLine(const checkerboard &state, int startX, int startY, int dx, int dy, int length)
 {
@@ -572,7 +613,7 @@ int playRobot::evaluateLine(const checkerboard &state, int startX, int startY, i
         }
     }
     // printBoard(newstate);
-    return ((int)(4*robotScore) - 5*humanScore);
+    return ((int)(2*robotScore) - 5*humanScore);
 }
 
 std::mutex transpositionTableMutex;
@@ -629,7 +670,6 @@ int playRobot::minimax(checkerboard &state, std::vector<position> possiblemoves,
                 best = std::max(best, minimax(state, moves, depth + 1, !isMax, alpha, beta));
                 state.board[move.x][move.y] = em;
                 alpha = std::max(alpha, best);
-
                 if (beta <= alpha)
                     break; // Beta 剪枝
             }
@@ -663,110 +703,187 @@ int playRobot::minimax(checkerboard &state, std::vector<position> possiblemoves,
     return best;
 }
 
-int playRobot::findBestMove(checkerboard &state, int &k1, int &k2)
+int playRobot::findBestMove(checkerboard &state, int &k1, int &k2, int degree, int &l1, int &l2)
 {
-    // 优先考虑中心区域
-    int bestValue = std::numeric_limits<int>::min();
-    int bestMove = -1;
-    int moveVal;
-    int move;
-    // int depth=4;
-    std::vector<position> moves = getPossibleMoves(state, robot);
-    std::vector<std::future<std::pair<int, int>>> futures;
-    // if (moves.size() > 0 && moves.size() < 5)
-    // {
-    //     depth = 10;
-    // }
-    // if (moves.size() > 0 && moves.size() < 10)
-    // {
-    //     depth = 8;
-    // }
-    // 异步计算每个可能走法的分数
-    for (const auto &pos : moves)
+    if (degree == 1)
     {
-        futures.push_back(std::async(std::launch::async, [this, pos, stateCopy = state, movesCopy = moves]() -> std::pair<int, int>
-                                     {
-                                         checkerboard localState = stateCopy; // 独立的局部副本，避免并发问题
-                                         int i = pos.x;
-                                         int j = pos.y;
-                                         if (i >= 0 && i < ROW && j >= 0 && j < COL && localState.board[i][j] == em)
-                                         {
-                                             localState.board[i][j] = robot;
-
-                                             int moveVal = minimax(localState, movesCopy, 0, false, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
-                                             localState.board[i][j] = em;
-                                             return {moveVal, i * COL + j};
-                                         }
-                                         return {std::numeric_limits<int>::min(), -1}; // 无效的结果
-                                     }));
-    }
-
-    // 收集所有线程的结果，并计算最佳走法
-    for (auto &f : futures)
-    {
-        auto result = f.get();
-        if (result.second != -1)
+        // 准备请求数据
+        robot_msgs::NextMove srv;
+        srv.request.last_chess_x = l1;
+        srv.request.last_chess_y = l2;
+        std::vector<int32_t> board_state;
+        ROS_INFO("human last move: x=%d, y=%d", l1, l2);
+        
+        // 将当前棋盘状态转换为一维数组
+        for (int i = 0; i < ROW; ++i)
         {
-            moveVal = result.first;
-            move = result.second;
-
-            if (moveVal > bestValue)
+            for (int j = 0; j < COL; ++j)
             {
-                bestValue = moveVal;
-                bestMove = move;
-                k1 = bestMove / COL;
-                k2 = bestMove % COL;
+                board_state.push_back(state.board[i][j]);
             }
+        }
+        srv.request.board_state = board_state;
+
+        // 调用服务端获取下一步棋
+        if (omega_AI.call(srv))
+        {
+            // 获取AI计算的最佳落子点
+            k1 = srv.response.x;
+            k2 = srv.response.y;
+            ROS_INFO("AI calculated next move: x=%d, y=%d", k1, k2);
+            return k1 * COL + k2;
         }
         else
         {
-            ROS_INFO("没有得到正确解析");
+            ROS_ERROR("Failed to call next_move service");
+            return -1;
         }
     }
-    ROS_INFO("i:%d j:%d", k1, k2);
-    return bestMove;
+    else
+    {
+        // 优先考虑中心区域
+        int bestValue = std::numeric_limits<int>::min();
+        int bestMove = -1;
+        int moveVal;
+        int move;
+        // int depth=4;
+        std::vector<position> moves = getPossibleMoves(state, robot);
+        std::vector<std::future<std::pair<int, int>>> futures;
+        // if (moves.size() > 0 && moves.size() < 5)
+        // {
+        //     depth = 10;
+        // }
+        // if (moves.size() > 0 && moves.size() < 10)
+        // {
+        //     depth = 8;
+        // }
+        // 异步计算每个可能走法的分数
+        for (const auto &pos : moves)
+        {
+            futures.push_back(std::async(std::launch::async, [this, pos, stateCopy = state, movesCopy = moves]() -> std::pair<int, int>
+                                        {
+                                            checkerboard localState = stateCopy; // 独立的局部副本，避免并发问题
+                                            int i = pos.x;
+                                            int j = pos.y;
+                                            if (i >= 0 && i < ROW && j >= 0 && j < COL && localState.board[i][j] == em)
+                                            {
+                                                localState.board[i][j] = robot;
+
+                                                int moveVal = minimax(localState, movesCopy, 0, false, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+                                                localState.board[i][j] = em;
+                                                return {moveVal, i * COL + j};
+                                            }
+                                            return {std::numeric_limits<int>::min(), -1}; // 无效的结果
+                                        }));
+        }
+
+        // 收集所有线程的结果，并计算最佳走法
+        for (auto &f : futures)
+        {
+            auto result = f.get();
+            if (result.second != -1)
+            {
+                moveVal = result.first;
+                move = result.second;
+
+                if (moveVal > bestValue)
+                {
+                    bestValue = moveVal;
+                    bestMove = move;
+                    k1 = bestMove / COL;
+                    k2 = bestMove % COL;
+                }
+            }
+            else
+            {
+                ROS_INFO("没有得到正确解析");
+            }
+        }
+        ROS_INFO("i:%d j:%d", k1, k2);
+        return bestMove;      
+    }
 }
+
+bool isround0 = true;
 bool playRobot::searchBoard()
 {
     ros::Duration(2).sleep();
     try
     {
         robot_msgs::Get_Board_State states;
+        robot_msgs::ChessBoardState msg;
         states.request.run = true;
-        if (!poses.empty())
-        {
-            states.request.getpositions = false;
-        }
-        else
-        {
-            states.request.getpositions = true;
-        }
+        // 根据是否有位置信息设置请求
+        states.request.getpositions = poses.empty(); 
+        
         if (obj_detection.call(states) && !states.response.board.empty())
         {
-            // if ((states.response.round >= cb.round && states.response.round < cb.round + 2))
-            // {
-            //     int change_count = 0;
-            //     if (states.response.round != 0)
-            //     {
-            //         for (int i = 0; i < ROW; ++i)
-            //         {
-            //             for (int j = 0; j < COL; ++j)
-            //             {
-            //                 int index=i * COL + j;
-            //                 if (cb.board[i][j] != states.response.board[index])
-            //                 {
-            //                     change_count++;
-            //                 }
-            //             }
-            //         }
-            //         // 如果变化的个数大于1，返回false以触发重新扫描
-            //         if (change_count > 1)
-            //         {
-            //             ROS_WARN("Detected more than one change, rescan needed.");
-            //             return false;
-            //         }
-            //     }
-
+            // 当开始游戏时，检查棋盘是否为空
+            if (is_start && isround0)
+            {
+                bool isEmpty = true;
+                for (int i = 0; i < ROW * COL; ++i)
+                {
+                    if (states.response.board[i] != 0)
+                    {
+                        isEmpty = false;
+                        break;
+                    }
+                }
+                // 如果棋盘为空，执行后续扫描逻辑
+                if (isEmpty)
+                {
+                    ROS_INFO("Empty board detected, ready to start scanning.");
+                    isround0 = false;
+                }
+                else
+                {
+                    // 如果棋盘不为空，给出警告信息，继续扫描
+                    ROS_WARN("Non-empty board detected after starting, continue scanning.");
+                    return false;
+                }
+            }
+            else if(!is_start)
+            {
+                bool isround0 = true;
+                ROS_WARN("New game need empty board.");
+                return false;
+            }
+            
+            if ((states.response.round >= cb.round && states.response.round < cb.round + 2))
+            {
+                int change_count = 0;
+                if (states.response.round != 0)
+                {
+                    for (int i = 0; i < ROW; ++i)
+                    {
+                        for (int j = 0; j < COL; ++j)
+                        {
+                            int index=i * COL + j;
+                            if (cb.board[i][j] != states.response.board[index])
+                            {
+                                change_count++;
+                                // 如果变化的是人类的棋子，记录最后一步
+                                if (degree == 1 && cb.board[i][j] == 0 && states.response.board[index] == human)
+                                {
+                                    last_human_move_x = i;
+                                    last_human_move_y = j;
+                                }
+                            }
+                        }
+                    }
+                    // 如果变化的个数大于1，返回false以触发重新扫描
+                    if (change_count > 1)
+                    {
+                        ROS_WARN("Detected more than one change, rescan needed.");
+                        msg.iserror = true;
+                        msg.board=states.response.board;
+                        msg.iswin = 0;
+                        boardStatePub.publish(msg);
+                        return false;
+                    }
+                }
+                
                 for (int i = 0; i < ROW; ++i)
                 {
                     for (int j = 0; j < COL; ++j)
@@ -776,7 +893,7 @@ bool playRobot::searchBoard()
                     }
                 }
                 cb.round = states.response.round;
-                robot_msgs::ChessBoardState msg;
+                msg.iserror = false;
                 msg.board=states.response.board;
                 msg.turn = cb.round;
                 msg.iswin = 0;
@@ -788,13 +905,14 @@ bool playRobot::searchBoard()
                 return true;
             }
         }
-    // }
+    }
     catch (const std::exception &e)
     {
         std::cerr << e.what() << '\n';
     }
     return false;
 }
+
 bool playRobot::move(geometry_msgs::Pose pose)
 {
     pose.position.z = 0;
@@ -810,6 +928,7 @@ bool playRobot::move(geometry_msgs::Pose pose)
                                     tools.degreesToRadians(J_joint[3]), tools.degreesToRadians(J_joint[4]), tools.degreesToRadians(J_joint[5])});
     return true;
 }
+
 bool playRobot::getchess()
 {
     // arm->move_j(std::vector<double>{tools.degreesToRadians(90), tools.degreesToRadians(-20), tools.degreesToRadians(-60),
@@ -827,7 +946,6 @@ bool playRobot::getchess()
             success = false;
             while (!success && i < ct.response.positions.size())
             {
-
                 geometry_msgs::Pose p = ct.response.positions[i].pose;
                 p = arm->setPoint(std::vector<double>{p.position.x, p.position.y, p.position.z, 0, tools.degreesToRadians(180), tools.degreesToRadians(-90)});
                 p = tools.transPose(p, "tool", "xMate3_link6");
@@ -877,6 +995,7 @@ bool playRobot::getchess()
 
     return success;
 }
+
 bool playRobot::Victory()
 {
     ROS_INFO("ROBOT Victroy !!!");
@@ -902,6 +1021,7 @@ bool playRobot::Victory()
     boardStatePub.publish(states);
     return true;
 }
+
 bool playRobot::startGame()
 {
 
@@ -913,9 +1033,9 @@ bool playRobot::startGame()
 
         if (is_start)
         {
-
             robot_msgs::ChessBoardState states;
             ROS_INFO("Start Game!");
+            isround0 = true;
 
             while (ros::ok())
             {
@@ -947,8 +1067,10 @@ bool playRobot::startGame()
                         break;
                     }
                     ROS_INFO("Robot's trun");
-                    int k1, k2;
-                    int p = findBestMove(cb, k1, k2);
+                    int k1, k2, l1, l2;
+                    l1 = last_human_move_x;
+                    l2 = last_human_move_y;
+                    int p = findBestMove(cb, k1, k2, degree, l1, l2);
                     ROS_INFO("p:%d ", p);
                     getchess();
                     move(poses[p].pose);
