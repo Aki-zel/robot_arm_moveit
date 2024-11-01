@@ -52,7 +52,7 @@
   <arg name="enable_sync"               default="false"/>
   <arg name="align_depth"               default="true"/>
 
-  <arg name="publish_tf"                default="true"/>
+  <arg name="publish_tf"                default="false"/>
   <arg name="tf_publish_rate"           default="0"/>
 <!-- pointcloud -->
   <arg name="filters"                   default=""/> 

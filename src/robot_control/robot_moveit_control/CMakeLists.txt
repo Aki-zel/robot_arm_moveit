@@ -25,14 +25,13 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2
   geometry_msgs
-  rm_msgs
   moveit_ros_planning_interface
   robot_msgs
   moveit_visual_tools
   rviz_visual_tools
-  yd_msgs
   actionlib
   actionlib_msgs
+  industrial_trajectory_filters
 )
 
 
@@ -132,7 +131,7 @@ catkin_package(
 #  LIBRARIES robot_moveit_control
  CATKIN_DEPENDS roscpp rospy std_msgs rviz  sensor_msgs cv_bridge image_transport tf2_eigen tf2_geometry_msgs tf2_ros tf2 
  geometry_msgs rm_msgs moveit_ros_planning_interface robot_msgs moveit_visual_tools rviz_visual_tools yd_msgs  actionlib
- actionlib_msgs
+ actionlib_msgs industrial_trajectory_filters
 #  DEPENDS system_lib
 )
 set(QT_LIBRARIES Qt5::Core Qt5::Widgets Qt5::Gui)
@@ -190,13 +189,15 @@ add_library(robotTool_h
 # add_executable(${PROJECT_NAME}_node src/robot_moveit_control_node.cpp)
 # add_executable(ydrobot ${QRC_FILES} ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
 add_executable(ydtest src/test.cpp)
-add_executable(controlcenter src/ArmControlCenter.cpp)
+#add_executable(controlcenter src/ArmControlCenter.cpp)
 
 # add_executable(example01 example/example01.cpp)
 # add_executable(example02 example/example02.cpp)
 # add_executable(example03 example/example03.cpp)
 # add_executable(example04 example/example04.cpp)
 add_executable(example05 example/example05.cpp)
+add_executable(example05p example/example05p.cpp)
+add_executable(example07 example/example07.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -207,7 +208,7 @@ add_executable(example05 example/example05.cpp)
 ## same as for the library above
 # add_dependencies(ydrobot ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(ydtest ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(controlcenter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#add_dependencies(controlcenter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
@@ -223,11 +224,11 @@ target_link_libraries(ydtest
   robotTool_h
   ${catkin_LIBRARIES}
 )
-target_link_libraries(controlcenter
-  MoveitServer_h
-  robotTool_h
-  ${catkin_LIBRARIES}
-)
+# target_link_libraries(controlcenter
+#   MoveitServer_h
+#   robotTool_h
+#   ${catkin_LIBRARIES}
+# )
 # target_link_libraries(example01
 #   MoveitServer_h
 #   robotTool_h
@@ -249,6 +250,16 @@ target_link_libraries(controlcenter
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(example05
+  MoveitServer_h
+  robotTool_h
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(example05p
+  MoveitServer_h
+  robotTool_h
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(example07
   MoveitServer_h
   robotTool_h
   ${catkin_LIBRARIES}
