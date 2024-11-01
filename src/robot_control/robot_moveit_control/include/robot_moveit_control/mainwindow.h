@@ -28,7 +28,6 @@
 #include <QLabel>
 #include <thread>
 #include <robot_msgs/Hand_Catch.h>
-
 namespace Ui
 {
     class MainWindow;

@@ -818,72 +818,38 @@ bool playRobot::searchBoard()
         
         if (obj_detection.call(states) && !states.response.board.empty())
         {
-            // 当开始游戏时，检查棋盘是否为空
-            if (is_start && isround0)
-            {
-                bool isEmpty = true;
-                for (int i = 0; i < ROW * COL; ++i)
-                {
-                    if (states.response.board[i] != 0)
-                    {
-                        isEmpty = false;
-                        break;
-                    }
-                }
-                // 如果棋盘为空，执行后续扫描逻辑
-                if (isEmpty)
-                {
-                    ROS_INFO("Empty board detected, ready to start scanning.");
-                    isround0 = false;
-                }
-                else
-                {
-                    // 如果棋盘不为空，给出警告信息，继续扫描
-                    ROS_WARN("Non-empty board detected after starting, continue scanning.");
-                    return false;
-                }
-            }
-            else if(!is_start)
-            {
-                bool isround0 = true;
-                ROS_WARN("New game need empty board.");
-                return false;
-            }
-            
-            if ((states.response.round >= cb.round && states.response.round < cb.round + 2))
-            {
-                int change_count = 0;
-                if (states.response.round != 0)
-                {
-                    for (int i = 0; i < ROW; ++i)
-                    {
-                        for (int j = 0; j < COL; ++j)
-                        {
-                            int index=i * COL + j;
-                            if (cb.board[i][j] != states.response.board[index])
-                            {
-                                change_count++;
-                                // 如果变化的是人类的棋子，记录最后一步
-                                if (degree == 1 && cb.board[i][j] == 0 && states.response.board[index] == human)
-                                {
-                                    last_human_move_x = i;
-                                    last_human_move_y = j;
-                                }
-                            }
-                        }
-                    }
-                    // 如果变化的个数大于1，返回false以触发重新扫描
-                    if (change_count > 1)
-                    {
-                        ROS_WARN("Detected more than one change, rescan needed.");
-                        msg.iserror = true;
-                        msg.board=states.response.board;
-                        msg.iswin = 0;
-                        boardStatePub.publish(msg);
-                        return false;
-                    }
-                }
-                
+            states.request.getpositions = false;
+        }
+        else
+        {
+            states.request.getpositions = true;
+        }
+        if (obj_detection.call(states) && !states.response.board.empty())
+        {
+            // if ((states.response.round >= cb.round && states.response.round < cb.round + 2))
+            // {
+            //     int change_count = 0;
+            //     if (states.response.round != 0)
+            //     {
+            //         for (int i = 0; i < ROW; ++i)
+            //         {
+            //             for (int j = 0; j < COL; ++j)
+            //             {
+            //                 int index=i * COL + j;
+            //                 if (cb.board[i][j] != states.response.board[index])
+            //                 {
+            //                     change_count++;
+            //                 }
+            //             }
+            //         }
+            //         // 如果变化的个数大于1，返回false以触发重新扫描
+            //         if (change_count > 1)
+            //         {
+            //             ROS_WARN("Detected more than one change, rescan needed.");
+            //             return false;
+            //         }
+            //     }
+
                 for (int i = 0; i < ROW; ++i)
                 {
                     for (int j = 0; j < COL; ++j)

@@ -40,6 +40,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 {
 	setlocale(LC_ALL, ""); // 设置编码
 	spinner.start();
+	tools = new robotTool;
 	plan_group = PLANNING_GROUP;
 	arm_.setGoalPositionTolerance(0.001);
 	arm_.setGoalOrientationTolerance(0.01);
@@ -61,15 +62,21 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	tool_do_pub = nh_.advertise<rokae_msgs::SetIoOutput>("set_io", 10);
 	collision_stage_pub = nh_.advertise<std_msgs::Int16>("/rm_driver/Set_Collision_Stage", 1);
 	joint_model_group = arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
+	joint_sub_ = nh_.subscribe("joint_positions", 10, &MoveitServer::jointCallback, this);
+	pose_name_sub_ = nh_.subscribe("pose_name", 10, &MoveitServer::poseNameCallback, this);
+	pose_service_ = nh_.advertiseService("get_end_effector_pose", &MoveitServer::getEndEffectorPoseService, this);
+	arm_setting_sub_ = nh_.subscribe("arm_setting", 10, &MoveitServer::armSettingCallback, this);
+	arm_pose_sub_ = nh_.subscribe("arm_pose", 10, &MoveitServer::armPoseCallback, this);
+	pose_subscriber_ = nh_.subscribe("/arm_pose_goal", 10, &MoveitServer::poseCallback, this);
 	ROS_INFO_NAMED("tutorial", "Start MOVEITSERVER");
 	initializeClaw();
 }
 /// @brief 设置最大速度和加速度
 /// @param speed
-void MoveitServer::setMaxVelocity(double speed, double speed1)
+void MoveitServer::setMaxVelocity(double vel, double acc)
 {
-	arm_.setMaxAccelerationScalingFactor(speed1);
-	arm_.setMaxVelocityScalingFactor(speed);
+	arm_.setMaxAccelerationScalingFactor(acc);
+	arm_.setMaxVelocityScalingFactor(vel);
 }
 /// @brief 规划求解并执行运动
 /// @return True表示成功规划并执行，False表示规划失败
@@ -359,7 +366,7 @@ void MoveitServer::setConstraint(const moveit_msgs::Constraints cons)
 /// @param pose 用于setpoint的点数据
 /// @param succeed 是否运行该语句
 /// @return True表示成功规划并执行，False表示规划失败
-bool MoveitServer::move_l(const std::vector<double> &pose, bool succeed) // 按目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
+bool MoveitServer::move_l(const std::vector<double> &pose, bool succeed, bool is_async) // 按目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
 {
 	std::vector<geometry_msgs::Pose> waypoints;
 	if (succeed)
@@ -369,7 +376,7 @@ bool MoveitServer::move_l(const std::vector<double> &pose, bool succeed) // 按�
 		target_pose = this->setPoint(pose);
 		waypoints.push_back(target_pose);
 
-		return this->move_l(waypoints);
+		return this->move_l(waypoints, succeed, is_async);
 	}
 	return succeed;
 }
@@ -378,14 +385,14 @@ bool MoveitServer::move_l(const std::vector<double> &pose, bool succeed) // 按�
 /// @param position 目标点pose
 /// @param succeed 是否执行该语句
 /// @return True表示成功规划并执行，False表示规划失败
-bool MoveitServer::move_l(const geometry_msgs::Pose &position, bool succeed) // 按目标空间位姿直线移动(接收x,y,z，保持末端位姿)
+bool MoveitServer::move_l(const geometry_msgs::Pose &position, bool succeed, bool is_async) // 按目标空间位姿直线移动(接收x,y,z，保持末端位姿)
 {
 	std::vector<geometry_msgs::Pose> waypoints;
 	if (succeed)
 	{
 		waypoints.push_back(position);
 
-		return this->move_l(waypoints);
+		return this->move_l(waypoints, succeed, is_async);
 	}
 	return succeed;
 }
@@ -394,7 +401,7 @@ bool MoveitServer::move_l(const geometry_msgs::Pose &position, bool succeed) // 
 /// @param posees 用于setpoint的多组点数据
 /// @param succeed 是否执行该语句
 /// @return True表示成功规划并执行，False表示规划失败
-bool MoveitServer::move_l(const std::vector<std::vector<double>> &posees, bool succeed) // 按多个目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
+bool MoveitServer::move_l(const std::vector<std::vector<double>> &posees, bool succeed, bool is_async) // 按多个目标空间位姿走直线移动(x,y,z,roll,pitch,yaw)
 {
 	std::vector<geometry_msgs::Pose> waypoints;
 	if (succeed)
@@ -406,7 +413,7 @@ bool MoveitServer::move_l(const std::vector<std::vector<double>> &posees, bool s
 			waypoints.push_back(target_pose);
 		}
 
-		return this->move_l(waypoints);
+		return this->move_l(waypoints, succeed, is_async);
 	}
 	return succeed;
 }
@@ -415,7 +422,7 @@ bool MoveitServer::move_l(const std::vector<std::vector<double>> &posees, bool s
 /// @param Points 多个pose点组成的数组
 /// @param succeed 是否运行该语句
 /// @return True表示成功规划并执行，False表示规划失败
-bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool succeed)
+bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool succeed, bool is_async)
 {
 	moveit_msgs::RobotTrajectory trajectory;
 	if (succeed)
@@ -465,7 +472,14 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 				rt.getRobotTrajectoryMsg(trajectory);
 				moveit::planning_interface::MoveGroupInterface::Plan plan;
 				plan.trajectory_ = trajectory;
-				arm_.execute(plan);
+				if (is_async)
+				{
+					arm_.asyncExecute(plan);
+				}
+				else
+				{
+					arm_.execute(plan);
+				}
 				return true;
 			}
 		}
@@ -477,7 +491,74 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 	}
 	return succeed;
 }
+void MoveitServer::jointCallback(const std_msgs::Float64MultiArray::ConstPtr &msg)
+{
+	std::vector<double> joint_positions(msg->data.begin(), msg->data.end());
+	move_j(joint_positions); // 调用 move_j 接口
+}
+void MoveitServer::poseNameCallback(const std_msgs::String::ConstPtr &msg)
+{
+	std::string pose_name = msg->data;
+	ROS_INFO("Received pose name: %s", pose_name.c_str());
 
+	// 调用 go_pose 函数执行姿态转换
+	if (!go_pose(pose_name))
+	{
+		ROS_WARN("Failed to execute go_pose for pose: %s", pose_name.c_str());
+	}
+}
+bool MoveitServer::getEndEffectorPoseService(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+	geometry_msgs::Pose current_pose = arm_.getCurrentPose().pose;
+
+	// 将末端姿态信息转换为字符串返回，或者通过其他方式传输具体位姿信息
+	std::stringstream ss;
+	ss << "Position: " << std::endl
+	   << "X:" << current_pose.position.x << std::endl
+	   << "Y:" << current_pose.position.y << std::endl
+	   << "Z:" << current_pose.position.z << std::endl
+	   << "Orientation: " << std::endl
+	   << "OX:" << current_pose.orientation.x << std::endl
+	   << "OY:" << current_pose.orientation.y << std::endl
+	   << "OZ:" << current_pose.orientation.z << std::endl
+	   << "OW:" << current_pose.orientation.w;
+	res.message = ss.str();
+	res.success = true;
+
+	return true;
+}
+void MoveitServer::armSettingCallback(const robot_msgs::ArmSetting::ConstPtr &msg)
+{
+	float vel = msg->vel;
+	float acc = msg->acc;
+	setMaxVelocity(vel, acc);
+}
+void MoveitServer::armPoseCallback(const robot_msgs::ArmPose::ConstPtr &msg)
+{
+	// 创建geometry_msgs::Pose并填充数据
+	geometry_msgs::Pose target_pose, move_pose;
+	target_pose.position.x = msg->x;
+	target_pose.position.y = msg->y;
+	target_pose.position.z = msg->z;
+
+	// 使用tf2创建姿态四元数
+	tf2::Quaternion quaternion;
+	quaternion.setRPY(msg->roll, msg->pitch, msg->yaw);
+	target_pose.orientation = tf2::toMsg(quaternion);
+	geometry_msgs::Pose current_pose = arm_.getCurrentPose().pose;
+	move_pose = tools->calculateTargetPose(current_pose, target_pose);
+	// arm_.stop();
+	// 调用move_l函数，控制机械臂移动到指定位置
+	move_l(move_pose);
+}
+void MoveitServer::poseCallback(const geometry_msgs::Pose::ConstPtr &pose_msg)
+{
+	// 更新机械臂目标位姿并执行运动
+	geometry_msgs::Pose pose;
+	pose.orientation=pose_msg.get()->orientation;
+	pose.position=pose_msg.get()->position;
+	move_p(pose);
+}
 MoveitServer::~MoveitServer()
 {
 	// delete tfListener;

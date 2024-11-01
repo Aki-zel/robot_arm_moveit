@@ -11,9 +11,9 @@ struct checkerboard
 };
 enum chess
 {
-    em = -1,
-    human, // O
-    robot  // X
+    em = 0,
+    human =-1, // O
+    robot =1 // X
 };
 class playRobot
 {

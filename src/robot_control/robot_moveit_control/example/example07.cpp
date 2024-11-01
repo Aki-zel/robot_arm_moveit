@@ -126,7 +126,7 @@ bool playRobot::handleBoardState(robot_msgs::Board_State::Request &req, robot_ms
     int center = 2;
 
     // 遍历每个方块
-    for (size_t i = 0; i < req.positions.size(); ++i)
+    for (std::size_t i = 0; i < req.positions.size(); ++i)
     {
         // 获取方块的位置 (行, 列)
         int row = req.positions[i].row;
