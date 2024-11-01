@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 	spinner.start();																	  // 启动异步spinner
 	tf2_ros::Buffer tfBuffer;															  // 创建TF缓冲区对象
 	tf2_ros::TransformListener tfListener(tfBuffer);									  // 创建TF监听器对象
-	std::string PLANNING_GROUP = "rokae_arm";											  // 定义规划组
+	std::string PLANNING_GROUP = "arm";											  // 定义规划组
 	MoveitServer arm(PLANNING_GROUP);													  // 创建MoveitServer对象
 	// ros::ServiceClient client = nh.serviceClient<robot_msgs::Hand_Catch>("color_detect"); // 创建颜色检测服务客户端
 																						  // 创建robotTool控件
