@@ -826,29 +826,29 @@ bool playRobot::searchBoard()
         }
         if (obj_detection.call(states) && !states.response.board.empty())
         {
-            // if ((states.response.round >= cb.round && states.response.round < cb.round + 2))
-            // {
-            //     int change_count = 0;
-            //     if (states.response.round != 0)
-            //     {
-            //         for (int i = 0; i < ROW; ++i)
-            //         {
-            //             for (int j = 0; j < COL; ++j)
-            //             {
-            //                 int index=i * COL + j;
-            //                 if (cb.board[i][j] != states.response.board[index])
-            //                 {
-            //                     change_count++;
-            //                 }
-            //             }
-            //         }
-            //         // 如果变化的个数大于1，返回false以触发重新扫描
-            //         if (change_count > 1)
-            //         {
-            //             ROS_WARN("Detected more than one change, rescan needed.");
-            //             return false;
-            //         }
-            //     }
+            if ((states.response.round >= cb.round && states.response.round < cb.round + 2))
+            {
+                int change_count = 0;
+                if (states.response.round != 0)
+                {
+                    for (int i = 0; i < ROW; ++i)
+                    {
+                        for (int j = 0; j < COL; ++j)
+                        {
+                            int index=i * COL + j;
+                            if (cb.board[i][j] != states.response.board[index])
+                            {
+                                change_count++;
+                            }
+                        }
+                    }
+                    // 如果变化的个数大于1，返回false以触发重新扫描
+                    if (change_count > 1)
+                    {
+                        ROS_WARN("Detected more than one change, rescan needed.");
+                        return false;
+                    }
+                }
 
                 for (int i = 0; i < ROW; ++i)
                 {

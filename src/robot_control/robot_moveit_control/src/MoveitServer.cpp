@@ -32,7 +32,7 @@
 #include <moveit/trajectory_processing/ruckig_traj_smoothing.h>
 #include <industrial_trajectory_filters/uniform_sample_filter.h>
 #include <robotTool.h>
-#include <rokae_msgs/SetIoOutput.h>
+#include <rm_msgs/Tool_Digital_Output.h>
 #include <moveit_msgs/GetMotionSequence.h>
 /// @brief 构造函数
 /// @param PLANNING_GROUP
@@ -51,7 +51,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	arm_.allowReplanning(true);
 	arm_.setPlanningTime(5.0);
 	// arm_.setPlannerId("LBTRRT");
-	arm_.setPlanningPipelineId("ompl");
+	// arm_.setPlanningPipelineId("ompl");
 	arm_.setPlannerId("TRRT");
 	// arm_.setPlanningPipelineId("pilz_industrial_motion_planner");
 	// arm_.setPlannerId("PTP");
@@ -59,7 +59,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	// arm_.setPlannerId("RRTstar");
 	// arm_.setEndEffectorLink("ee_link");
 	tfListener = std::make_unique<tf2_ros::TransformListener>(tfBuffer);
-	tool_do_pub = nh_.advertise<rokae_msgs::SetIoOutput>("set_io", 10);
+	tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
 	collision_stage_pub = nh_.advertise<std_msgs::Int16>("/rm_driver/Set_Collision_Stage", 1);
 	joint_model_group = arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 	joint_sub_ = nh_.subscribe("joint_positions", 10, &MoveitServer::jointCallback, this);
@@ -235,33 +235,31 @@ void MoveitServer::setCollisionMatrix()
 	planning_scene.getPlanningSceneMsg(scene);
 	planning_scene_interface.applyPlanningScene(scene);
 }
-/// @brief 设置夹爪开合（Rokae机械臂接口）
-/// @param num IO口 参数0，1
-/// @param state Flase为关，True为开
+/// @brief 设置夹爪开合（睿尔曼机械臂接口）
+/// @param num IO口 参数1，2
+/// @param state Flase为开，True为关
 void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
 {
-	// rm_msgs::Tool_Digital_Output tool_do_msg;
-	// tool_do_msg.num = num;
-	// tool_do_msg.state = state;
-	ros::Duration(0.5).sleep();
-	rokae_msgs::SetIoOutput tool_do_msg;
-	tool_do_msg.board = 1;
+	rm_msgs::Tool_Digital_Output tool_do_msg;
 	tool_do_msg.num = num;
 	tool_do_msg.state = state;
 	tool_do_pub.publish(tool_do_msg);
 	ROS_INFO("Published Tool Digital Output message with num = %d and state = %s", num, state ? "true" : "false");
-	ros::Duration(0.5).sleep();
+	ros::Duration(1).sleep();
 }
 
 /// @brief 初始化夹爪并将机械臂回到零位
 void MoveitServer::initializeClaw()
 {
-	Set_Tool_DO(0, true);
-	Set_Tool_DO(1, true);
-
 	Set_Tool_DO(1, false);
+	Set_Tool_DO(2, false);
 	Set_Tool_DO(1, true);
+	Set_Tool_DO(1, false);
+	Set_Tool_DO(2, true);
+	Set_Tool_DO(2, false);
 	ROS_INFO("Claw initialization completed");
+	move_j(std::vector<double>{tools->degreesToRadians(0), tools->degreesToRadians(0), tools->degreesToRadians(-90),
+							   tools->degreesToRadians(0), tools->degreesToRadians(-90), tools->degreesToRadians(0)});
 	// go_home();
 }
 
@@ -555,8 +553,8 @@ void MoveitServer::poseCallback(const geometry_msgs::Pose::ConstPtr &pose_msg)
 {
 	// 更新机械臂目标位姿并执行运动
 	geometry_msgs::Pose pose;
-	pose.orientation=pose_msg.get()->orientation;
-	pose.position=pose_msg.get()->position;
+	pose.orientation = pose_msg.get()->orientation;
+	pose.position = pose_msg.get()->position;
 	move_p(pose);
 }
 MoveitServer::~MoveitServer()

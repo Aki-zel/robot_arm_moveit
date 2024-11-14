@@ -6,10 +6,6 @@
 #include <std_srvs/Empty.h>
 #include <std_srvs/SetBool.h>
 #include <sensor_msgs/Image.h>
-#include <vgn/GetSceneCloud.h>
-#include <vgn/GetMapCloud.h>
-#include <vgn/PredictGrasps.h>
-#include <vgn/GraspConfig.h>
 #include <MoveitServer.h>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
