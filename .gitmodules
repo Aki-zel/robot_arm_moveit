@@ -1,3 +1,6 @@
 [submodule "src/realman_arm"]
 	path = src/realman_arm
 	url = git@gitlab.com:Aki-zel/realman_arm.git
+[submodule "src/grasp_net"]
+	path = src/grasp_net
+	url = git@gitlab.com:Aki-zel/graspnet.git
