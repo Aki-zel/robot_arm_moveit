@@ -193,7 +193,7 @@ add_executable(ydtest src/test.cpp)
 
 # add_executable(example01 example/example01.cpp)
 # add_executable(example02 example/example02.cpp)
-# add_executable(example03 example/example03.cpp)
+add_executable(example03 example/example03.cpp)
 # add_executable(example04 example/example04.cpp)
 add_executable(example05 example/example05.cpp)
 add_executable(example05p example/example05p.cpp)
@@ -239,11 +239,11 @@ target_link_libraries(ydtest
 #   robotTool_h
 #   ${catkin_LIBRARIES}
 # )
-# target_link_libraries(example03
-#   MoveitServer_h
-#   robotTool_h
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(example03
+  MoveitServer_h
+  robotTool_h
+  ${catkin_LIBRARIES}
+)
 # target_link_libraries(example04
 #   MoveitServer_h
 #   robotTool_h

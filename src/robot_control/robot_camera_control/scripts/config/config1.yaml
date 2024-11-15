@@ -1,13 +1,4 @@
 # 标签名称
-# class_name: [ 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
-#          'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
-#          'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-#          'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard',
-#          'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-#          'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
-#          'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone',
-#          'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear',
-#          'hair drier', 'toothbrush' ]
 class_name: ['plastic','plastic bottle','can']
 robot:
   base_frame_id: base_link_rm
@@ -20,7 +11,7 @@ camera:
 # 阈值设置
 threshold:
   iou: 0.4
-  confidence: 0.6
+  confidence: 0.7
   # 颜色与面积阈值
   color_threshold:
     roi_min: [0, 0, 100]
@@ -42,4 +33,10 @@ model_type: 'yolov5'
 model_file: /home/ydfo/rwm_moveit/src/robot_control/robot_camera_control/model/ribbish.onnx
 params_file: ""
 config_file: ""
-gmodel_file: ""
+
+#grasp_net
+gmodel_file: "/home/ydfo/rwm_moveit/src/robot_control/robot_camera_control/model/checkpoint-rs.tar"
+num_point: 20000
+num_view: 300
+collision_thresh: 0.01
+voxel_size: 0.01
