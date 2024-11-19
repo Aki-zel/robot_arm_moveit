@@ -4,15 +4,10 @@ devel
 build
 .catkin_tools
 src/rm_robot/arm_controller_code/scripts/img/
-src/rm_robot/arm_controller_code/model/
 src/rm_robot/arm_controller_code/scripts/weights/
 src/easy_handeye
 src/aruco_ros
-src/robot_control/robtot_camera_control/model/*.onnx
-src/robot_control/robtot_camera_control/model/*.yml
-src/robot_control/robtot_camera_control/model/*.pd*
-src/robot_control/robtot_camera_control/model/*.pt
-src/robot_control/robtot_camera_control/scripts/img/
+src/robot_control/robot_camera_control/scripts/img/
 .xdp_rwm_moveit.workspace.U2GKM2
 rwm_moveit.workspace.user
 src/robot_control/robot_moveit_control/ui/mainwindow.ui.autosave
@@ -29,7 +24,6 @@ core
 camera_pose.txt
 .qtc_clangd
 **/__pycache__
-src/robot_control/robot_camera_control/model
 src/robot_control/robot_moveit_control/scripts/1.py
 src/robot_control/robot_camera_control/scripts/cache/model.trt
 src/robot_control/robot_camera_control/scripts/*.png
@@ -46,3 +40,7 @@ positions_output*.txt
 .gitignore
 3.py
 core.example05p.1935503
+src/robot_control/robot_camera_control/model/*.onnx
+src/robot_control/robot_camera_control/model/*.yml
+src/robot_control/robot_camera_control/model/*.pd*
+src/robot_control/robot_camera_control/model/*.pt
