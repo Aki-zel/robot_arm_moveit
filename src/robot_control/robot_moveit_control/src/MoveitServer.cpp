@@ -258,8 +258,8 @@ void MoveitServer::initializeClaw()
 	Set_Tool_DO(2, true);
 	Set_Tool_DO(2, false);
 	ROS_INFO("Claw initialization completed");
-	move_j(std::vector<double>{tools->degreesToRadians(0), tools->degreesToRadians(0), tools->degreesToRadians(-90),
-							   tools->degreesToRadians(0), tools->degreesToRadians(-90), tools->degreesToRadians(0)});
+	// move_j(std::vector<double>{tools->degreesToRadians(0), tools->degreesToRadians(0), tools->degreesToRadians(-90),
+	// 						   tools->degreesToRadians(0), tools->degreesToRadians(-90), tools->degreesToRadians(0)});
 	// go_home();
 }
 

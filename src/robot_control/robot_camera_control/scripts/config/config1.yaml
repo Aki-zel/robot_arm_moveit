@@ -8,19 +8,6 @@ camera:
   color_topic: /camera/color/image_raw
   info_topic: /camera/aligned_depth_to_color/camera_info
   depth_topic: /camera/aligned_depth_to_color/image_raw
-# 阈值设置
-threshold:
-  iou: 0.4
-  confidence: 0.7
-  # 颜色与面积阈值
-  color_threshold:
-    roi_min: [0, 0, 100]
-    roi_max: [60, 60, 180]
-    lower: [100, 25, 100]
-    upper: [255, 255, 210]
-  area_threshold:
-    min_area: 1300
-    max_area: 6000
 
 # 计算设备
 # -cpu
@@ -40,3 +27,52 @@ num_point: 20000
 num_view: 300
 collision_thresh: 0.01
 voxel_size: 0.01
+
+
+# 阈值设置
+threshold:
+  iou: 0.4
+  confidence: 0.7
+
+# 颜色阈值设置
+colors:
+  cabinet_handle:
+    color_threshold:
+      roi_min: [0, 0, 60]
+      roi_max: [60, 60, 180]
+      lower: [100, 20, 100]
+      upper: [255, 255, 210]
+    area_threshold:
+      min_area: 800
+      max_area: 4000
+  drawer:
+    color_threshold:
+        lower: [0, 0, 150]
+        upper: [160, 30, 255]
+    area_threshold:
+        min_area: 15000
+        max_area: 150000
+  blue:
+    color_threshold:
+        lower: [100, 100, 100] #[100, 100, 90]
+        upper: [140, 255, 255]
+    area_threshold:
+        min_area: 200
+        max_area: 3000
+  orange:
+    color_threshold:
+        lower: [0, 90, 100]   #[0, 90, 118]  
+        upper: [15, 255, 255]  
+    area_threshold:
+        min_area: 400
+        max_area: 3000
+  green:
+    color_threshold:
+        lower: [50, 20, 30] #[60, 70, 50]
+        upper: [90, 255, 255]
+    area_threshold:
+        min_area: 400
+        max_area: 3000
+
+  
+
