@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
 	// 										 rt.degreesToRadians(0), rt.degreesToRadians(90), rt.degreesToRadians(0)});
     ROS_INFO("移动到识别预选位置");
     robot_msgs::Hand_Catch run;
-    run.request.run = true;
     // 需要抓取物品的名称
     run.request.name = "can";
     ROS_INFO("调用视觉识别服务");

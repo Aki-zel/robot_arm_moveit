@@ -24,7 +24,6 @@ int main(int argc, char **argv)
 	
 	// 调用目标检测服务
 	robot_msgs::Hand_Catch srv;
-	srv.request.run = true; // 设置请求标志位
 	srv.request.name = "blue"; // 设置目标颜色
 	if (client.call(srv)) // 调用服务
 	{

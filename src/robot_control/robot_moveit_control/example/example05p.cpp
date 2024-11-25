@@ -902,7 +902,6 @@ bool playRobot::getchess()
     ROS_INFO("Get Chess");
     robot_msgs::Hand_Catch ct;
     ct.request.name = "green";
-    ct.request.run = true;
     bool success;
     int i = 0;
     while ((true))

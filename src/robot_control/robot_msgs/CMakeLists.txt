@@ -58,7 +58,7 @@ add_message_files(
   ArmSetting.msg
   ArmPose.msg
   # Message2.msg
-  # MoveL_Data.msg
+  ObjectionRealTimeDetect.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -68,7 +68,7 @@ add_service_files(
   # Service2.srv
   Hand_Catch.srv
   Task_Call.srv
-  Objection_Detect.srv
+  # Objection_Detect.srv
   Get_Board_State.srv
   Board_State.srv
   NextMove.srv

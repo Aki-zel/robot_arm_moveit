@@ -1,7 +1,7 @@
 # 标签名称
 class_name: ['plastic','plastic bottle','can']
 robot:
-  base_frame_id: base_link_rm
+  base_frame_id: base_link
   ee_frame_id: ee_link
 camera:
   frame_id: camera_color_optical_frame
@@ -32,7 +32,7 @@ voxel_size: 0.01
 # 阈值设置
 threshold:
   iou: 0.4
-  confidence: 0.7
+  confidence: 0.85
 
 # 颜色阈值设置
 colors:

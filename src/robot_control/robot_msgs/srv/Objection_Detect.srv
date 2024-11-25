@@ -1,5 +1,0 @@
-bool run
----
-bool result
-bool success
-geometry_msgs/PoseStamped position
