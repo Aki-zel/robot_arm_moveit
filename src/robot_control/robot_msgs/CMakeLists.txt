@@ -80,6 +80,7 @@ add_action_files(
   # Action1.action
   # Action2.action
   Call_Task.action
+  TaskExecution.action
   # Objection_Detect.action
 )
 

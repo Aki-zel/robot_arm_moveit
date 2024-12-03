@@ -72,46 +72,60 @@ class CameraControlCenter(BaseDetection):
         try:
             # 对模型进行处理
             color_image = self.cv_image
-            t_start = time.time()
-            self.Predicts(color_image)
-            t_end = time.time()
-            rospy.loginfo(f"预测时间: {(t_end - t_start) * 1000}ms")
+            if req.name=="qrcode":
+                image_path = os.path.join(current_work_dir, "object.png")
+                cv2.imwrite(image_path, color_image)
+                angle,center=self.preprocess_and_detect(color_image)
+                if center is not None:
+                    camera_xyz = self.getObject3DPosition(center[0], center[1])
+                    camera_xyz = np.round(np.array(camera_xyz), 3).tolist()
+                    world_position = self.tf_transform(
+                        camera_xyz, [0, 0, np.deg2rad(-angle)])
+                    self.tf_broad(world_position)
+                    labels.append("qrcode")
+                    positions.append(world_position)
+            else:
+                t_start = time.time()
+                self.Predicts(color_image)
+                t_end = time.time()
+                rospy.loginfo(f"预测时间: {(t_end - t_start) * 1000}ms")
 
-            res = self.visual(color_image)  # 可视化检测结果
-            image_path = os.path.join(current_work_dir, "object.png")
-            cv2.imwrite(image_path, res)
-            object_list = self.getFilteredObjects()
-            if object_list:
-                for obj in object_list:
-                    if obj["label"] == req.name or req.name=="":
-                        box_coords = obj["box_coordinates"]
-                        ux, uy = int((box_coords[0] + box_coords[2]) / 2), int((box_coords[1] + box_coords[3]) / 2)
-                        camera_xyz = self.getObject3DPosition(ux, uy)
-                        camera_xyz = np.round(np.array(camera_xyz), 3).tolist()
-                        if req.isgrasp:
-                            iteration_count = 0
-                            while iteration_count < 15:
-                                end_points, cloud = self.process_ros_image_data(box_coords, camera_xyz[2])
-                                gg = self.get_grasps(end_points)
-                                gg = self.collision_detection(gg, np.array(cloud.points))
-                                gg = self.get_grasps_data(gg, 1)
+                res = self.visual(color_image)  # 可视化检测结果
+                image_path = os.path.join(current_work_dir, "object.png")
+                cv2.imwrite(image_path, res)
+                object_list = self.getFilteredObjects()
+                if object_list:
+                    for obj in object_list:
+                        if obj["label"] == req.name or req.name=="":
+                            box_coords = obj["box_coordinates"]
+                            ux, uy = int((box_coords[0] + box_coords[2]) / 2), int((box_coords[1] + box_coords[3]) / 2)
+                            camera_xyz = self.getObject3DPosition(ux, uy)
+                            camera_xyz = np.round(np.array(camera_xyz), 3).tolist()
+                            print(camera_xyz)
+                            if req.isgrasp:
+                                iteration_count = 0
+                                while iteration_count < 15:
+                                    end_points, cloud = self.process_ros_image_data(box_coords, camera_xyz[2])
+                                    gg = self.get_grasps(end_points)
+                                    gg = self.collision_detection(gg, np.array(cloud.points))
+                                    gg = self.get_grasps_data(gg, 1)
 
-                                if gg.grasp_group_array.size > 0 and gg.grasp_group_array[0, 0] > 0.95:
-                                    grasp = self.grasp_group_array_to_pose_stamped(gg.grasp_group_array)
-                                    for g in grasp:
-                                        world_pose = self.tf_transform_pose(g)
-                                        self.tf_broad(world_pose)
-                                        positions.append(world_pose)
-                                        labels.append(obj["label"])
-                                    break
-                                iteration_count +=1
-                                del end_points, cloud, gg
-                                gc.collect()
+                                    if gg.grasp_group_array.size > 0 and gg.grasp_group_array[0, 0] > 0.95:
+                                        grasp = self.grasp_group_array_to_pose_stamped(gg.grasp_group_array)
+                                        for g in grasp:
+                                            world_pose = self.tf_transform_pose(g)
+                                            self.tf_broad(world_pose)
+                                            positions.append(world_pose)
+                                            labels.append(obj["label"])
+                                        break
+                                    iteration_count +=1
+                                    del end_points, cloud, gg
+                                    gc.collect()
 
-                        else:
-                            world_pose = self.tf_transform(camera_xyz)
-                            positions.append(world_pose)
-                            labels.append(obj["label"])
+                            else:
+                                world_pose = self.tf_transform(camera_xyz)
+                                positions.append(world_pose)
+                                labels.append(obj["label"])
 
             feedback.labels = labels
             feedback.positions = positions

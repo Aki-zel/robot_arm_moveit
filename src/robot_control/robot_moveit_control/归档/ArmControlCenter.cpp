@@ -514,7 +514,7 @@ public:
 
 private:
     ros::NodeHandle nh_;
-    MoveitServer arm;
+
     ros::Timer timer;
     // ros::Subscriber a;
     Server *server;
@@ -524,6 +524,7 @@ private:
     ros::ServiceClient object_client, color_client, carControl, object_client_realtime;
     ros::ServiceServer CallTask;
     std_msgs::String statemsg;
+    MoveitServer arm;
     robotTool tool;
     bool state;
 };

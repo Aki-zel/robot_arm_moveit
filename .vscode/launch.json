@@ -24,7 +24,7 @@
           "ignoreFailures": true
         }
       ],
-      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c/tonka3000.qtvsctools/qt.natvis.xml"
+      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c-1/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "ydtest",
@@ -49,13 +49,13 @@
           "ignoreFailures": true
         }
       ],
-      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c/tonka3000.qtvsctools/qt.natvis.xml"
+      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c-1/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
-      "name": "controlcenter",
+      "name": "TaskExecutionServer",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/controlcenter",
+      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/TaskExecutionServer",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
@@ -74,7 +74,7 @@
           "ignoreFailures": true
         }
       ],
-      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c/tonka3000.qtvsctools/qt.natvis.xml"
+      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c-1/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "example",
@@ -99,7 +99,7 @@
           "ignoreFailures": true
         }
       ],
-      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c/tonka3000.qtvsctools/qt.natvis.xml"
+      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c-1/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "rokae_control",
@@ -124,7 +124,7 @@
           "ignoreFailures": true
         }
       ],
-      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c/tonka3000.qtvsctools/qt.natvis.xml"
+      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c-1/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
       "name": "ROS: Launch",

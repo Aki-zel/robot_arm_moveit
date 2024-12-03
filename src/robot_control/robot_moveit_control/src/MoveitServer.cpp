@@ -40,7 +40,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 {
 	setlocale(LC_ALL, ""); // 设置编码
 	spinner.start();
-	tools = new robotTool;
+	tool = std::make_unique<robotTool>();
 	plan_group = PLANNING_GROUP;
 	arm_.setGoalPositionTolerance(0.001);
 	arm_.setGoalOrientationTolerance(0.01);
@@ -69,7 +69,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	arm_pose_sub_ = nh_.subscribe("arm_pose", 10, &MoveitServer::armPoseCallback, this);
 	pose_subscriber_ = nh_.subscribe("/arm_pose_goal", 10, &MoveitServer::poseCallback, this);
 	ROS_INFO_NAMED("tutorial", "Start MOVEITSERVER");
-	initializeClaw();
+	// initializeClaw();
 }
 /// @brief 设置最大速度和加速度
 /// @param speed
@@ -258,8 +258,8 @@ void MoveitServer::initializeClaw()
 	Set_Tool_DO(2, true);
 	Set_Tool_DO(2, false);
 	ROS_INFO("Claw initialization completed");
-	// move_j(std::vector<double>{tools->degreesToRadians(0), tools->degreesToRadians(0), tools->degreesToRadians(-90),
-	// 						   tools->degreesToRadians(0), tools->degreesToRadians(-90), tools->degreesToRadians(0)});
+	// move_j(std::vector<double>{tool->degreesToRadians(0), tool->degreesToRadians(0), tool->degreesToRadians(-90),
+	// 						   tool->degreesToRadians(0), tool->degreesToRadians(-90), tool->degreesToRadians(0)});
 	// go_home();
 }
 
@@ -276,6 +276,17 @@ void MoveitServer::getCurrentJoint(std::vector<double> &joint_group_positions)
 {
 	moveit::core::RobotStatePtr current_state = arm_.getCurrentState();
 	current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
+}
+bool MoveitServer::move_j(const double j1, const double j2, const double j3, const double j4, const double j5, const double j6, bool succeed)
+{
+	if (succeed)
+	{
+		std::vector<double> joint_group_positions = {tool->degreesToRadians(j1), tool->degreesToRadians(j2), tool->degreesToRadians(j3),
+													 tool->degreesToRadians(j4), tool->degreesToRadians(j5), tool->degreesToRadians(j6)};
+		arm_.setJointValueTarget(joint_group_positions);
+		return Planer();
+	}
+	return succeed;
 }
 /// @brief 根据各关节进行关节空间运动
 /// @param joint_group_positions 单位RAD
@@ -544,7 +555,7 @@ void MoveitServer::armPoseCallback(const robot_msgs::ArmPose::ConstPtr &msg)
 	quaternion.setRPY(msg->roll, msg->pitch, msg->yaw);
 	target_pose.orientation = tf2::toMsg(quaternion);
 	geometry_msgs::Pose current_pose = arm_.getCurrentPose().pose;
-	move_pose = tools->calculateTargetPose(current_pose, target_pose);
+	move_pose = tool->calculateTargetPose(current_pose, target_pose);
 	// arm_.stop();
 	// 调用move_l函数，控制机械臂移动到指定位置
 	move_l(move_pose);

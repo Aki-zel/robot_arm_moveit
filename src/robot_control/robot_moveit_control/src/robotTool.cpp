@@ -63,7 +63,7 @@ geometry_msgs::Pose robotTool::transPose(geometry_msgs::Pose p, std::string sour
         // 1参数 是target_frame，这里理解为 数据应转换到的frame, 也就是 tf 的 frame_id ； 2 是source_frame ，这里理解为 数据来源的frame,
         // 等待变换可用
         tfBuffer.canTransform(target_frame, source_frame, ros::Time(0), ros::Duration(3.0));
-        // 获取变换，并将pose从task变换到base_link_rm
+        // 获取变换
         tfBuffer.transform(pose_stamped_in, pose_stamped_out, target_frame);
     }
     catch (tf2::TransformException &ex)
@@ -84,7 +84,7 @@ void robotTool::publishStaticTFwithRot(const geometry_msgs::Pose &p, std::string
     // 设置头信息
     ts.header.seq = 100;
     ts.header.stamp = ros::Time::now();
-    ts.header.frame_id = "base_link_rm";
+    ts.header.frame_id = "base_link";
     // 设置子级坐标系
     ts.child_frame_id = name;
     // 设置子级相对于父级的偏移量

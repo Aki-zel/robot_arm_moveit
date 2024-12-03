@@ -1,9 +1,17 @@
 <launch>
 <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="base_To_cramera" args="x y z qx qy qz qw base_link camera_link"/> -->
     <node pkg="tf2_ros" type="static_transform_publisher" name="base_To_cramera" args="
-    -0.035094737624828475 -0.0456128779537601 -0.01486063833576061
-    0.005223684082061308 -0.003166704553077452 -0.001393486456179785 0.9999313196906172
+    -0.04468305574053162 -0.07141446380436445 0.1046814817471058
+    0.00565619385903051 -0.013162453747379788 -0.06037134371781357 0.9980731727383932
     Link6 camera_color_optical_frame"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="base_To_gripper" args="
+    0 0 0.185
+    0 0 -0.078  0.997
+    Link6 gripper"/>
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="base_To_cramera" args="
+    0 0 0
+    0 0 0 1
+    Link6 camera_color_optical_frame"/> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_color_optical_frame"
       args="0 0 0 -1.57079632679 0 -1.57079632679 camera_color_optical_frame camera_color_frame " /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"

@@ -39,6 +39,7 @@ public:
 	bool go_pose(const std::string str);
 	void getCurrentJoint(std::vector<double> &joint_group_positions);
 	bool move_j(const std::vector<double> &joint_group_positions, bool succeed = true);
+	bool move_j(const double j1,const double j2,const double j3,const double j4,const double j5,const double j6, bool succeed = true);
 	bool move_p(const std::vector<double> &pose, bool succeed = true);
 	bool move_p(const geometry_msgs::Pose &msg, bool succeed = true);
 	bool move_p_l(const geometry_msgs::Pose &msg, bool succeed = true);
@@ -91,7 +92,7 @@ private:
 	// constmoveit::core::LinkModel * end_effector_link ;
 	moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
 	const moveit::core::JointModelGroup *joint_model_group;
-	robotTool *tools;
+	std::unique_ptr<robotTool> tool;
 
 	// moveit_visual_tools::MoveItVisualTools *visual_tools;
 };

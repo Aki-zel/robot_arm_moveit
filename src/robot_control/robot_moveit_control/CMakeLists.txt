@@ -39,7 +39,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
-
+find_package(yaml-cpp REQUIRED)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -177,16 +177,17 @@ add_library(robotTool_h
 # add_executable(${PROJECT_NAME}_node src/robot_moveit_control_node.cpp)
 # add_executable(ydrobot ${QRC_FILES} ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
 add_executable(ydtest src/test.cpp)
-#add_executable(controlcenter src/ArmControlCenter.cpp)
+add_executable(TaskExecutionServer src/TaskExecutionServer.cpp)
 
 # add_executable(example01 example/example01.cpp)
 # add_executable(example02 example/example02.cpp)
 add_executable(example03 example/example03.cpp)
-# add_executable(example04 example/example04.cpp)
+add_executable(example04 example/example04.cpp)
 add_executable(example05 example/example05.cpp)
 add_executable(example05p example/example05p.cpp)
 add_executable(example07 example/example07.cpp)
 add_executable(example08 example/example08.cpp)
+add_executable(example09 example/example09.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -197,7 +198,7 @@ add_executable(example08 example/example08.cpp)
 ## same as for the library above
 # add_dependencies(ydrobot ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(ydtest ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#add_dependencies(controlcenter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(TaskExecutionServer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
@@ -213,11 +214,12 @@ target_link_libraries(ydtest
   robotTool_h
   ${catkin_LIBRARIES}
 )
-# target_link_libraries(controlcenter
-#   MoveitServer_h
-#   robotTool_h
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(TaskExecutionServer
+  MoveitServer_h
+  robotTool_h
+  yaml-cpp
+  ${catkin_LIBRARIES}
+)
 # target_link_libraries(example01
 #   MoveitServer_h
 #   robotTool_h
@@ -233,11 +235,11 @@ target_link_libraries(example03
   robotTool_h
   ${catkin_LIBRARIES}
 )
-# target_link_libraries(example04
-#   MoveitServer_h
-#   robotTool_h
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(example04
+  MoveitServer_h
+  robotTool_h
+  ${catkin_LIBRARIES}
+)
 target_link_libraries(example05
   MoveitServer_h
   robotTool_h
@@ -258,6 +260,12 @@ target_link_libraries(example08
   robotTool_h
   ${catkin_LIBRARIES}
 )
+target_link_libraries(example09
+  MoveitServer_h
+  robotTool_h
+  ${catkin_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############

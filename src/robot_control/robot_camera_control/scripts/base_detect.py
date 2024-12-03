@@ -22,6 +22,7 @@ from tf.transformations import quaternion_from_euler, quaternion_multiply
 from scipy.spatial.transform import Rotation as R
 import fastdeploy as fd
 import fastdeploy.vision as vision
+from pyzbar.pyzbar import decode
 
 from graspnetAPI import GraspGroup
 from grasp_net.models.graspnet  import GraspNet, pred_decode
@@ -241,7 +242,7 @@ class BaseDetection:
 
             # 使用元数据生成点云
             intrinsic_matrix = np.array(self.camera_info.K).reshape(3, 3)  # 将K字段转换为NumPy数组并重塑为3x3矩阵
-            camera = GraspCameraInfo(1280.0, 720.0, intrinsic_matrix[0, 0], intrinsic_matrix[1, 1], intrinsic_matrix[0, 2], intrinsic_matrix[1, 2], 1000)
+            camera = GraspCameraInfo(self.camera_info.width, self.camera_info.height, intrinsic_matrix[0, 0], intrinsic_matrix[1, 1], intrinsic_matrix[0, 2], intrinsic_matrix[1, 2], 1000)
             cloud = create_point_cloud_from_depth_image(depth, camera, organized=True)
             workspace_mask = self.create_workspace_mask(depth, box)
             # 获取有效点
@@ -489,13 +490,134 @@ class BaseDetection:
         cy = self.camera_info.K[5]
         x = int(round(x))
         y = int(round(y))
+        X=Y=Z=0
         depth_value = self.depth_img[y, x]
         if depth_value == 0:
-            rospy.logerr("未检测到深度信息!!!!!")
-            X=Y=Z=0
-        else:
-            Z = depth_value / 1000
-            X = (x - cx) * Z / fx 
-            Y = (y - cy) * Z / fy 
+            min_depth = 0
+            search_range = 10  # 搜索范围为10像素
+            for dx in range(-search_range, search_range + 1):
+                for dy in range(-search_range, search_range + 1):
+                    # 防止超出图像边界
+                    new_x = x + dx
+                    new_y = y + dy
+                    if 0 <= new_x < self.depth_img.shape[1] and 0 <= new_y < self.depth_img.shape[0]:
+                        depth = self.depth_img[new_y, new_x]
+                        if depth > 0:  # 找到有效的深度值
+                            if min_depth==0:  # 第一次找到有效深度值
+                                min_depth = depth
+                            else:  # 找到更小的有效深度值
+                                min_depth = min(min_depth, depth)
+
+            if min_depth > 0:
+                depth_value = min_depth
+                rospy.loginfo(f"找到最大深度值: {min_depth}，位置: ({x}, {y})")
+            else:
+                rospy.logerr("未能在指定范围内找到有效深度值")
+                X=Y=Z=0 # 返回无效坐标
+        
+        Z = depth_value / 1000
+        X = (x - cx) * Z / fx 
+        Y = (y - cy) * Z / fy 
 
         return [X, Y, Z]
+    
+    def preprocess_and_detect(self,image):
+        center=None
+        angle=None
+        new_center=None
+        # 转换为灰度图像
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        # 放大图像
+        scale_factor = 3
+        height, width = gray.shape
+        resized = cv2.resize(gray, (width * scale_factor, height * scale_factor), interpolation=cv2.INTER_LINEAR)
+        blurred = cv2.GaussianBlur(resized, (3, 3), 0)
+
+        # 阈值化
+        _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+        # 开运算去噪
+        kernel = np.ones((5, 5), np.uint8)  # 创建一个5x5的内核
+        opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+        opened=cv2.erode(thresh,kernel,1)
+        # 边缘检测
+        edge = cv2.Canny(opened, 100, 200)
+
+        # 查找轮廓并获取层次结构
+        contours, hierarchy = cv2.findContours(edge, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        # 转换为彩色图像以便绘制
+        output = cv2.cvtColor(resized, cv2.COLOR_GRAY2BGR)
+
+        # 存储满足条件的轮廓
+        valid_contours = []
+
+        # 遍历所有轮廓，找出矩形
+        for i, contour in enumerate(contours):
+            area = cv2.contourArea(contour)
+            if area < 100 or area > 2500:
+                continue
+
+            # 获取轮廓的近似多边形
+            epsilon = 0.04 * cv2.arcLength(contour, True)
+            approx = cv2.approxPolyDP(contour, epsilon, True)
+
+            if len(approx) == 4:
+                child_count = 0
+                child_index = hierarchy[0][i][2]  # 获取第一个子轮廓的索引
+                while child_index != -1:
+                    child_contour_area = cv2.contourArea(contours[child_index])
+                    if child_contour_area > 40:  # 面积阈值为100
+                        child_count += 1
+                    child_index = hierarchy[0][child_index][2]  # 获取下一个兄弟轮廓的索引
+
+                if child_count >= 2:
+                    valid_contours.append(approx)
+                    cv2.drawContours(output, [approx], -1, (0, 255, 0), 2)
+
+        # 如果找到符合条件的轮廓，计算最小外接矩形并识别二维码
+        if len(valid_contours) >= 3:
+            all_points = np.vstack(valid_contours)
+            rect = cv2.minAreaRect(all_points)
+            box = cv2.boxPoints(rect)
+            box = np.intp(box)
+
+            # 在 resized 图像上截取二维码区域
+            x, y, w, h = cv2.boundingRect(box)
+            qr_region_resized = resized[y:y+h, x:x+w]
+               # 使用 pyzbar 进行二维码识别
+            decoded_objects = decode(qr_region_resized)
+            center_x, center_y = rect[0]
+            angle = -rect[2]
+            center = (int(center_x/scale_factor), int(center_y/scale_factor))
+            print(f"Center of QR Code: {center}")
+            # vec = box[1] - box[0]  # 边向量
+            # angle = np.degrees(np.arctan2(vec[1], vec[0]))  # atan2返回弧度，转换为角度    
+            print(f"Before Rotation Angle: {angle:.2f} degrees")
+            if abs(angle)>45:
+                if angle < 0:
+                    angle = -(90 - abs(angle))
+                else:
+                    angle = 90 - abs(angle)
+            angle_rad = np.radians(angle)
+            # 计算移动向量
+            move_x = 200 * np.sin(angle_rad)
+            move_y = 200 * np.cos(angle_rad)
+            # 计算新的中心点坐标
+            new_center = (center[0] + int(move_x), center[1] + int(move_y))
+            print(f"New center after offset: {new_center}")
+
+            cv2.circle(image, new_center, 5, (0, 255, 0), -1)  # 红色圆点标记新的中心
+
+            print(f"Rotation Angle: {angle:.2f} degrees")
+            # 绘制二维码边框和中心点
+            cv2.polylines(image, [np.int32(box)], isClosed=True, color=(0, 255, 0), thickness=2)
+            cv2.circle(image, center, 5, (0, 0, 255), -1)  # 红色圆点标记中心
+           
+        image_path = os.path.join(current_work_dir, "QRCode.png") 
+        processed_output = os.path.join(current_work_dir, "processed_output.png") 
+        # 保存处理后的图像
+        cv2.imwrite(image_path, image)
+        cv2.imwrite(processed_output, output)
+        return angle,new_center

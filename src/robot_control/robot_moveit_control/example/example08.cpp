@@ -39,8 +39,9 @@ public:
         carCon_.waitForServer();
         hasProcessedData_ = false;
         detectionThread_ = std::thread(&ArmControlCenter::detect, this);
+        std::string PLANNING_GROUP = "arm";  
         // 初始化机械臂控制
-        moveitServer_ = std::make_shared<MoveitServer>();
+        moveitServer_ = std::make_shared<MoveitServer>(PLANNING_GROUP);
         ROS_INFO("ArmControlCenter initialized successfully.");
     }
     void detect()
