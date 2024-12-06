@@ -251,8 +251,8 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "task_execution_server");
 
-    ros::AsyncSpinner spinner(2);
-    spinner.start();
+    ros::AsyncSpinner spinner(2); 
+    spinner.start(); 
     TaskExecutionServer server("task_execution");
     ros::waitForShutdown();
     return 0;

@@ -34,14 +34,20 @@ int main(int argc, char **argv)
     std::string PLANNING_GROUP = "arm";                                 // 定义规划组
     moveit_server_ptr = std::make_unique<MoveitServer>(PLANNING_GROUP); // 创建MoveitServer对象
     robotTool tools;
-    tools.setModusMod();
-    ros::Duration(1).sleep();
-    // tools.publishCommand(1,1,std::vector<uint16_t>{0,100});
-    tools.setGripperPosition(100);
-    ros::Duration(3).sleep();
-    tools.setGripperPosition(50);
-    ros::Duration(3).sleep();
-    tools.setGripperPosition(0);
+    // tools.setModusMod();
+    // ros::Duration(1).sleep();
+    // // tools.publishCommand(1,1,std::vector<uint16_t>{0,100});
+    // tools.setGripperPosition(100);
+    // ros::Duration(3).sleep();
+    // tools.setGripperPosition(50);
+    // ros::Duration(3).sleep();
+    // tools.setGripperPosition(0);
+    // moveit_server_ptr->setclearOctomap();
+    moveit_server_ptr->setclearOctomap(true);
+    ros::Duration(8).sleep();
+    moveit_server_ptr->setclearOctomap(false);
+    ros::Duration(8).sleep();
+    moveit_server_ptr->setclearOctomap(true);
     // 注册信号处理函数
     std::signal(SIGINT, signalHandler);
     std::signal(SIGTERM, signalHandler);

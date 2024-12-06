@@ -24,6 +24,7 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Transform.h>
 #include <std_msgs/Int16.h>
+#include <std_srvs/Empty.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
@@ -52,15 +53,18 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	arm_.setPlanningTime(5.0);
 	// arm_.setPlannerId("LBTRRT");
 	// arm_.setPlanningPipelineId("ompl");
-	arm_.setPlannerId("TRRT");
+	// arm_.setPlannerId("TRRT");
 	// arm_.setPlanningPipelineId("pilz_industrial_motion_planner");
 	// arm_.setPlannerId("PTP");
-	// arm_.setPlannerId("RRTConnect");
+	arm_.setPlannerId("RRTConnect");
 	// arm_.setPlannerId("RRTstar");
 	// arm_.setEndEffectorLink("ee_link");
-	tfListener = std::make_unique<tf2_ros::TransformListener>(tfBuffer);
+	planning_scene_interface = std::make_shared<moveit::planning_interface::PlanningSceneInterface>();
+	tf_buffer_ = std::make_shared<tf2_ros::Buffer>(ros::Duration(10.0));
+	tfListener = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
 	tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
 	collision_stage_pub = nh_.advertise<std_msgs::Int16>("/rm_driver/Set_Collision_Stage", 1);
+	clear_octomap = nh_.serviceClient<std_srvs::Empty>("/clear_octomap");
 	joint_model_group = arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 	joint_sub_ = nh_.subscribe("joint_positions", 10, &MoveitServer::jointCallback, this);
 	pose_name_sub_ = nh_.subscribe("pose_name", 10, &MoveitServer::poseNameCallback, this);
@@ -68,6 +72,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	arm_setting_sub_ = nh_.subscribe("arm_setting", 10, &MoveitServer::armSettingCallback, this);
 	arm_pose_sub_ = nh_.subscribe("arm_pose", 10, &MoveitServer::armPoseCallback, this);
 	pose_subscriber_ = nh_.subscribe("/arm_pose_goal", 10, &MoveitServer::poseCallback, this);
+	timer_ = nh_.createTimer(ros::Duration(3.0), &MoveitServer::clearOctoMapCallback, this);
 	ROS_INFO_NAMED("tutorial", "Start MOVEITSERVER");
 	// initializeClaw();
 }
@@ -78,8 +83,22 @@ void MoveitServer::setMaxVelocity(double vel, double acc)
 	arm_.setMaxAccelerationScalingFactor(acc);
 	arm_.setMaxVelocityScalingFactor(vel);
 }
+void MoveitServer::setclearOctomap(const bool enable)
+{
+	enable_octomap_=enable;
+}
+void MoveitServer::clearOctoMapCallback(const ros::TimerEvent&){
+	if (enable_octomap_) {
+            std_srvs::Empty srv;
+            if (clear_octomap.call(srv)) {
+                // ROS_INFO("OctoMap cleared successfully.");
+            } else {
+                ROS_ERROR("Failed to call service /clear_octomap.");
+            }
+        }
+}
 /// @brief 规划求解并执行运动
-/// @return True表示成功规划并执行，False表示规划失败
+/// @return True表示成功规划并执行，False表示规划失败 ?
 bool MoveitServer::Planer()
 {
 	bool success = false;
@@ -204,7 +223,7 @@ geometry_msgs::Transform MoveitServer::getCurrent_State()
 
 	try
 	{
-		transformStamped = this->tfBuffer.lookupTransform("xMate3_base", "tool", ros::Time(0));
+		transformStamped = this->tf_buffer_->lookupTransform("xMate3_base", "tool", ros::Time(0));
 		this->current_state = transformStamped.transform;
 		return transformStamped.transform;
 	}
@@ -233,7 +252,7 @@ void MoveitServer::setCollisionMatrix()
 	acm.setEntry("ee_link", true);
 	moveit_msgs::PlanningScene scene;
 	planning_scene.getPlanningSceneMsg(scene);
-	planning_scene_interface.applyPlanningScene(scene);
+	planning_scene_interface->applyPlanningScene(scene);
 }
 /// @brief 设置夹爪开合（睿尔曼机械臂接口）
 /// @param num IO口 参数1，2
@@ -443,7 +462,7 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 		int attempts = 0;
 		while (fraction < 1.0 && attempts < maxtries)
 		{
-			fraction = arm_.computeCartesianPath(Points, eef_step, jump_threshold, trajectory);
+			fraction = arm_.computeCartesianPath(Points, eef_step, trajectory);
 			attempts++;
 		}
 
