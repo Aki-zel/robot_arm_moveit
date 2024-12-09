@@ -52,10 +52,10 @@
       "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c/tonka3000.qtvsctools/qt.natvis.xml"
     },
     {
-      "name": "controlcenter",
+      "name": "TaskExecutionServer",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/controlcenter",
+      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/TaskExecutionServer",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
@@ -80,7 +80,7 @@
       "name": "example",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/example07",
+      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/example08",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",

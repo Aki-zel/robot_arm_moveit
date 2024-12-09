@@ -17,7 +17,6 @@
             ],
             "group": "build",
             "label": "catkin_make: build"
-        }
-       
+        }       
     ]
 }

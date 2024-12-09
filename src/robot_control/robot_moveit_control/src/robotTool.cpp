@@ -13,11 +13,6 @@
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <tf2_ros/transform_broadcaster.h>
-#include <vgn/GraspConfig.h>
-#include <vgn/GetMapCloud.h>
-#include <vgn/GetSceneCloud.h>
-#include <vgn/PredictGrasps.h>
-#include <vgn/GraspConfig.h>
 #include <std_msgs/String.h>
 #include <std_srvs/Empty.h>
 #include <std_srvs/SetBool.h>
@@ -68,7 +63,7 @@ geometry_msgs::Pose robotTool::transPose(geometry_msgs::Pose p, std::string sour
         // 1参数 是target_frame，这里理解为 数据应转换到的frame, 也就是 tf 的 frame_id ； 2 是source_frame ，这里理解为 数据来源的frame,
         // 等待变换可用
         tfBuffer.canTransform(target_frame, source_frame, ros::Time(0), ros::Duration(3.0));
-        // 获取变换，并将pose从task变换到base_link_rm
+        // 获取变换
         tfBuffer.transform(pose_stamped_in, pose_stamped_out, target_frame);
     }
     catch (tf2::TransformException &ex)
@@ -89,7 +84,7 @@ void robotTool::publishStaticTFwithRot(const geometry_msgs::Pose &p, std::string
     // 设置头信息
     ts.header.seq = 100;
     ts.header.stamp = ros::Time::now();
-    ts.header.frame_id = "xMate3_base";
+    ts.header.frame_id = "base_link";
     // 设置子级坐标系
     ts.child_frame_id = name;
     // 设置子级相对于父级的偏移量
@@ -101,31 +96,6 @@ void robotTool::publishStaticTFwithRot(const geometry_msgs::Pose &p, std::string
     stbroadcaster.sendTransform(ts);
     ros::Duration(1).sleep();
 }
-/// @brief 发布抓取姿态的坐标
-/// @param grasps std::vector<vgn::GraspConfig>
-void robotTool::publishGraspPoses(const std::vector<vgn::GraspConfig> &grasps)
-{
-    for (size_t i = 0; i < grasps.size(); ++i)
-    {
-        geometry_msgs::Pose transformed_pose = transPose(grasps[i].pose);
-        geometry_msgs::TransformStamped transform_stamped;
-        transform_stamped.header.stamp = ros::Time::now();
-        transform_stamped.header.frame_id = "base_link_rm";
-        transform_stamped.child_frame_id = "grasp_" + std::to_string(i);
-        ROS_INFO("%s", transform_stamped.child_frame_id.c_str());
-        transform_stamped.transform.translation.x = transformed_pose.position.x;
-        transform_stamped.transform.translation.y = transformed_pose.position.y;
-        transform_stamped.transform.translation.z = transformed_pose.position.z;
-
-        transform_stamped.transform.rotation.x = transformed_pose.orientation.x;
-        transform_stamped.transform.rotation.y = transformed_pose.orientation.y;
-        transform_stamped.transform.rotation.z = transformed_pose.orientation.z;
-        transform_stamped.transform.rotation.w = transformed_pose.orientation.w;
-
-        broadcaster.sendTransform(transform_stamped);
-    }
-}
-
 /// @brief 用于计算两个坐标的转换，将trans_pose转换应用到target_pose
 /// @param target_pose geometry_msgs::Pose
 /// @param trans_pose geometry_msgs::Pose

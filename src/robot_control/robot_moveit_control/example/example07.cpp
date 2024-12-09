@@ -50,7 +50,6 @@ bool playRobot::getcube(std::string color)
     ROS_INFO("Get Chess");
     robot_msgs::Hand_Catch ct;
     ct.request.name = color;
-    ct.request.run = true;
     bool success;
     int i = 0;
     while ((true))

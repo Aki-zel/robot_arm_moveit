@@ -8,7 +8,6 @@
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
-#include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/CollisionObject.h>
 #include <sensor_msgs/JointState.h>
 #include <tf2/buffer_core.h>
@@ -27,18 +26,18 @@
 #include <std_msgs/Float64MultiArray.h>
 #include <std_msgs/String.h>
 #include <std_srvs/Trigger.h>
-#include <robot_msgs/ArmSetting.h>
-#include <robot_msgs/ArmPose.h>
 #include <robotTool.h>
-typedef actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction> MoveGroupClient;
+
 class MoveitServer
 {
 public:
 	MoveitServer(std::string &PLANNING_GROUP);
 	bool go_home();
 	bool go_pose(const std::string str);
+	void setclearOctomap(const bool enable);
 	void getCurrentJoint(std::vector<double> &joint_group_positions);
 	bool move_j(const std::vector<double> &joint_group_positions, bool succeed = true);
+	bool move_j(const double j1,const double j2,const double j3,const double j4,const double j5,const double j6, bool succeed = true);
 	bool move_p(const std::vector<double> &pose, bool succeed = true);
 	bool move_p(const geometry_msgs::Pose &msg, bool succeed = true);
 	bool move_p_l(const geometry_msgs::Pose &msg, bool succeed = true);
@@ -58,6 +57,7 @@ public:
 	void initializeClaw();
 	void setMaxVelocity(double vel, double acc = 0.4);
 	void setCollisionMatrix();
+	void clearOctoMapCallback(const ros::TimerEvent&);
 
 	~MoveitServer();
 
@@ -81,17 +81,20 @@ private:
 	ros::ServiceServer pose_service_;
 	ros::Subscriber arm_pose_sub_;
 	ros::Subscriber pose_subscriber_;
+	ros::ServiceClient clear_octomap;
+	ros::Publisher tool_do_pub, collision_stage_pub;
 	ros::NodeHandle nh_;
-	tf2_ros::Buffer tfBuffer;
+	std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
 	std::unique_ptr<tf2_ros::TransformListener> tfListener;
 	// ros::Subscriber tf_sub;
 	geometry_msgs::Transform current_state;
-	ros::Publisher tool_do_pub, collision_stage_pub;
 	ros::AsyncSpinner spinner;
 	// constmoveit::core::LinkModel * end_effector_link ;
-	moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+	std::shared_ptr<moveit::planning_interface::PlanningSceneInterface> planning_scene_interface;
 	const moveit::core::JointModelGroup *joint_model_group;
-	robotTool *tools;
+	std::unique_ptr<robotTool> tool;
+	ros::Timer timer_;
+	bool enable_octomap_;
 
 	// moveit_visual_tools::MoveItVisualTools *visual_tools;
 };

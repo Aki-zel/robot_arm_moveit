@@ -1,6 +1,6 @@
 #request
-bool run
 string name
+bool isgrasp
 ---
 #respond
 string[] labels

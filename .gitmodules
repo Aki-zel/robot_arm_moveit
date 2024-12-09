@@ -1,6 +1,6 @@
-[submodule "src/robot_control/robot_helpers"]
-	path = src/robot_control/robot_helpers
-	url = https://mirror.ghproxy.com/https://github.com/mbreyer/robot_helpers.git
+[submodule "src/grasp_net"]
+	path = src/grasp_net
+	url = git@gitlab.com:Aki-zel/graspnet.git
 [submodule "src/rokae_ros_interface"]
 	path = src/rokae_ros_interface
 	url = git@gitlab.com:Aki-zel/rokae_ros_interface.git

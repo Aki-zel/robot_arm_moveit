@@ -14,8 +14,8 @@
   <arg name="fisheye_height"      default="-1"/>
   <arg name="enable_fisheye"      default="false"/>
 
-  <arg name="depth_width"         default="640"/>
-  <arg name="depth_height"        default="480"/>
+  <arg name="depth_width"         default="1280"/>
+  <arg name="depth_height"        default="720"/>
   <arg name="enable_depth"        default="true"/>
 
   <arg name="confidence_width"    default="-1"/>
@@ -30,13 +30,13 @@
   <arg name="enable_infra2"       default="false"/>
   <arg name="infra_rgb"           default="false"/>
 
-  <arg name="color_width"         default="640"/>
-  <arg name="color_height"        default="480"/>
+  <arg name="color_width"         default="1280"/>
+  <arg name="color_height"        default="720"/>
   <arg name="enable_color"        default="true"/>
 
   <arg name="fisheye_fps"         default="-1"/>
   <arg name="depth_fps"           default="15"/>
-  <arg name="infra_fps"           default="15"/>
+  <arg name="infra_fps"           default="5"/>
   <arg name="color_fps"           default="15"/>
   <arg name="gyro_fps"            default="-1"/>
   <arg name="accel_fps"           default="-1"/>
@@ -44,21 +44,44 @@
   <arg name="enable_accel"        default="false"/>
 
   <arg name="enable_pointcloud"         default="false"/>
-  <arg name="pointcloud_texture_stream" default="RS2_STREAM_COLOR"/>
+  <arg name="pointcloud_texture_stream" default="RS2_STREAM_ANY"/>
   <arg name="pointcloud_texture_index"  default="0"/>
   <arg name="allow_no_texture_points"   default="false"/>
-  <arg name="ordered_pc"                default="false"/>
+  <arg name="ordered_pc"                default="true"/>
 
-  <arg name="enable_sync"               default="false"/>
+  <arg name="enable_sync"               default="true"/>
   <arg name="align_depth"               default="true"/>
 
   <arg name="publish_tf"                default="false"/>
   <arg name="tf_publish_rate"           default="0"/>
 <!-- pointcloud -->
-  <arg name="filters"                   default=""/> 
-  <arg name="clip_distance"             default="-2"/>
+<!-- 
+  decimation
+  功能：下采样深度图，减少分辨率以提高性能，同时降低噪声。
+  适用场景：需要减少数据量时使用。
+  threshold
+  功能：设置深度值的上下限范围，仅保留指定范围内的深度数据。
+  适用场景：移除不需要的远近深度数据（例如背景或过近物体）。
+  disparity
+  功能：将深度图转换为视差图，或将视差图转换回深度图。
+  适用场景：用于某些算法优化时。
+  spatial
+  功能：对深度图进行空间滤波，平滑深度数据，减少噪声。
+  适用场景：场景中深度图较为不平滑或有噪声时。
+  temporal
+  功能：时间滤波，通过对连续帧的深度数据进行平均，减少帧间波动。
+  适用场景：实时场景中深度数据抖动较大时。
+  hole_filling
+  功能：填补深度图中的空洞。
+  适用场景：深度图中存在大量无效数据或空洞时。
+  colorizer
+  功能：将深度图转换为伪彩色图，便于可视化。
+  适用场景：调试或显示深度图时。 -->
+  <arg name="filters"                   default="spatial,temporal,decimation,pointcloud"/> 
+  <!-- 从深度图中删除大于设定值（m）的东西 -->
+  <arg name="clip_distance"             default="3"/>
   <arg name="linear_accel_cov"          default="0.01"/>
-  <arg name="initial_reset"             default="true"/>
+  <arg name="initial_reset"             default="false"/>
   <arg name="reconnect_timeout"         default="6.0"/>
   <arg name="wait_for_device_timeout"   default="-1.0"/>
   <arg name="unite_imu_method"          default=""/>
@@ -86,8 +109,8 @@
       <arg name="json_file_path"           value="$(arg json_file_path)"/>
 
       <arg name="enable_pointcloud"        value="$(arg enable_pointcloud)"/>
-      <!-- <arg name="pointcloud_texture_stream" value="$(arg pointcloud_texture_stream)"/> -->
-      <!-- <arg name="pointcloud_texture_index"  value="$(arg pointcloud_texture_index)"/> -->
+      <arg name="pointcloud_texture_stream" value="$(arg pointcloud_texture_stream)"/>
+      <arg name="pointcloud_texture_index"  value="$(arg pointcloud_texture_index)"/>
       <arg name="enable_sync"              value="$(arg enable_sync)"/>
       <arg name="align_depth"              value="$(arg align_depth)"/>
 

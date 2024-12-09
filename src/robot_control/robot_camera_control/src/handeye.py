@@ -12,7 +12,6 @@ from cv_bridge import CvBridge
 from std_msgs.msg import Bool
 import tf.transformations as tf_trans
 
-
 class HandEyeCalibration:
     def __init__(self):
         # ROS节点初始化

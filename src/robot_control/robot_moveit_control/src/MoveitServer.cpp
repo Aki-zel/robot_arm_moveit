@@ -24,6 +24,7 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Transform.h>
 #include <std_msgs/Int16.h>
+#include <std_srvs/Empty.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
@@ -40,7 +41,7 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 {
 	setlocale(LC_ALL, ""); // 设置编码
 	spinner.start();
-	tools = new robotTool;
+	tool = std::make_unique<robotTool>();
 	plan_group = PLANNING_GROUP;
 	arm_.setGoalPositionTolerance(0.001);
 	arm_.setGoalOrientationTolerance(0.01);
@@ -51,25 +52,28 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	arm_.allowReplanning(true);
 	arm_.setPlanningTime(5.0);
 	// arm_.setPlannerId("LBTRRT");
-	arm_.setPlanningPipelineId("ompl");
-	arm_.setPlannerId("TRRT");
+	// arm_.setPlanningPipelineId("ompl");
+	// arm_.setPlannerId("TRRT");
 	// arm_.setPlanningPipelineId("pilz_industrial_motion_planner");
 	// arm_.setPlannerId("PTP");
-	// arm_.setPlannerId("RRTConnect");
+	arm_.setPlannerId("RRTConnect");
 	// arm_.setPlannerId("RRTstar");
 	// arm_.setEndEffectorLink("ee_link");
-	tfListener = std::make_unique<tf2_ros::TransformListener>(tfBuffer);
-	tool_do_pub = nh_.advertise<rokae_msgs::SetIoOutput>("set_io", 10);
-	collision_stage_pub = nh_.advertise<std_msgs::Int16>("/rm_driver/Set_Collision_Stage", 1);
+	planning_scene_interface = std::make_shared<moveit::planning_interface::PlanningSceneInterface>();
+	tf_buffer_ = std::make_shared<tf2_ros::Buffer>(ros::Duration(10.0));
+	tfListener = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
+	clear_octomap = nh_.serviceClient<std_srvs::Empty>("/clear_octomap");
 	joint_model_group = arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
+	tool_do_pub = nh_.advertise<rokae_msgs::SetIoOutput>("set_io", 10);
 	joint_sub_ = nh_.subscribe("joint_positions", 10, &MoveitServer::jointCallback, this);
 	pose_name_sub_ = nh_.subscribe("pose_name", 10, &MoveitServer::poseNameCallback, this);
 	pose_service_ = nh_.advertiseService("get_end_effector_pose", &MoveitServer::getEndEffectorPoseService, this);
 	arm_setting_sub_ = nh_.subscribe("arm_setting", 10, &MoveitServer::armSettingCallback, this);
 	arm_pose_sub_ = nh_.subscribe("arm_pose", 10, &MoveitServer::armPoseCallback, this);
 	pose_subscriber_ = nh_.subscribe("/arm_pose_goal", 10, &MoveitServer::poseCallback, this);
+	timer_ = nh_.createTimer(ros::Duration(3.0), &MoveitServer::clearOctoMapCallback, this);
 	ROS_INFO_NAMED("tutorial", "Start MOVEITSERVER");
-	initializeClaw();
+	// initializeClaw();
 }
 /// @brief 设置最大速度和加速度
 /// @param speed
@@ -78,8 +82,23 @@ void MoveitServer::setMaxVelocity(double vel, double acc)
 	arm_.setMaxAccelerationScalingFactor(acc);
 	arm_.setMaxVelocityScalingFactor(vel);
 }
+void MoveitServer::setclearOctomap(const bool enable)
+{
+	enable_octomap_=enable;
+}
+void MoveitServer::clearOctoMapCallback(const ros::TimerEvent&){
+	if (enable_octomap_) {
+            std_srvs::Empty srv;
+            if (clear_octomap.call(srv)) {
+                // ROS_INFO("OctoMap cleared successfully.");
+            } else {
+                ROS_ERROR("Failed to call service /clear_octomap.");
+            }
+        }
+}
+
 /// @brief 规划求解并执行运动
-/// @return True表示成功规划并执行，False表示规划失败
+/// @return True表示成功规划并执行，False表示规划失败 ?
 bool MoveitServer::Planer()
 {
 	bool success = false;
@@ -204,7 +223,7 @@ geometry_msgs::Transform MoveitServer::getCurrent_State()
 
 	try
 	{
-		transformStamped = this->tfBuffer.lookupTransform("xMate3_base", "tool", ros::Time(0));
+		transformStamped = this->tf_buffer_->lookupTransform("xMate3_base", "tool", ros::Time(0));
 		this->current_state = transformStamped.transform;
 		return transformStamped.transform;
 	}
@@ -233,7 +252,7 @@ void MoveitServer::setCollisionMatrix()
 	acm.setEntry("ee_link", true);
 	moveit_msgs::PlanningScene scene;
 	planning_scene.getPlanningSceneMsg(scene);
-	planning_scene_interface.applyPlanningScene(scene);
+	planning_scene_interface->applyPlanningScene(scene);
 }
 /// @brief 设置夹爪开合（Rokae机械臂接口）
 /// @param num IO口 参数0，1
@@ -278,6 +297,17 @@ void MoveitServer::getCurrentJoint(std::vector<double> &joint_group_positions)
 {
 	moveit::core::RobotStatePtr current_state = arm_.getCurrentState();
 	current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
+}
+bool MoveitServer::move_j(const double j1, const double j2, const double j3, const double j4, const double j5, const double j6, bool succeed)
+{
+	if (succeed)
+	{
+		std::vector<double> joint_group_positions = {tool->degreesToRadians(j1), tool->degreesToRadians(j2), tool->degreesToRadians(j3),
+													 tool->degreesToRadians(j4), tool->degreesToRadians(j5), tool->degreesToRadians(j6)};
+		arm_.setJointValueTarget(joint_group_positions);
+		return Planer();
+	}
+	return succeed;
 }
 /// @brief 根据各关节进行关节空间运动
 /// @param joint_group_positions 单位RAD
@@ -434,7 +464,7 @@ bool MoveitServer::move_l(const std::vector<geometry_msgs::Pose> Points, bool su
 		int attempts = 0;
 		while (fraction < 1.0 && attempts < maxtries)
 		{
-			fraction = arm_.computeCartesianPath(Points, eef_step, jump_threshold, trajectory);
+			fraction = arm_.computeCartesianPath(Points, eef_step, trajectory);
 			attempts++;
 		}
 
@@ -546,7 +576,7 @@ void MoveitServer::armPoseCallback(const robot_msgs::ArmPose::ConstPtr &msg)
 	quaternion.setRPY(msg->roll, msg->pitch, msg->yaw);
 	target_pose.orientation = tf2::toMsg(quaternion);
 	geometry_msgs::Pose current_pose = arm_.getCurrentPose().pose;
-	move_pose = tools->calculateTargetPose(current_pose, target_pose);
+	move_pose = tool->calculateTargetPose(current_pose, target_pose);
 	// arm_.stop();
 	// 调用move_l函数，控制机械臂移动到指定位置
 	move_l(move_pose);
@@ -555,8 +585,8 @@ void MoveitServer::poseCallback(const geometry_msgs::Pose::ConstPtr &pose_msg)
 {
 	// 更新机械臂目标位姿并执行运动
 	geometry_msgs::Pose pose;
-	pose.orientation=pose_msg.get()->orientation;
-	pose.position=pose_msg.get()->position;
+	pose.orientation = pose_msg.get()->orientation;
+	pose.position = pose_msg.get()->position;
 	move_p(pose);
 }
 MoveitServer::~MoveitServer()

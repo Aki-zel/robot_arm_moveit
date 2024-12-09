@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  grasp_net
 )
 
 ## System dependencies are found with CMake's conventions
@@ -106,7 +107,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES robtot_camera_control
-#  CATKIN_DEPENDS cv_bridge roscpp rospy std_msgs
+ CATKIN_DEPENDS cv_bridge roscpp rospy std_msgs grasp_net
 #  DEPENDS system_lib
 )
 
