@@ -51,49 +51,11 @@ public:
     {
         return tfBuffer.lookupTransform(source_frame, target_frame, ros::Time(0));
     }
-    void setModusMod()
-    {
-        std_msgs::Empty msg;
-        set_ModusMod_pub.publish(msg);
-    }
-    void publishCommand(uint16_t address, uint8_t num, const std::vector<uint16_t> &data)
-    {
-        rm_msgs::Modus_Write_Registers msg;
-        msg.device = _Gripper_Address;
-        if (address == 1)
-        {
-            msg.address = _Set_Gripper_Position;
-        }
-        else
-        {
-            msg.address = _Set_Gripper_Force;
-        }
-        msg.num = num;
-        msg.data = data; // 将数据直接填充为消息的数组
-        command_pub.publish(msg);
-        ROS_INFO("Published command: device=%d, address=%d, num=%d", msg.device, msg.address, msg.num);
-    }
-    void setGripperPosition(const uint16_t &data)
-    {
-        std::vector<uint16_t> dataArray;
-        dataArray.push_back(0);
-        dataArray.push_back(data);
-        publishCommand(1, 1, dataArray);
-    }
-    void setGripperForce(const uint16_t &data)
-    {
-        std::vector<uint16_t> dataArray;
-        dataArray.push_back(0);
-        dataArray.push_back(data);
-        publishCommand(2, 1, dataArray);
-    }
 };
 
 robotTool::robotTool()
 {
     tfListener = new tf2_ros::TransformListener(tfBuffer);
-    command_pub = nh.advertise<rm_msgs::Modus_Write_Registers>("/rm_driver/Write_Registers", 10);
-    set_ModusMod_pub = nh.advertise<std_msgs::Empty>("/rm_driver/Set_Modbus_Mode", 10);
 }
 
 robotTool::~robotTool()

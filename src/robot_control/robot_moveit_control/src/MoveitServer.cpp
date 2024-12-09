@@ -33,7 +33,6 @@
 #include <moveit/trajectory_processing/ruckig_traj_smoothing.h>
 #include <industrial_trajectory_filters/uniform_sample_filter.h>
 #include <robotTool.h>
-#include <rm_msgs/Tool_Digital_Output.h>
 #include <moveit_msgs/GetMotionSequence.h>
 /// @brief 构造函数
 /// @param PLANNING_GROUP
