@@ -1,0 +1,45 @@
+# 标签名称
+# class_name: [ 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
+#          'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
+#          'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+#          'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard',
+#          'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
+#          'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
+#          'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone',
+#          'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear',
+#          'hair drier', 'toothbrush' ]
+class_name: ['doorhandle','cabinet','drawerhandle']
+robot:
+  base_frame_id: base_link_rm
+  ee_frame_id: ee_link
+camera:
+  frame_id: camera_rgb_optical_frame
+  color_topic: /camera/rgb/image_rect_color
+  info_topic: /camera/rgb/camera_info
+  depth_topic: /camera/depth/image_rect
+# 阈值设置
+threshold:
+  iou: 0.4
+  confidence: 0.6
+  # 颜色与面积阈值
+  color_threshold:
+    roi_min: [0, 0, 100]
+    roi_max: [60, 60, 180]
+    lower: [100, 25, 100]
+    upper: [255, 255, 210]
+  area_threshold:
+    min_area: 1300
+    max_area: 6000
+
+# 计算设备
+# -cpu
+# -openvino
+# -ort
+# -trt
+device: 'gpu'
+model_type: 'yolov5'
+# 模型权重路径
+model_file: /home/yds/rwm_moveit/src/robot_control/robot_camera_control/model/handle.onnx
+params_file: ""
+config_file: ""
+gmodel_file: ""

@@ -1,7 +1,7 @@
 #request
-bool catch
-
+string name
+bool isgrasp
 ---
 #respond
-string[] label
-float32[] positions
+string[] labels
+geometry_msgs/PoseStamped[] positions

@@ -1,0 +1,136 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "ydrobot",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/Moveitserver",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "为 gdb 启用整齐打印",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "将反汇编风格设置为 Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ],
+      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c/tonka3000.qtvsctools/qt.natvis.xml"
+    },
+    {
+      "name": "ydtest",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/ydtest",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "为 gdb 启用整齐打印",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "将反汇编风格设置为 Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ],
+      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c/tonka3000.qtvsctools/qt.natvis.xml"
+    },
+    {
+      "name": "TaskExecutionServer",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/TaskExecutionServer",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "为 gdb 启用整齐打印",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "将反汇编风格设置为 Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ],
+      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c/tonka3000.qtvsctools/qt.natvis.xml"
+    },
+    {
+      "name": "example",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/devel/lib/robot_moveit_control/example08",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "为 gdb 启用整齐打印",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "将反汇编风格设置为 Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ],
+      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c/tonka3000.qtvsctools/qt.natvis.xml"
+    },
+    {
+      "name": "rokae_control",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/devel/lib/rokae_hardware/rokae_control",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "为 gdb 启用整齐打印",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "将反汇编风格设置为 Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ],
+      "visualizerFile": "/home/ydfo/.vscode-server/data/User/workspaceStorage/7f47e95a1720083a7f7c391e3800918c/tonka3000.qtvsctools/qt.natvis.xml"
+    },
+    {
+      "name": "ROS: Launch",
+      "type": "ros",
+      "request": "launch",
+      "target": "/home/ydt/rwm_moveit/src/rokae_ros_interface/rokae_bringup/launch/xMateER3_control.launch"
+    }
+  ]
+}

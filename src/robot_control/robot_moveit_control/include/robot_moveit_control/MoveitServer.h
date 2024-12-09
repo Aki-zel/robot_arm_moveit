@@ -1,52 +1,103 @@
 #ifndef MOVEITSERVER_H_
 #define MOVEITSERVER_H_
 
+#include <bits/stdc++.h>
 #include <ros/ros.h>
 #include <moveit/move_group_interface/move_group_interface.h>
-#include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
 #include <moveit_msgs/CollisionObject.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <rm_msgs/Tool_Digital_Output.h>
-#include <rm_msgs/Tool_IO_State.h>
-#include <bits/stdc++.h>
+#include <moveit/robot_trajectory/robot_trajectory.h>
+#include <moveit_msgs/CollisionObject.h>
 #include <sensor_msgs/JointState.h>
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/PoseStamped.h>
-// using namespace std;
-
+#include <tf2/buffer_core.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_msgs/TFMessage.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Transform.h>
+#include <std_msgs/Int16.h>
+#include <moveit_visual_tools/moveit_visual_tools.h>
+#include <moveit/robot_model/robot_model.h>
+#include <moveit/trajectory_processing/iterative_time_parameterization.h>
+#include <moveit/trajectory_processing/iterative_spline_parameterization.h>
+#include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/String.h>
+#include <std_srvs/Trigger.h>
+#include <robot_msgs/ArmSetting.h>
+#include <robot_msgs/ArmPose.h>
+#include <robotTool.h>
 class MoveitServer
 {
 public:
 	MoveitServer(std::string &PLANNING_GROUP);
-	void go_home();
-	void go_pose(const std::string str);
-	bool move_j(const std::vector<double> &joint_group_positions);
-	bool move_p(const std::vector<double> &pose);
-	bool move_p(const double (&position)[3]);
-	bool move_p(const geometry_msgs::PoseStampedConstPtr &msg);
-	bool move_p_with_constrains(const std::vector<double> &pose);
-	bool move_p_with_constrains(const double (&position)[3]);
-	bool move_l(const std::vector<double> &pose);
-	bool move_l(const double (&position)[3]);
-	bool move_l(const std::vector<std::vector<double>> &posees);
+	bool go_home();
+	bool go_pose(const std::string str);
+	void setclearOctomap(const bool enable);
+	void getCurrentJoint(std::vector<double> &joint_group_positions);
+	bool move_j(const std::vector<double> &joint_group_positions, bool succeed = true);
+	bool move_j(const double j1,const double j2,const double j3,const double j4,const double j5,const double j6, bool succeed = true);
+	bool move_p(const std::vector<double> &pose, bool succeed = true);
+	bool move_p(const geometry_msgs::Pose &msg, bool succeed = true);
+	bool move_p_l(const geometry_msgs::Pose &msg, bool succeed = true);
+	bool move_p(const geometry_msgs::PoseStamped &msg, bool succeed = true);
+	bool move_l(const std::vector<double> &pose, bool succeed = true,bool is_async=false);
+	bool move_l(const std::vector<std::vector<double>> &posees, bool succeed = true,bool is_async=false);
+	bool move_l(const std::vector<geometry_msgs::Pose> Points, bool succeed = true,bool is_async=false);
+	bool move_l(const geometry_msgs::Pose &position, bool succeed = true,bool is_async=false);
+	void setConstraint(const moveit_msgs::Constraints cons);
 	void Set_Tool_DO(int num, bool state);
-	void joint_state_callback(const sensor_msgs::JointStateConstPtr &msg);
-	void Planer(moveit::planning_interface::MoveGroupInterface::Plan plan);
-	bool Executer();
+	geometry_msgs::Transform getCurrent_State();
+	geometry_msgs::Pose getCurrent_Pose();
+	bool Planer();
+	geometry_msgs::Pose setPoint(const double x, const double y, const double z);
+	geometry_msgs::Pose setPoint(const std::vector<double> &pose);
+	void stop();
+	void initializeClaw();
+	void setMaxVelocity(double vel, double acc = 0.4);
+	void setCollisionMatrix();
+	void clearOctoMapCallback(const ros::TimerEvent&);
+
 	~MoveitServer();
 
+private:
+	void jointCallback(const std_msgs::Float64MultiArray::ConstPtr &msg);
+	void poseNameCallback(const std_msgs::String::ConstPtr &msg);
+	bool getEndEffectorPoseService(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+	void armSettingCallback(const robot_msgs::ArmSetting::ConstPtr &msg);
+	void armPoseCallback(const robot_msgs::ArmPose::ConstPtr &msg);
+	void poseCallback(const geometry_msgs::Pose::ConstPtr& pose_msg);
+
 public:
-	std::string reference_frame;
-	std::string end_effector_link;
-	ros::NodeHandle nh_;
 	moveit::planning_interface::MoveGroupInterface arm_;
-	moveit::planning_interface::MoveGroupInterface::Plan myplan;
-	// msg
-	ros::Publisher tool_do_pub;
-	ros::Subscriber joint_state_sub;
-	sensor_msgs::JointState *joint_state;
+
+private:
+	// std::string reference_frame;
+	std::string plan_group;
+	ros::Subscriber joint_sub_; // 新增的订阅者
+	ros::Subscriber arm_setting_sub_;
+	ros::Subscriber pose_name_sub_;
+	ros::ServiceServer pose_service_;
+	ros::Subscriber arm_pose_sub_;
+	ros::Subscriber pose_subscriber_;
+	ros::ServiceClient clear_octomap;
+	ros::NodeHandle nh_;
+	std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+	std::unique_ptr<tf2_ros::TransformListener> tfListener;
+	// ros::Subscriber tf_sub;
+	geometry_msgs::Transform current_state;
+	ros::Publisher tool_do_pub, collision_stage_pub;
+	ros::AsyncSpinner spinner;
+	// constmoveit::core::LinkModel * end_effector_link ;
+	std::shared_ptr<moveit::planning_interface::PlanningSceneInterface> planning_scene_interface;
+	const moveit::core::JointModelGroup *joint_model_group;
+	std::unique_ptr<robotTool> tool;
+	ros::Timer timer_;
+	bool enable_octomap_;
+
+	// moveit_visual_tools::MoveItVisualTools *visual_tools;
 };
 
 #endif /* MOVEITSERVER_H_ */

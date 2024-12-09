@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   message_generation
+  sensor_msgs
+  actionlib_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -49,11 +51,15 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  CubePosition.msg
+  ChessBoardState.msg
+  ArmSetting.msg
+  ArmPose.msg
+  # Message2.msg
+  ObjectionRealTimeDetect.msg
+)
 
 ## Generate services in the 'srv' folder
 add_service_files(
@@ -61,20 +67,30 @@ add_service_files(
   # Service1.srv
   # Service2.srv
   Hand_Catch.srv
+  Task_Call.srv
+  # Objection_Detect.srv
+  Get_Board_State.srv
+  Board_State.srv
+  NextMove.srv
 )
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+add_action_files(
+  FILES
+  # Action1.action
+  # Action2.action
+  Call_Task.action
+  TaskExecution.action
+  # Objection_Detect.action
+)
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
   geometry_msgs
   std_msgs
+  sensor_msgs
+  actionlib_msgs
 )
 
 
@@ -110,8 +126,8 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES robot_msgs
- CATKIN_DEPENDS message_runtime roscpp rospy geometry_msgs std_msgs 
- DEPENDS system_lib
+ CATKIN_DEPENDS message_runtime roscpp rospy geometry_msgs std_msgs sensor_msgs actionlib_msgs
+#  DEPENDS system_lib
 )
 
 ###########

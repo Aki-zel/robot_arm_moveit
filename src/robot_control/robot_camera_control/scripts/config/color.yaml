@@ -1,0 +1,51 @@
+robot:
+  base_frame_id: xMate3_base
+  ee_frame_id: tool
+camera:
+  frame_id: camera_rgb_optical_frame
+  color_topic: /camera/rgb/image_rect_color
+  info_topic: /camera/rgb/camera_info
+  depth_topic: /camera/depth/image_rect_raw
+# 颜色阈值设置
+colors:
+  cabinet_handle:
+    color_threshold:
+      roi_min: [0, 0, 60]
+      roi_max: [60, 60, 180]
+      lower: [100, 20, 100]
+      upper: [255, 255, 210]
+    area_threshold:
+      min_area: 800
+      max_area: 4000
+  drawer:
+    color_threshold:
+        lower: [0, 0, 150]
+        upper: [160, 30, 255]
+    area_threshold:
+        min_area: 15000
+        max_area: 150000
+  blue:
+    color_threshold:
+        lower: [100, 100, 100] #[100, 100, 90]
+        upper: [140, 255, 255]
+    area_threshold:
+        min_area: 200
+        max_area: 3000
+  orange:
+    color_threshold:
+        lower: [0, 90, 100]   #[0, 90, 118]  
+        upper: [15, 255, 255]  
+    area_threshold:
+        min_area: 400
+        max_area: 3000
+  green:
+    color_threshold:
+        lower: [50, 20, 30] #[60, 70, 50]
+        upper: [90, 255, 255]
+    area_threshold:
+        min_area: 400
+        max_area: 3000
+
+  
+
+

@@ -1,0 +1,13 @@
+# TaskExecution.action
+# Goal
+string task_type     # 任务类型
+string parameters    # 任务参数，以YAML格式字符串表示
+
+---
+# Result
+bool success         # 是否成功执行
+string result        # 执行结果消息
+
+---
+# Feedback
+string status        # 当前执行状态
