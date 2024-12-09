@@ -62,8 +62,6 @@ MoveitServer::MoveitServer(std::string &PLANNING_GROUP) : arm_(PLANNING_GROUP), 
 	planning_scene_interface = std::make_shared<moveit::planning_interface::PlanningSceneInterface>();
 	tf_buffer_ = std::make_shared<tf2_ros::Buffer>(ros::Duration(10.0));
 	tfListener = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
-	tool_do_pub = nh_.advertise<rm_msgs::Tool_Digital_Output>("/rm_driver/Tool_Digital_Output", 10);
-	collision_stage_pub = nh_.advertise<std_msgs::Int16>("/rm_driver/Set_Collision_Stage", 1);
 	clear_octomap = nh_.serviceClient<std_srvs::Empty>("/clear_octomap");
 	joint_model_group = arm_.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 	joint_sub_ = nh_.subscribe("joint_positions", 10, &MoveitServer::jointCallback, this);
@@ -254,32 +252,12 @@ void MoveitServer::setCollisionMatrix()
 	planning_scene.getPlanningSceneMsg(scene);
 	planning_scene_interface->applyPlanningScene(scene);
 }
-/// @brief 设置夹爪开合（睿尔曼机械臂接口）
-/// @param num IO口 参数1，2
-/// @param state Flase为开，True为关
-void MoveitServer::Set_Tool_DO(int num, bool state) // 控制夹爪开合
-{
-	rm_msgs::Tool_Digital_Output tool_do_msg;
-	tool_do_msg.num = num;
-	tool_do_msg.state = state;
-	tool_do_pub.publish(tool_do_msg);
-	ROS_INFO("Published Tool Digital Output message with num = %d and state = %s", num, state ? "true" : "false");
-	ros::Duration(1).sleep();
-}
-
 /// @brief 初始化夹爪并将机械臂回到零位
 void MoveitServer::initializeClaw()
 {
-	Set_Tool_DO(1, false);
-	Set_Tool_DO(2, false);
-	Set_Tool_DO(1, true);
-	Set_Tool_DO(1, false);
-	Set_Tool_DO(2, true);
-	Set_Tool_DO(2, false);
-	ROS_INFO("Claw initialization completed");
 	// move_j(std::vector<double>{tool->degreesToRadians(0), tool->degreesToRadians(0), tool->degreesToRadians(-90),
 	// 						   tool->degreesToRadians(0), tool->degreesToRadians(-90), tool->degreesToRadians(0)});
-	// go_home();
+	go_home();
 }
 
 /// @brief 停止当前运动并清空目标

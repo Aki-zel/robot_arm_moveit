@@ -26,9 +26,8 @@
 #include <std_msgs/Float64MultiArray.h>
 #include <std_msgs/String.h>
 #include <std_srvs/Trigger.h>
-#include <robot_msgs/ArmSetting.h>
-#include <robot_msgs/ArmPose.h>
 #include <robotTool.h>
+
 class MoveitServer
 {
 public:
@@ -48,7 +47,6 @@ public:
 	bool move_l(const std::vector<geometry_msgs::Pose> Points, bool succeed = true,bool is_async=false);
 	bool move_l(const geometry_msgs::Pose &position, bool succeed = true,bool is_async=false);
 	void setConstraint(const moveit_msgs::Constraints cons);
-	void Set_Tool_DO(int num, bool state);
 	geometry_msgs::Transform getCurrent_State();
 	geometry_msgs::Pose getCurrent_Pose();
 	bool Planer();
@@ -88,7 +86,6 @@ private:
 	std::unique_ptr<tf2_ros::TransformListener> tfListener;
 	// ros::Subscriber tf_sub;
 	geometry_msgs::Transform current_state;
-	ros::Publisher tool_do_pub, collision_stage_pub;
 	ros::AsyncSpinner spinner;
 	// constmoveit::core::LinkModel * end_effector_link ;
 	std::shared_ptr<moveit::planning_interface::PlanningSceneInterface> planning_scene_interface;
