@@ -1,3 +1,6 @@
 [submodule "src/grasp_net"]
 	path = src/grasp_net
 	url = git@gitlab.com:Aki-zel/graspnet.git
+[submodule "src/duco_arm"]
+	path = src/duco_arm
+	url = git@gitlab.com:Aki-zel/duco_arm.git
