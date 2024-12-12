@@ -18,7 +18,6 @@
 #include <std_msgs/Empty.h>
 #include <std_srvs/Empty.h>
 #include <std_srvs/SetBool.h>
-#include <rm_msgs/Modus_Write_Registers.h>
 #include <iomanip>
 #include <sstream>
 #include <cstdint>
@@ -47,6 +46,8 @@ public:
     geometry_msgs::Pose moveFromPose(const geometry_msgs::Pose &pose, double distance);
     double round(double num, int exponent);
     double degreesToRadians(double degrees);
+    void setGripperPosition(const int pose);
+    void setGripperForce(const int force);
     geometry_msgs::TransformStamped lookupTransform(std::string source_frame = "task", std::string target_frame = "base_link_rm")
     {
         return tfBuffer.lookupTransform(source_frame, target_frame, ros::Time(0));

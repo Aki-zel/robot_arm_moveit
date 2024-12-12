@@ -165,3 +165,9 @@ double robotTool::degreesToRadians(double degrees)
 {
     return round((degrees * M_PI / 180.0), 10);
 }
+void robotTool::setGripperPosition(const int pose){
+    ROS_INFO("%d",pose);
+}
+void robotTool::setGripperForce(const int force){
+    ROS_INFO("%d",force);
+}

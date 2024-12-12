@@ -4,7 +4,7 @@
 #include <yaml-cpp/yaml.h> // 用于处理 YAML 格式
 #include <MoveitServer.h>
 #include <robotTool.h>
-#include <yd_msgs/MoveLocalTargetAction.h>
+// #include <yd_msgs/MoveLocalTargetAction.h>
 #include <robot_msgs/ObjectionRealTimeDetect.h>
 #include <robot_msgs/Hand_Catch.h>
 #include <thread>
@@ -172,7 +172,7 @@ public:
         }
         success = arm->move_j(-128, 4, 89, 0, 84, 63, success && is_running_);
         auto current_pose = arm->getCurrent_Pose();
-        // tool->setGripperPosition(30);
+        tool->setGripperPosition(30);
         ROS_INFO("获取当前的坐标点");
         ROS_INFO("位置信息: x: %f, y: %f, z: %f", current_pose.position.x, current_pose.position.y, current_pose.position.z);
         ROS_INFO("方向信息: qx: %f, qy: %f, qz: %f, qw: %f", current_pose.orientation.x, current_pose.orientation.y, current_pose.orientation.z, current_pose.orientation.w);
@@ -199,7 +199,7 @@ public:
             success = arm->move_j(-128, 4, 89, 0, 84, 63);
             tool->setGripperPosition(30);
             auto current_pose = arm->getCurrent_Pose();
-            // tool->setGripperPosition(30);
+            tool->setGripperPosition(30);
             ROS_INFO("获取当前的坐标点");
             ROS_INFO("位置信息: x: %f, y: %f, z: %f", current_pose.position.x, current_pose.position.y, current_pose.position.z);
             ROS_INFO("方向信息: qx: %f, qy: %f, qz: %f, qw: %f", current_pose.orientation.x, current_pose.orientation.y, current_pose.orientation.z, current_pose.orientation.w);
