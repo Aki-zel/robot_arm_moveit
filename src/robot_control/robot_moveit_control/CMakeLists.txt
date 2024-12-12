@@ -32,7 +32,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
   industrial_trajectory_filters
-  yd_msgs
+  # yd_msgs
 )
 
 
@@ -183,10 +183,10 @@ add_executable(TaskExecutionServer src/TaskExecutionServer.cpp)
 # add_executable(example02 example/example02.cpp)
 add_executable(example03 example/example03.cpp)
 add_executable(example04 example/example04.cpp)
-add_executable(example05 example/example05.cpp)
-add_executable(example05p example/example05p.cpp)
-add_executable(example07 example/example07.cpp)
-add_executable(example08 example/example08.cpp)
+# add_executable(example05 example/example05.cpp)
+# add_executable(example05p example/example05p.cpp)
+# add_executable(example07 example/example07.cpp)
+# add_executable(example08 example/example08.cpp)
 add_executable(example09 example/example09.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -240,26 +240,26 @@ target_link_libraries(example04
   robotTool_h
   ${catkin_LIBRARIES}
 )
-target_link_libraries(example05
-  MoveitServer_h
-  robotTool_h
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(example05p
-  MoveitServer_h
-  robotTool_h
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(example07
-  MoveitServer_h
-  robotTool_h
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(example08
-  MoveitServer_h
-  robotTool_h
-  ${catkin_LIBRARIES}
-)
+# target_link_libraries(example05
+#   MoveitServer_h
+#   robotTool_h
+#   ${catkin_LIBRARIES}
+# )
+# target_link_libraries(example05p
+#   MoveitServer_h
+#   robotTool_h
+#   ${catkin_LIBRARIES}
+# )
+# target_link_libraries(example07
+#   MoveitServer_h
+#   robotTool_h
+#   ${catkin_LIBRARIES}
+# )
+# target_link_libraries(example08
+#   MoveitServer_h
+#   robotTool_h
+#   ${catkin_LIBRARIES}
+# )
 target_link_libraries(example09
   MoveitServer_h
   robotTool_h

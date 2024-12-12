@@ -26,6 +26,8 @@
 #include <std_msgs/Float64MultiArray.h>
 #include <std_msgs/String.h>
 #include <std_srvs/Trigger.h>
+#include <robot_msgs/ArmPose.h>
+#include <robot_msgs/ArmSetting.h>
 #include <robotTool.h>
 
 class MoveitServer

@@ -4,7 +4,7 @@
 #include <yaml-cpp/yaml.h> // 用于处理 YAML 格式
 #include <MoveitServer.h>
 #include <robotTool.h>
-#include <yd_msgs/MoveLocalTargetAction.h>
+// #include <yd_msgs/MoveLocalTargetAction.h>
 #include <robot_msgs/ObjectionRealTimeDetect.h>
 #include <robot_msgs/Hand_Catch.h>
 #include <thread>
