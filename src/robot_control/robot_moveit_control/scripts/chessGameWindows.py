@@ -77,8 +77,7 @@ class MainWindows(FramelessWindow, Ui_Form):
         self.ros_spin_thread = RosSpinThread()
         self.ros_spin_thread.start()
         self.getBoard = rospy.Subscriber(
-            "/boardState", ChessBoardState, self.getBoardState, queue_size=10
-        )
+            "/boardState", ChessBoardState, self.getBoardState, queue_size=10)
         self.startGamepub = rospy.Publisher("/startGame", Bool, queue_size=10)
         self.chooseDegreepub = rospy.Publisher("/degree", Int32, queue_size=10) 
         self.cubeGameClient = rospy.ServiceProxy("/cubegame", Board_State)
