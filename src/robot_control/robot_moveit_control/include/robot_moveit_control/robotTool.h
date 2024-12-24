@@ -22,9 +22,9 @@
 #include <sstream>
 #include <cstdint>
 
-#define _Gripper_Address 0x01
-#define _Set_Gripper_Position 0x9C40
-#define _Set_Gripper_Force 0x9C41
+// #define _Gripper_Address 0x01
+// #define _Set_Gripper_Position 0x9C40
+// #define _Set_Gripper_Force 0x9C41
 class robotTool
 {
 private:
@@ -32,7 +32,8 @@ private:
     tf2_ros::TransformListener *tfListener;
     tf2_ros::TransformBroadcaster broadcaster;
     tf2_ros::StaticTransformBroadcaster stbroadcaster;
-    ros::Publisher command_pub, set_ModusMod_pub;
+    ros::Publisher gripper_position_pub_;
+    ros::Publisher gripper_force_pub_;
     ros::NodeHandle nh;
 
 public:
@@ -57,6 +58,9 @@ public:
 robotTool::robotTool()
 {
     tfListener = new tf2_ros::TransformListener(tfBuffer);
+     // 初始化发布器
+    gripper_position_pub_ = nh.advertise<std_msgs::Int16>("gripper/position", 10);  // 发布夹爪位置
+    gripper_force_pub_ = nh.advertise<std_msgs::Int16>("gripper/force", 10);  // 发布夹爪力度
 }
 
 robotTool::~robotTool()

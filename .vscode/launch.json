@@ -105,7 +105,7 @@
       "name": "rokae_control",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/devel/lib/rokae_hardware/rokae_control",
+      "program": "${workspaceFolder}/devel/lib/duco_driver/gripper_controller",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",

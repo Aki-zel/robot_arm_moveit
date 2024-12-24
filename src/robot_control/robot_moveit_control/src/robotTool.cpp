@@ -165,9 +165,20 @@ double robotTool::degreesToRadians(double degrees)
 {
     return round((degrees * M_PI / 180.0), 10);
 }
-void robotTool::setGripperPosition(const int pose){
-    ROS_INFO("%d",pose);
+void robotTool::setGripperPosition(const int pose)
+{
+    // 创建并发布夹爪位置
+    std_msgs::Int16 position_msg;
+    position_msg.data = pose;
+    gripper_position_pub_.publish(position_msg);
+    ROS_INFO("Gripper Position: %d", pose);
 }
-void robotTool::setGripperForce(const int force){
-    ROS_INFO("%d",force);
+
+void robotTool::setGripperForce(const int force)
+{
+    // 创建并发布夹爪力度
+    std_msgs::Int16 force_msg;
+    force_msg.data = force;
+    gripper_force_pub_.publish(force_msg);
+    ROS_INFO("Gripper Force: %d", force);
 }
